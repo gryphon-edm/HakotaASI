@@ -33,24 +33,26 @@ A "Container of Containers" that provides a centralized dashboard to manage the 
 
 ### 📦 The Strategic Stack
 The platform is built on four foundation libraries:
-1. **`anahata-asi-core`**: The foundational JASI container, the CWGC engine, and the toolchain.
-2. **`anahata-asi-swing`**: Multimodal UI components with identity-preserving "Diff-and-Update" rendering.
-3. **`anahata-asi-gemini`**: The reference adapter for Google’s Generative AI.
-4. **`anahata-asi-yam`**: The laboratory for experimental multimodal tools (Chrome, Audio, Speech).
+1. **[`anahata-asi-core`](https://asi.anahata.uno/core.html)**: The foundational JASI container, the CWGC engine, and the toolchain.
+2. **[`anahata-asi-swing`](https://asi.anahata.uno/swing.html)**: Multimodal UI components with identity-preserving "Diff-and-Update" rendering.
+3. **[`anahata-asi-gemini`](https://asi.anahata.uno/gemini.html)**: The reference adapter for Google’s Generative AI.
+4. **[`anahata-asi-yam`](https://asi.anahata.uno/yam.html)**: The laboratory for experimental multimodal tools (Chrome, Audio, Speech).
 
 ---
 
 ### 🚀 Reference Implementations
 
-#### **Anahata ASI Desktop**
+#### **[Anahata ASI Desktop](https://asi.anahata.uno/desktop.html)**
 *Standalone Cross-Platform ASI Container*
 A pure-Java Swing application providing a full-fidelity interface for desktop and terminal environments.
 - **Included Toolkits**: Screen Capture, Audio Device Management, Online Radio, Chrome Automation, Speech Synthesis (TTS), Shell Execution, and JIT Java Compilation.
+- **Get it**: [Latest Release](https://github.com/anahata-os/anahata-asi/releases/latest) | [Latest Snapshot (Bleeding Edge)](https://github.com/anahata-os/anahata-asi/releases/tag/latest-snapshot)
 
-#### **Anahata ASI Studio**
+#### **[Anahata ASI Studio](https://asi.anahata.uno/nb.html)**
 *Enterprise Java-Ready Autonomous Coding Agent*
 A deep NetBeans IDE integration that transforms your development environment into an ASI studio.
 - **Included Features**: Type Hierarchies, Programmatic Refactoring, Smart Code Hints, Dependency Source resolution, UML Generation, Maven Embedder, and all features of Anahata ASI Desktop.
+- **Get it**: [Latest Release](https://github.com/anahata-os/anahata-asi/releases/latest) | [Latest Snapshot (.nbm)](https://github.com/anahata-os/anahata-asi/releases/tag/latest-snapshot)
 
 ---
 
