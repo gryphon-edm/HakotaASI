@@ -109,7 +109,7 @@ public class CwGcPanel extends JPanel {
      * and the historical recycling log.
      */
     private void initComponents() {
-        JPanel headerPanel = new JPanel(new MigLayout("insets 10, fillx", "[grow]", "[]0[]5[]"));
+        JPanel headerPanel = new JPanel(new MigLayout("insets 10, fillx", "[grow]", "[]0[]"));
         headerPanel.setBackground(new Color(245, 245, 245));
         headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
         JLabel titleLabel = new JLabel("Context Window Garbage Collector");
@@ -118,23 +118,24 @@ public class CwGcPanel extends JPanel {
 
         strategyLabel = new JLabel();
         strategyLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        headerPanel.add(strategyLabel, "wrap");
+        headerPanel.add(strategyLabel);
+
+        add(headerPanel, BorderLayout.NORTH);
+
+        JPanel mainContent = new JPanel(new MigLayout("insets 0 5 0 5, fill, gapy 0", "[grow]", "[]0[]0[grow]"));
 
         JLabel engineLabel = new JLabel("<html><b>Metabolism Engine:</b> A hint about all <i>Effectively Pruned</i> parts is included in the prompt. "
                 + "Message garbage collection occurs when all parts in a message are <i>Effectively Pruned</i>.</html>");
         engineLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        headerPanel.add(engineLabel);
-
-        add(headerPanel, BorderLayout.NORTH);
-
-        JPanel mainContent = new JPanel(new MigLayout("insets 10, fill", "[grow]", "[350!][grow]"));
+        engineLabel.setBorder(BorderFactory.createEmptyBorder(2, 5, 2, 5));
+        mainContent.add(engineLabel, "wrap");
 
         // --- Top: Metrics and Chart ---
         JPanel topPanel = new JPanel(new MigLayout("insets 0, fill, gap 20", "[350!][grow]", "[grow]"));
         topPanel.setBorder(BorderFactory.createTitledBorder("CwGC Metabolic Status"));
 
         // Left: Detailed Metrics
-        JPanel metricsPanel = new JPanel(new MigLayout("insets 10, fillx, gap 5", "[right][left, grow]", "[]5[]5[]5[]5[]5[]15[]20[]"));
+        JPanel metricsPanel = new JPanel(new MigLayout("insets 10, fillx, gap 5", "[right][left, grow]", "[]5[]5[]5[]5[]5[]5[]5[]"));
         Font valueFont = new JLabel().getFont().deriveFont(Font.BOLD, 14f);
 
         metricsPanel.add(new JLabel("System Instructions:"));
@@ -157,18 +158,18 @@ public class CwGcPanel extends JPanel {
         ragTokensLabel = createValueLabel(valueFont, new Color(26, 188, 156)); // Turquoise
         metricsPanel.add(ragTokensLabel, "wrap");
 
-        metricsPanel.add(new JLabel("Pruned (Recycled):"));
+        metricsPanel.add(new JLabel("Effectively Pruned:"));
         prunedHistoryTokensLabel = createValueLabel(valueFont, new Color(149, 165, 166)); // Grey
         metricsPanel.add(prunedHistoryTokensLabel, "wrap");
         
-        metricsPanel.add(new JLabel("Total Prompt Load:"), "gaptop 10");
+        metricsPanel.add(new JLabel("Total Prompt Load:"), "gaptop 5");
         totalPromptLoadLabel = new JLabel("0");
         totalPromptLoadLabel.setFont(valueFont.deriveFont(18f));
         metricsPanel.add(totalPromptLoadLabel, "wrap");
 
         refreshBtn = new JButton("Refresh Now", new RestartIcon(16));
         refreshBtn.addActionListener(e -> refresh());
-        metricsPanel.add(refreshBtn, "span 2, gaptop 10");
+        metricsPanel.add(refreshBtn, "span 2, gaptop 5");
 
         topPanel.add(metricsPanel, "top");
 
@@ -180,7 +181,7 @@ public class CwGcPanel extends JPanel {
 
         // --- Bottom: Recycling Log ---
         JPanel logPanel = new JPanel(new BorderLayout());
-        logPanel.setBorder(BorderFactory.createTitledBorder("Recycling Log (Hard Pruning Events)"));
+        logPanel.setBorder(BorderFactory.createTitledBorder("Garbage Collector Logs (Permanently removed messages)"));
 
         JButton clearBtn = new JButton("Clear GC Logs", new DeleteIcon(16));
         clearBtn.addActionListener(e -> {
@@ -199,8 +200,11 @@ public class CwGcPanel extends JPanel {
             }
         };
         logTable = new JXTable(logModel);
-        logTable.setColumnControlVisible(true);
-        logPanel.add(new JScrollPane(logTable), BorderLayout.CENTER);
+        
+        JPanel tableContainer = new JPanel(new BorderLayout());
+        tableContainer.add(logTable.getTableHeader(), BorderLayout.NORTH);
+        tableContainer.add(logTable, BorderLayout.CENTER);
+        logPanel.add(tableContainer, BorderLayout.CENTER);
 
         mainContent.add(logPanel, "grow");
 
