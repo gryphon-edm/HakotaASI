@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     <div class="social-links">
                         <a href="https://www.youtube.com/@anahata108" target="_blank" title="Anahata TV"><i class="fab fa-youtube"></i></a>
-                        <a href="https://discord.gg/Pjev7Cha" target="_blank" title="Discord"><i class="fab fa-discord"></i></a>
+                        <a href="https://discord.gg/gwGWWxPUXE" target="_blank" title="Discord"><i class="fab fa-discord"></i></a>
                         <a href="https://x.com/AnahataASI" target="_blank" title="Twitter / X"><i class="fa-brands fa-x-twitter"></i></a>
                         <a href="https://github.com/anahata-os/anahata-asi" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
                     </div>

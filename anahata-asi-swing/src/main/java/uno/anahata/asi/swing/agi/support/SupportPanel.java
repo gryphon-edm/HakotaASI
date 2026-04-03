@@ -68,7 +68,7 @@ public class SupportPanel extends ScrollablePanel {
         gridGbc.weightx = 0.0;
 
         gridGbc.gridx = 0; gridGbc.gridy = 0;
-        linksGrid.add(createLinkCard("Join our Discord", "https://discord.gg/e5Uf4fbE", 
+        linksGrid.add(createLinkCard("Join our Discord", "https://discord.gg/gwGWWxPUXE", 
                 "Connect with the community and get real-time help.", "discord.png"), gridGbc);
 
         gridGbc.gridx = 1;
