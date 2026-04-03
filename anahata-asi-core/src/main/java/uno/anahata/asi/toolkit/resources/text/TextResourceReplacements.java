@@ -10,6 +10,10 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.agi.tool.AgiToolException;
 
@@ -47,7 +51,18 @@ public class TextResourceReplacements extends AbstractTextResourceWrite {
         }
         String newContent = originalContent;
         for (TextReplacement replacement : replacements) {
-            newContent = newContent.replace(replacement.getTarget(), replacement.getReplacement());
+            String target = replacement.getTarget();
+            if (target == null || target.isEmpty()) {
+                continue;
+            }
+
+            // Create a regex that is lenient with trailing whitespace and line endings
+            // 1. Quote literals 2. Match any newline 3. Allow optional trailing whitespace
+            String regex = Stream.of(target.split("\\R", -1))
+                    .map(line -> Pattern.quote(line) + "[ \\t]*")
+                    .collect(Collectors.joining("\\R"));
+
+            newContent = newContent.replaceAll(regex, Matcher.quoteReplacement(replacement.getReplacement()));
         }
         return newContent;
     }
@@ -61,22 +76,41 @@ public class TextResourceReplacements extends AbstractTextResourceWrite {
              throw new AgiToolException("No replacements provided.");
         }
 
+        String normalizedOriginal = normalizeForComparison(originalContent);
+
         for (TextReplacement replacement : replacements) {
             String target = replacement.getTarget();
             if (target == null || target.isEmpty()) {
                 throw new AgiToolException("Replacement target cannot be null or empty.");
             }
             
-            int count = StringUtils.countMatches(originalContent, target);
+            String normalizedTarget = normalizeForComparison(target);
+            int count = StringUtils.countMatches(normalizedOriginal, normalizedTarget);
             
             if (replacement.getExpectedCount() > 0 && count != replacement.getExpectedCount()) {
-                throw new AgiToolException("Replacement failed for '" + target + "'. Expected " + replacement.getExpectedCount() + " occurrences, but found " + count);
+                throw new AgiToolException("Replacement failed for '" + target + "'. Expected " + replacement.getExpectedCount() + " occurrences, but found " + count + " (normalized comparison).");
             }
             
             if (count == 0 && replacement.getExpectedCount() != 0) {
-                 throw new AgiToolException("Target string not found in file: " + target);
+                 throw new AgiToolException("Target string not found in file (even after normalization): " + target);
             }
         }
-        // Identical content check is now in parent validate()
+    }
+
+    /**
+     * Normalizes a string for "semantic" comparison by standardizing line 
+     * endings and removing trailing whitespace from all lines.
+     * 
+     * @param s The string to normalize.
+     * @return The normalized string.
+     */
+    private String normalizeForComparison(String s) {
+        if (s == null) {
+            return null;
+        }
+        // 1. Standardize line endings to LF
+        String result = s.replace("\r\n", "\n").replace("\r", "\n");
+        // 2. Remove trailing whitespace from each line
+        return result.replaceAll("(?m)[ \t]+$", "");
     }
 }
