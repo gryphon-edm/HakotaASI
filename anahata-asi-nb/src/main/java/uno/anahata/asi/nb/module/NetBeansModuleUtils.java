@@ -49,6 +49,12 @@ public final class NetBeansModuleUtils {
      * 
      * @return The full NetBeans classpath string.
      */
+    /**
+     * Internal logic to construct the NetBeans classpath by aggregating the 
+     * system classpath, dynamic classpath, and all reachable module JARs.
+     * 
+     * @return The fully assembled classpath string.
+     */
     private static String buildNetBeansClasspath() {
         try {
             String javaClassPath = System.getProperty("java.class.path");
@@ -73,6 +79,12 @@ public final class NetBeansModuleUtils {
         }
     }
 
+    /**
+     * Retrieves the set of JAR files that constitute the classpath of the 
+     * current Anahata module and all its dependencies.
+     * 
+     * @return A Set of File objects representing the module classpath.
+     */
     private static Set<File> getModuleClassPath() {
         Set<ModuleInfo> processed = new HashSet<>();
         ModuleInfo thisModule = Modules.getDefault().ownerOf(AnahataInstaller.class);
@@ -82,6 +94,14 @@ public final class NetBeansModuleUtils {
         return getClassPath(thisModule, processed);
     }
 
+    /**
+     * Recursively traverses the dependency tree of a module to collect all 
+     * associated JAR files.
+     * 
+     * @param mi The module to start traversal from.
+     * @param processed The set of already processed modules to prevent cycles.
+     * @return A Set of JAR files for the module and its transitive dependencies.
+     */
     private static Set<File> getClassPath(ModuleInfo mi, Set<ModuleInfo> processed) {
         Set<File> ret = new HashSet<>();
         processed.add(mi);
@@ -95,6 +115,12 @@ public final class NetBeansModuleUtils {
         return ret;
     }
 
+    /**
+     * Resolves a dependency to its corresponding {@link ModuleInfo}.
+     * 
+     * @param d The dependency to resolve.
+     * @return The ModuleInfo if it's a module dependency and can be found, null otherwise.
+     */
     private static ModuleInfo getDependantModuleInfo(Dependency d) {
         Modules modules = Modules.getDefault();
         if (d.getType() == Dependency.TYPE_MODULE) {
@@ -105,6 +131,14 @@ public final class NetBeansModuleUtils {
         return null;
     }
 
+    /**
+     * Uses reflection to invoke the non-public {@code getAllJars()} method on 
+     * a {@link ModuleInfo} instance. This is necessary to get the full list 
+     * of JARs bundled with a module (including library extensions).
+     * 
+     * @param thisModule The module to inspect.
+     * @return A list of JAR files provided by the module.
+     */
     public static List<File> getAllModuleJarsUsingReflection(ModuleInfo thisModule) {
         try {
             Method getAllJarsMethod = thisModule.getClass().getMethod("getAllJars");
@@ -118,6 +152,13 @@ public final class NetBeansModuleUtils {
         return Collections.emptyList();
     }
 
+    /**
+     * Converts a set of File objects into a single classpath string using 
+     * the platform's path separator.
+     * 
+     * @param classPath The set of files to process.
+     * @return A formatted classpath string.
+     */
     private static String filesToClassPathString(Set<File> classPath) {
         StringBuilder sb = new StringBuilder();
         for (File jarFile : classPath) {
