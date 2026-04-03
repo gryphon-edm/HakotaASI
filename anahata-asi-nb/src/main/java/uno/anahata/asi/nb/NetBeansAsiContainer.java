@@ -114,23 +114,30 @@ public class NetBeansAsiContainer extends AbstractSwingAsiContainer {
      * <p>
      * Implementation details: Establishes a reactive bridge between the core 
      * Resource Manager and the NetBeans Annotation system. 
-     * The pulse logic is filtered to only trigger refreshes if the session is logically open.
+     * The pulse logic is triggered for nickname updates, resource changes, 
+     * and session visibility (open/closed) transitions.
      * </p>
      */
     @Override
     public void onAgiRegistered(Agi agi) {
         log.info("Attaching reactive annotation pulse for agi session: {}", agi.getShortId());
 
-        // REACTIVE BRIDGE: Listen for resource changes and nickname updates to trigger IDE refreshes
+        // REACTIVE BRIDGE: Trigger IDE refresh on nickname, resources, or visibility changes
         PropertyChangeListener listener = evt -> {
-            if (agi.isOpen()) {
-                log.info("Reactive pulse trigger ('{}') in session '{}'. Firing IDE annotation refresh.", evt.getPropertyName(), agi.getDisplayName());
-                AnahataAnnotationProvider.fireRefresh(null, null);
+            String prop = evt.getPropertyName();
+            boolean isVisibilityChange = "open".equals(prop);
+            
+            // Only fire refresh for open sessions or during visibility transitions
+            if (isVisibilityChange || agi.isOpen()) {
+                if ("nickname".equals(prop) || "resources".equals(prop) || isVisibilityChange) {
+                    log.info("Reactive pulse trigger ('{}') in session '{}'. Firing IDE annotation refresh.", prop, agi.getDisplayName());
+                    AnahataAnnotationProvider.fireRefresh(null, null);
+                }
             }
         };
 
         agi.getResourceManager().addPropertyChangeListener("resources", listener);
-        agi.addPropertyChangeListener("nickname", listener);
+        agi.addPropertyChangeListener(listener);
         sessionListeners.put(agi.getConfig().getSessionId(), listener);
     }
 
@@ -146,7 +153,7 @@ public class NetBeansAsiContainer extends AbstractSwingAsiContainer {
         if (listener != null) {
             log.info("Cleaning up annotation pulse for agi session: {}", agi.getShortId());
             agi.getResourceManager().removePropertyChangeListener("resources", listener);
-            agi.removePropertyChangeListener("nickname", listener);
+            agi.removePropertyChangeListener(listener);
         }
     }
 
