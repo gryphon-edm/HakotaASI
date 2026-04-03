@@ -230,8 +230,9 @@ public class Resources extends AnahataToolkit {
      * @throws Exception if replacements fail.
      */
     @AgiTool("Performs multiple text replacements in a text resource in the RAG message. "
+            + "All occurrences of all replacements are replaced. "
             + "Returns a standard unified diff of the changes applied.\n"
-            + "**Call this tool once per resource only**: If you need to do two replacements in one file, use two TextReplacement in the same tool call. "
+            + "**On any given turn, you can only use this tool once per resource **: If you need to do two replacements in one file, use two TextReplacement in the same call (Because If you do it in two tool calls, the second one will fail optimsitc locking validation). "
             + "This tool will fail if the refered resource is not in context.")
     public String findAndReplaceInTextResource(@AgiToolParam("The set of replacements.") TextResourceReplacements replacements) throws Exception {
         replacements.validate(getAgi());
