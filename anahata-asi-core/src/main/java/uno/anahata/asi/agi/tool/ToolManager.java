@@ -59,7 +59,7 @@ import uno.anahata.asi.agi.tool.spi.java.JavaObjectToolkit;
 public class ToolManager extends BasicPropertyChangeSource implements ContextProvider, Rebindable {
 
     /** A static counter for generating unique, sequential tool call IDs. */
-    private static final AtomicInteger callIdGenerator = new AtomicInteger(0);
+    //private static final AtomicInteger callIdGenerator = new AtomicInteger(0);
 
     /** Whether this manager is currently providing context augmentation. */
     @Setter
@@ -110,7 +110,7 @@ public class ToolManager extends BasicPropertyChangeSource implements ContextPro
      * Resets the static tool call ID counter to zero.
      */
     public void reset() {
-        callIdGenerator.set(0);
+        //callIdGenerator.set(0);
         log.info("ToolManager call ID counter has been reset.");
     }
 
@@ -169,7 +169,7 @@ public class ToolManager extends BasicPropertyChangeSource implements ContextPro
      */
     public AbstractToolCall createToolCall(AbstractModelMessage amm, String id, String name, Map<String, Object> jsonArgs) {
         //String callId = (id == null || id.isEmpty()) ? String.valueOf(callIdGenerator.incrementAndGet()) : id;
-        String callId = null;
+        String callId = id;
 
         Optional<? extends AbstractTool> toolOpt = findToolByName(name);
         log.info("Found tool: " + toolOpt);
