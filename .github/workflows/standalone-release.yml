@@ -47,9 +47,11 @@ jobs:
       - name: Prepare jpackage Input
         shell: bash
         run: |
-          mkdir -p package-input
+          mkdir -p package-input/lib
+          # Copy the main executable jar to the root
           cp anahata-asi-desktop/target/anahata-asi-desktop-${{ env.VERSION }}.jar package-input/
-          mvn -f anahata-asi-desktop/pom.xml dependency:copy-dependencies -DincludeScope=runtime -DoutputDirectory=package-input
+          # Copy all runtime dependencies to the lib folder
+          mvn -f anahata-asi-desktop/pom.xml dependency:copy-dependencies -DincludeScope=runtime -DoutputDirectory=package-input/lib
           # Copy assets for jpackage flags
           cp anahata-asi-desktop/src/main/resources/icon.png .
           cp anahata-asi-desktop/src/main/resources/splash.png .
@@ -62,7 +64,6 @@ jobs:
                    --input package-input \
                    --main-jar "anahata-asi-desktop-${{ env.VERSION }}.jar" \
                    --main-class uno.anahata.asi.standalone.SwingMain \
-                   --class-path "package-input/*" \
                    --icon icon.png \
                    --java-options "-splash:splash.png" \
                    --type app-image \
