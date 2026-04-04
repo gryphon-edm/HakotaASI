@@ -80,6 +80,14 @@ public abstract class BlobPart extends AbstractPart {
     }
 
     @Override
+    public int getTokenCount() {
+        // MULTIMODAL ACCOUNTING: Binary parts have a fixed cost in most models 
+        // (Gemini is ~258). This override prevents 'Binary Inflation' where 
+        // base64 strings are treated as thousands of text tokens.
+        return 258;
+    }
+
+    @Override
     protected int getDefaultMaxDepth() {
         return getAgiConfig().getDefaultBlobPartMaxDepth();
     }
