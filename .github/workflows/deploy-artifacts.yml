@@ -56,7 +56,6 @@ jobs:
           body: |
             ${{ startsWith(github.ref, 'refs/tags/') && 'Official Release' || '🚀 This is an automated rolling snapshot of the main branch. Use with caution!' }}
           files: |
-            anahata-asi-desktop/target/*.jar
             anahata-asi-nb/target/*.nbm
           draft: false
           prerelease: ${{ !startsWith(github.ref, 'refs/tags/') }}
