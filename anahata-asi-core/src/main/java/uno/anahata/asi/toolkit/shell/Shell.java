@@ -12,6 +12,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import lombok.AllArgsConstructor;
+import uno.anahata.asi.agi.message.RagMessage;
 import uno.anahata.asi.agi.tool.spi.java.JavaMethodToolResponse;
 import uno.anahata.asi.agi.tool.AnahataToolkit;
 import uno.anahata.asi.toolkit.shell.ShellExecutionResult;
@@ -50,10 +51,23 @@ public class Shell extends AnahataToolkit {
     @Override
     public List<String> getSystemInstructions() throws Exception {
         StringBuilder sb = new StringBuilder();
-        sb.append(" Host Environment Variables\n");
+        sb.append("## Shell Toolkit\n");
+        sb.append("- **Current Working Directory**: ").append(System.getProperty("user.dir")).append("\n\n");
+        sb.append("- **Host Environment Variables**:\n");
         Map<String, String> sortedEnv = new TreeMap<>(System.getenv());
         sortedEnv.forEach((k, v) -> sb.append("- **").append(k).append("**: ").append(v).append("\n"));
         return List.of(sb.toString());
+    }
+
+    /** 
+     * {@inheritDoc} 
+     * 
+     * 
+     */
+    @Override
+    public void populateMessage(RagMessage ragMessage) throws Exception {
+        String cwd = System.getProperty("user.dir");
+        ragMessage.addTextPart("## Shell Toolkit Context\n- **Current Working Directory**: " + cwd + "\n");
     }
 
     /**
