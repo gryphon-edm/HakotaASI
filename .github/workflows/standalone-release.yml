@@ -71,14 +71,14 @@ jobs:
         shell: bash
         run: |
           jpackage --name "Anahata-ASI-Desktop" \
---app-version "${{ env.JPACKAGE_VERSION }}" \
+                   --app-version "${{ env.JPACKAGE_VERSION }}" \
                    --input package-input \
                    --main-jar "anahata-asi-desktop-${{ env.VERSION }}.jar" \
                    --main-class uno.anahata.asi.standalone.SwingMain \
                    --icon "${{ env.ICON_FILE }}" \
                    --java-options "-splash:splash.png" \
                    --type app-image \
---dest dist \
+                   --dest dist \
                    --verbose
           
           # Zip/Tar the result for distribution
