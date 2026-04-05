@@ -98,8 +98,16 @@ public class CwGcPanel extends JPanel {
             resourcesListener.unbind();
         }
         
-        this.historyListener = new EdtPropertyChangeListener(this, agi.getContextManager(), "history", evt -> refresh());
-        this.resourcesListener = new EdtPropertyChangeListener(this, agi.getResourceManager(), "resources", evt -> refresh());
+        this.historyListener = new EdtPropertyChangeListener(this, agi.getContextManager(), "history", evt -> {
+            if (isShowing()) {
+                refresh();
+            }
+        });
+        this.resourcesListener = new EdtPropertyChangeListener(this, agi.getResourceManager(), "resources", evt -> {
+            if (isShowing()) {
+                refresh();
+            }
+        });
     }
 
     /**
@@ -235,7 +243,9 @@ public class CwGcPanel extends JPanel {
     public void reload() {
         this.agi = agiPanel.getAgi();
         setupListeners();
-        refresh();
+        if (isShowing()) {
+            refresh();
+        }
     }
 
     /**
@@ -316,6 +326,5 @@ public class CwGcPanel extends JPanel {
     @Override
     public void addNotify() {
         super.addNotify();
-        refresh();
     }
 }

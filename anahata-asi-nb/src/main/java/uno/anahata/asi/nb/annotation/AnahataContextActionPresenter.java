@@ -15,6 +15,7 @@ import org.openide.util.actions.Presenter;
 import uno.anahata.asi.nb.AgiTopComponent;
 import uno.anahata.asi.nb.AnahataInstaller;
 import uno.anahata.asi.agi.Agi;
+import uno.anahata.asi.swing.icons.DeleteIcon;
 
 /**
  * A presenter for the dynamic "AI Context" context menu.
@@ -105,10 +106,7 @@ public class AnahataContextActionPresenter extends AbstractAction implements Pre
 
         // 2. Remove Submenu
         JMenu removeMenu = new JMenu("Remove from Context");
-        Image delImg = ImageUtilities.loadImage("icons/delete.png");
-        if (delImg != null) {
-            removeMenu.setIcon(new ImageIcon(delImg.getScaledInstance(16, 16, Image.SCALE_SMOOTH)));
-        }
+        removeMenu.setIcon(new DeleteIcon(16));
 
         for (Agi agi : activeAgis) {
             boolean hasAny = false;

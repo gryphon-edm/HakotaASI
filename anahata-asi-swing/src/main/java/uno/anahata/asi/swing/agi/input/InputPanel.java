@@ -40,6 +40,7 @@ import uno.anahata.asi.swing.icons.FramesIcon;
 import uno.anahata.asi.swing.icons.IconUtils;
 import uno.anahata.asi.swing.icons.RestartIcon;
 import uno.anahata.asi.swing.icons.RunAndSendIcon;
+import uno.anahata.asi.swing.icons.StopIcon;
 import uno.anahata.asi.swing.icons.ScreenshotIcon;
 import uno.anahata.asi.swing.icons.SendIcon;
 import uno.anahata.asi.swing.internal.AnyChangeDocumentListener;
@@ -291,7 +292,7 @@ public class InputPanel extends JPanel {
         sendButton = new JButton("Send", new SendIcon(16));
         sendButton.addActionListener(e -> sendMessage());
         
-        stopButton = new JButton("Stop", IconUtils.getIcon("delete.png", 16, 16));
+        stopButton = new JButton("Stop", new StopIcon(16));
         stopButton.addActionListener(e -> agi.stop());
         stopButton.setVisible(false);
 

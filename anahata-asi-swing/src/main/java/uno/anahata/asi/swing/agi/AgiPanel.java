@@ -120,7 +120,7 @@ public class AgiPanel extends ScrollablePanel {
         
         // TAB SELECTION LISTENER: Just-in-time refresh for metabolism metrics
         tabbedPane.addChangeListener(e -> {
-            if (tabbedPane.getSelectedComponent() == cwGcPanel) {
+            if (cwGcPanel.isShowing()) {
                 cwGcPanel.refresh();
             }
         });
