@@ -33,7 +33,6 @@ public class TeeInputOutput implements InputOutput {
      * @param delegate The NetBeans InputOutput instance to wrap and mirror.
      */
     public TeeInputOutput(InputOutput delegate) {
-        log.info("TeeInputOutput: Constructor called");
         this.delegate = delegate;
         this.teeOut = new TeeOutputWriter(delegate.getOut(), capturedOutWriter);
         this.teeErr = new TeeOutputWriter(delegate.getErr(), capturedErrWriter);
@@ -46,7 +45,6 @@ public class TeeInputOutput implements InputOutput {
      * @return The captured standard output as a String.
      */
     public String getCapturedOutput() {
-        log.info("TeeInputOutput: getCapturedOutput called");
         return capturedOutWriter.toString();
     }
 
@@ -57,7 +55,6 @@ public class TeeInputOutput implements InputOutput {
      * @return The captured error output as a String.
      */
     public String getCapturedError() {
-        log.info("TeeInputOutput: getCapturedError called");
         return capturedErrWriter.toString();
     }
 
@@ -68,7 +65,6 @@ public class TeeInputOutput implements InputOutput {
      */
     @Override
     public OutputWriter getOut() {
-        log.info("TeeInputOutput: getOut called");
         return teeOut;
     }
 
@@ -79,7 +75,6 @@ public class TeeInputOutput implements InputOutput {
      */
     @Override
     public OutputWriter getErr() {
-        log.info("TeeInputOutput: getErr called");
         return teeErr;
     }
 
@@ -89,7 +84,6 @@ public class TeeInputOutput implements InputOutput {
      */
     @Override
     public Reader getIn() {
-        log.info("TeeInputOutput: getIn called");
         return new StringReader(getCapturedOutput());
     }
 
@@ -99,7 +93,6 @@ public class TeeInputOutput implements InputOutput {
      */
     @Override
     public void closeInputOutput() {
-        log.info("TeeInputOutput: closeInputOutput called");
         teeOut.close();
         teeErr.close();
         delegate.closeInputOutput();
@@ -111,7 +104,6 @@ public class TeeInputOutput implements InputOutput {
      */
     @Override
     public boolean isClosed() {
-        log.info("TeeInputOutput: isClosed called");
         return delegate.isClosed();
     }
 
@@ -121,7 +113,6 @@ public class TeeInputOutput implements InputOutput {
      */
     @Override
     public Reader flushReader() {
-        log.info("TeeInputOutput: flushReader called");
         return delegate.flushReader();
     }
 
@@ -131,7 +122,6 @@ public class TeeInputOutput implements InputOutput {
      */
     @Override
     public void select() {
-        log.info("TeeInputOutput: select() called");
         delegate.select();
     }
 
@@ -141,7 +131,6 @@ public class TeeInputOutput implements InputOutput {
      */
     @Override
     public boolean isErrSeparated() {
-        log.info("TeeInputOutput: isErrSeparated called");
         return delegate.isErrSeparated();
     }
 
@@ -151,7 +140,6 @@ public class TeeInputOutput implements InputOutput {
      */
     @Override
     public void setErrSeparated(boolean value) {
-        log.info("TeeInputOutput: setErrSeparated called with value: {}", value);
         delegate.setErrSeparated(value);
     }
 
@@ -161,7 +149,6 @@ public class TeeInputOutput implements InputOutput {
      */
     @Override
     public boolean isFocusTaken() {
-        log.info("TeeInputOutput: isFocusTaken called");
         return delegate.isFocusTaken();
     }
 
@@ -171,7 +158,6 @@ public class TeeInputOutput implements InputOutput {
      */
     @Override
     public void setFocusTaken(boolean value) {
-        log.info("TeeInputOutput: setFocusTaken called with value: {}", value);
         delegate.setFocusTaken(value);
     }
 
@@ -181,7 +167,6 @@ public class TeeInputOutput implements InputOutput {
      */
     @Override
     public void setOutputVisible(boolean value) {
-        log.info("TeeInputOutput: setOutputVisible called with value: {}", value);
         delegate.setOutputVisible(value);
     }
 
@@ -191,7 +176,6 @@ public class TeeInputOutput implements InputOutput {
      */
     @Override
     public void setErrVisible(boolean value) {
-        log.info("TeeInputOutput: setErrVisible called with value: {}", value);
         delegate.setErrVisible(value);
     }
 
@@ -201,7 +185,6 @@ public class TeeInputOutput implements InputOutput {
      */
     @Override
     public void setInputVisible(boolean value) {
-        log.info("TeeInputOutput: setInputVisible called with value: {}", value);
         delegate.setInputVisible(value);
     }
 
@@ -225,7 +208,6 @@ public class TeeInputOutput implements InputOutput {
             super(w1);
             this.w1 = w1;
             this.w2 = w2;
-            log.info("TeeOutputWriter: Constructor called");
         }
 
         /**
@@ -273,7 +255,6 @@ public class TeeInputOutput implements InputOutput {
          */
         @Override
         public void flush() {
-            log.info("TeeOutputWriter: flush called");
             try { w1.flush(); w2.flush(); } catch (IOException e) { handleException(e); }
         }
 
@@ -283,7 +264,6 @@ public class TeeInputOutput implements InputOutput {
          */
         @Override
         public void close() {
-            log.info("TeeOutputWriter: close called");
             try { w1.close(); w2.close(); } catch (IOException e) { handleException(e); }
         }
 
@@ -293,7 +273,6 @@ public class TeeInputOutput implements InputOutput {
          */
         @Override
         public void reset() throws IOException {
-            log.info("TeeOutputWriter: reset called");
             if (w1 instanceof OutputWriter) {
                 ((OutputWriter) w1).reset();
             }
