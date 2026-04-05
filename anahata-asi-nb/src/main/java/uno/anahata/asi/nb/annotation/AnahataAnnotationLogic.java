@@ -143,6 +143,9 @@ public class AnahataAnnotationLogic {
             
             LOG.info("DIAGNOSTIC: Annotating PROJECT node: " + fo.getName() + " (Resolved Dir: " + projectDir.getPath() + ")");
             
+            //While this looks logical, it doesnt seem to work, projects get incorrectly annotatted 
+            //Map<Agi, Integer> fileCounts = FilesContextActionLogic.getSessionFileCounts(res, res.isFolder());
+            
             Map<Agi, Integer> fileCounts = FilesContextActionLogic.getSessionFileCounts(projectDir, true);
             for (Agi agi : activeAgis) {
                 int providerCount = getProvidingProviders(agi, res).size();
