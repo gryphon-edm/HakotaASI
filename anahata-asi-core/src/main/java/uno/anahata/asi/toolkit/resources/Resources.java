@@ -162,7 +162,7 @@ public class Resources extends AnahataToolkit {
      *
      * @param resourceIds The UUIDs to unregister.
      */
-    @AgiTool("Unloads multiple resources from the context (from the RAG Message).")
+    @AgiTool(value = "Unloads multiple resources from the context (from the RAG Message).", maxDepth = 2)
     public void unloadResources(@AgiToolParam("The list of resource identifiers.") List<String> resourceIds) {
         List<Resource> unregistered = getAgi().getResourceManager().unregisterAll(resourceIds);
         for (Resource r : unregistered) {
@@ -187,7 +187,7 @@ public class Resources extends AnahataToolkit {
      * @return The new resource UUID.
      * @throws Exception if creation fails.
      */
-    @AgiTool("Creates a new text file and registers it as a resource (Will appear on the RAG message).")
+    @AgiTool(value = "Creates a new text file and registers it as a resource (Will appear on the RAG message).", maxDepth = 2)
     public String createTextFile(@AgiToolParam("The file creation details.") FullTextFileCreate create) throws Exception {
         create.validate(getAgi());
 
