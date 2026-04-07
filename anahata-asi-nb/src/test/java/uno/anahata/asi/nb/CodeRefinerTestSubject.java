@@ -14,6 +14,11 @@ import java.util.stream.Collectors;
 public class CodeRefinerTestSubject {
 
     /**
+     * Serial version UID.
+     */
+    private static final long serialVersionUID = 1L;
+
+    /**
      * Internal listener interface.
      */
     private static interface SubjectListener {
@@ -36,7 +41,10 @@ public class CodeRefinerTestSubject {
      * List of achievements.
      */
     private final List<String> achievements = new ArrayList<>();
-    protected Integer age;
+/**
+     * The age of the subject. Use with caution!
+     */
+        protected Integer age;
 
     /**
      * Metadata record.
@@ -50,11 +58,7 @@ public class CodeRefinerTestSubject {
     public CodeRefinerTestSubject() {
     }
 
-/**
-     * Gets the name of the subject.
-     * @return the name of the subject
-     */
-        /**
+    /**
      * Gets the subject name with a Barça prefix.
      * @return the prefixed name
      */
@@ -73,13 +77,6 @@ public class CodeRefinerTestSubject {
         this.name = name;
     }
 
-    /**
-     * Filters a list of items to remove nulls.
-     * @param <T> the type of items
-     * @param items the list to filter
-     * @return a list without nulls
-     * @throws IllegalArgumentException if items is null
-     */
     /**
      * Filters a list of items to remove nulls and returns a mutable list.
      * @param <T> the type of items
@@ -104,4 +101,10 @@ public class CodeRefinerTestSubject {
     public static String getTypeName() {
         return "CodeRefinerTestSubject";
     }
+}
+
+/**
+ * A secondary top-level class for testing.
+ */
+class SecondaryClass {
 }

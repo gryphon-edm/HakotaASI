@@ -224,8 +224,10 @@ public class ToolbarPanel extends JPanel {
         togglePrunedButton.setToolTipText(showPruned ? 
                 "Showing pruned parts, click to hide" : "Not showing pruned parts, click to show");
         
-        toggleLocalToolsButton.setSelected(config.isLocalToolsEnabled());
-        toggleLocalToolsButton.setToolTipText(config.isLocalToolsEnabled() ? 
+        boolean localToolsEnabled = config.isLocalToolsEnabled();
+        toggleLocalToolsButton.setSelected(localToolsEnabled);
+        toggleLocalToolsButton.setIcon(IconUtils.getIcon(localToolsEnabled ? "java.png" : "mapacho.png", ICON_SIZE));
+        toggleLocalToolsButton.setToolTipText(localToolsEnabled ? 
                 "Java Tools enabled: click to disable" : "Java Tools disabled: click to enable");
         
         toggleHostedToolsButton.setSelected(config.isHostedToolsEnabled());

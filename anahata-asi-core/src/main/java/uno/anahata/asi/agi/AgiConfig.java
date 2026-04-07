@@ -52,9 +52,9 @@ public class AgiConfig extends BasicPropertyChangeSource {
     private Agi agi;
 
     /**
-     * The class of the AI provider currently selected for this session.
+     * The UUID of the AI provider currently selected for this session.
      */
-    private Class<? extends AbstractAgiProvider> selectedProviderClass;
+    private String selectedProviderUuid;
     
     /**
      * The ID of the AI model currently selected for this session.
@@ -62,9 +62,9 @@ public class AgiConfig extends BasicPropertyChangeSource {
     private String selectedModelId;
 
     /**
-     * The list of AI provider classes available for this agi session.
+     * The list of AI provider UUIDs available for this agi session.
      */
-    private List<Class<? extends AbstractAgiProvider>> providerClasses = new ArrayList<>();
+    private List<String> providerUuids = new ArrayList<>();
     
     /**
      * The list of tool classes to be used in this agi session.
@@ -152,11 +152,11 @@ public class AgiConfig extends BasicPropertyChangeSource {
     /** The default response modalities for this agi session. */
     private List<String> defaultResponseModalities = new ArrayList<>(List.of("TEXT"));
 
-    public void setSelectedProviderClass(Class<? extends AbstractAgiProvider> selectedProviderClass) {
-        Class<? extends AbstractAgiProvider> old = this.selectedProviderClass;
-        if (!Objects.equals(old, selectedProviderClass)) {
-            this.selectedProviderClass = selectedProviderClass;
-            propertyChangeSupport.firePropertyChange("selectedProviderClass", old, selectedProviderClass);
+    public void setSelectedProviderUuid(String selectedProviderUuid) {
+        String old = this.selectedProviderUuid;
+        if (!Objects.equals(old, selectedProviderUuid)) {
+            this.selectedProviderUuid = selectedProviderUuid;
+            propertyChangeSupport.firePropertyChange("selectedProviderUuid", old, selectedProviderUuid);
         }
     }
 

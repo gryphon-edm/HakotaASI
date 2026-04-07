@@ -1,6 +1,6 @@
 package uno.anahata.asi.standalone;
 
-import uno.anahata.asi.standalone.swing.StandaloneMainPanel;
+import uno.anahata.asi.standalone.swing.AsiDesktopMainPanel;
 import com.formdev.flatlaf.FlatLightLaf;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -8,7 +8,7 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import lombok.extern.slf4j.Slf4j;
-import uno.anahata.asi.standalone.swing.StandaloneAsiContainer;
+import uno.anahata.asi.standalone.swing.AsiDesktopAsiContainer;
 import uno.anahata.asi.swing.icons.IconUtils;
 
 /**
@@ -30,7 +30,7 @@ public class SwingMain {
         }
 
         // Core application setup
-        StandaloneAsiContainer container = new StandaloneAsiContainer();
+        AsiDesktopAsiContainer container = new AsiDesktopAsiContainer();
         
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Anahata ASI");
@@ -45,7 +45,7 @@ public class SwingMain {
             }
 
             // Create the StandaloneMainPanel which manages multiple sessions
-            StandaloneMainPanel mainPanel = new StandaloneMainPanel(container);
+            AsiDesktopMainPanel mainPanel = new AsiDesktopMainPanel(container);
             frame.add(mainPanel, BorderLayout.CENTER);
 
             frame.pack();

@@ -15,13 +15,13 @@ import uno.anahata.asi.swing.agi.SwingAgiConfig;
  * @author anahata
  */
 @Slf4j
-public class StandaloneAgiConfig extends SwingAgiConfig {
+public class AsiDesktopAgiConfig extends SwingAgiConfig {
     
     {
         // Automatically register the Gemini provider for standalone use.
-        getProviderClasses().add(GeminiAgiProvider.class);
+        getProviderUuids().add("Gemini");
         
-        setSelectedProviderClass(GeminiAgiProvider.class);
+        setSelectedProviderUuid("Gemini");
         setSelectedModelId("models/gemini-3-flash-preview");
     }
     
@@ -30,7 +30,7 @@ public class StandaloneAgiConfig extends SwingAgiConfig {
      * 
      * @param asiConfig The parent ASI container.
      */
-    public StandaloneAgiConfig(AbstractAsiContainer asiConfig) {
+    public AsiDesktopAgiConfig(AbstractAsiContainer asiConfig) {
         super(asiConfig);
     }
 
@@ -40,7 +40,7 @@ public class StandaloneAgiConfig extends SwingAgiConfig {
      * @param asiConfig The parent ASI container.
      * @param sessionId The unique ID of the session being restored.
      */
-    public StandaloneAgiConfig(AbstractAsiContainer asiConfig, String sessionId) {
+    public AsiDesktopAgiConfig(AbstractAsiContainer asiConfig, String sessionId) {
         super(asiConfig, sessionId);
         log.info("StandaloneAgiConfig registering: {}", GeminiAgiProvider.class);
     }

@@ -120,7 +120,7 @@ public class Refactor extends AnahataToolkit{
             return "Member '" + memberName + "' not found in " + filePath;
         }
 
-        RenameRefactoring refactoring = new RenameRefactoring(Lookups.fixed(handle, fo));
+        RenameRefactoring refactoring = new RenameRefactoring(Lookups.fixed(handle));
         refactoring.setNewName(newName);
 
         return executeRefactoring(refactoring, "Rename Member " + memberName + " to " + newName);
@@ -558,7 +558,7 @@ public class Refactor extends AnahataToolkit{
         }
 
         // CRITICAL: For Java elements, the query lookup MUST contain a TreePathHandle
-        WhereUsedQuery query = new WhereUsedQuery(Lookups.fixed(handle, fo));
+        WhereUsedQuery query = new WhereUsedQuery(Lookups.fixed(handle));
         query.putValue(WhereUsedQuery.FIND_REFERENCES, true);
         query.putValue(WhereUsedQuery.SEARCH_IN_COMMENTS, searchInComments);
 

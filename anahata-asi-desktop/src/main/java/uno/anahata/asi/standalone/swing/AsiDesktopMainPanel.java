@@ -26,10 +26,10 @@ import uno.anahata.asi.swing.internal.EdtPropertyChangeListener;
  * @author gemini-3-flash-preview
  */
 @Slf4j
-public class StandaloneMainPanel extends JPanel {
+public class AsiDesktopMainPanel extends JPanel {
 
     /** The parent ASI container managing the global state. */
-    private final StandaloneAsiContainer asiContainer;
+    private final AsiDesktopAsiContainer asiContainer;
     
     /** The sidebar panel for switching between active sessions. */
     private final AsiCardsContainerPanel asiContainerPanel;
@@ -45,7 +45,7 @@ public class StandaloneMainPanel extends JPanel {
      * 
      * @param container The standalone ASI container.
      */
-    public StandaloneMainPanel(StandaloneAsiContainer container) {
+    public AsiDesktopMainPanel(AsiDesktopAsiContainer container) {
         this.asiContainer = container;
         // Register this panel as the UI display for the container
         container.setMainPanel(this);

@@ -10,6 +10,7 @@ import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
 import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.agi.AgiConfig;
+import uno.anahata.asi.gemini.GeminiAgiProvider;
 import uno.anahata.asi.nb.annotation.AnahataAnnotationProvider;
 import uno.anahata.asi.nb.ui.render.FullTextResourceUpdateRenderer;
 import uno.anahata.asi.nb.ui.render.TextResourceReplacementsRenderer;
@@ -62,6 +63,9 @@ public class NetBeansAsiContainer extends AbstractSwingAsiContainer {
      */
     public NetBeansAsiContainer() {
         super("netbeans");
+        if (getProvider("Gemini") == null) {
+            registerProvider(new GeminiAgiProvider());
+        }
     }
 
     /**

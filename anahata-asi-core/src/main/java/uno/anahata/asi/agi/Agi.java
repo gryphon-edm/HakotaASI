@@ -202,7 +202,7 @@ public class Agi extends BasicPropertyChangeSource {
      * @return The list of shared provider instances.
      */
     public List<AbstractAgiProvider> getProviders() {
-        return config.getProviderClasses().stream()
+        return config.getProviderUuids().stream()
                 .map(config.getAsiContainer()::getProvider)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
@@ -299,10 +299,10 @@ public class Agi extends BasicPropertyChangeSource {
         
         // Mirror state to the DNA (AgiConfig)
         if (selectedModel != null) {
-            this.config.setSelectedProviderClass(selectedModel.getProvider().getClass());
+            this.config.setSelectedProviderUuid(selectedModel.getProvider().getUuid());
             this.config.setSelectedModelId(selectedModel.getModelId());
         } else {
-            this.config.setSelectedProviderClass(null);
+            this.config.setSelectedProviderUuid(null);
             this.config.setSelectedModelId(null);
         }
 

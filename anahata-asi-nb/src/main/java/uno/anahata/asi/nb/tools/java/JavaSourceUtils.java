@@ -92,12 +92,11 @@ public class JavaSourceUtils {
             @Override
             public void run(CompilationController parameter) throws Exception {
                 parameter.toPhase(JavaSource.Phase.ELEMENTS_RESOLVED);
-                TypeElement te = parameter.getTopLevelElements().isEmpty() ? null : parameter.getTopLevelElements().get(0);
-                if (te != null) {
+                for (TypeElement te : parameter.getTopLevelElements()) {
                     for (Element e : te.getEnclosedElements()) {
                         if (e.getSimpleName().contentEquals(memberName)) {
                             handle[0] = TreePathHandle.create(e, parameter);
-                            break;
+                            return;
                         }
                     }
                 }
@@ -125,9 +124,14 @@ public class JavaSourceUtils {
             @Override
             public void run(CompilationController parameter) throws Exception {
                 parameter.toPhase(JavaSource.Phase.ELEMENTS_RESOLVED);
-                TypeElement te = parameter.getTopLevelElements().isEmpty() ? null : parameter.getTopLevelElements().get(0);
-                if (te != null) {
-                    handle[0] = TreePathHandle.create(te, parameter);
+                for (TypeElement te : parameter.getTopLevelElements()) {
+                    if (te.getSimpleName().contentEquals(fo.getName())) {
+                        handle[0] = TreePathHandle.create(te, parameter);
+                        return;
+                    }
+                }
+                if (!parameter.getTopLevelElements().isEmpty()) {
+                    handle[0] = TreePathHandle.create(parameter.getTopLevelElements().get(0), parameter);
                 }
             }
         }, true);
@@ -339,8 +343,7 @@ public class JavaSourceUtils {
             @Override
             public void run(CompilationController parameter) throws Exception {
                 parameter.toPhase(JavaSource.Phase.ELEMENTS_RESOLVED);
-                TypeElement te = parameter.getTopLevelElements().isEmpty() ? null : parameter.getTopLevelElements().get(0);
-                if (te != null) {
+                for (TypeElement te : parameter.getTopLevelElements()) {
                     for (Element e : te.getEnclosedElements()) {
                         if (memberNames.contains(e.getSimpleName().toString())) {
                             if (e instanceof ExecutableElement ee) {
@@ -374,8 +377,7 @@ public class JavaSourceUtils {
             @Override
             public void run(CompilationController parameter) throws Exception {
                 parameter.toPhase(JavaSource.Phase.ELEMENTS_RESOLVED);
-                TypeElement te = parameter.getTopLevelElements().isEmpty() ? null : parameter.getTopLevelElements().get(0);
-                if (te != null) {
+                for (TypeElement te : parameter.getTopLevelElements()) {
                     for (Element e : te.getEnclosedElements()) {
                         if (memberNames.contains(e.getSimpleName().toString())) {
                             members.add((MemberInfo) MemberInfo.create(e, parameter));

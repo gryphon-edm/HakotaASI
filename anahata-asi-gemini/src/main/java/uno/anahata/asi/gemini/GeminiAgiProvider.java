@@ -9,6 +9,7 @@ import java.util.stream.StreamSupport;
 import lombok.Getter;
 import uno.anahata.asi.agi.provider.AbstractAgiProvider;
 import uno.anahata.asi.agi.provider.AbstractModel;
+import uno.anahata.asi.agi.provider.TokenizerType;
 
 /**
  * The concrete implementation of the {@code AbstractAgiProvider} for the Google
@@ -24,6 +25,8 @@ public class GeminiAgiProvider extends AbstractAgiProvider {
 
     public GeminiAgiProvider() {
         super("Gemini");
+        setDisplayName("Gemini-genai-java-sdk (Google's official genai Java SDK)");
+        setTokenizerType(TokenizerType.GEMINI);
     }
 
     /**

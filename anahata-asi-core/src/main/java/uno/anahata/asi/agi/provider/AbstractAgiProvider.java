@@ -3,7 +3,6 @@
  */
 package uno.anahata.asi.agi.provider;
 
-import java.awt.Desktop;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,10 +11,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.AbstractAsiContainer;
 
@@ -26,25 +27,51 @@ import uno.anahata.asi.AbstractAsiContainer;
  * @author anahata-gemini-pro-2.5
  */
 @Getter
+@Setter
 @Slf4j
 public abstract class AbstractAgiProvider {
+
+    /**
+     * The unique UUID for this specific provider instance.
+     * Crucial for distinguishing between multiple instances of the same
+     * provider class (e.g., two different Ollama endpoints).
+     */
+    private String uuid;
+
+    /**
+     * The user-facing display name for this instance (e.g., 'Groq Cloud').
+     */
+    private String displayName;
+
+    /**
+     * The type of tokenizer used by this provider.
+     * This determines how accurately the Context Window Garbage Collector
+     * can estimate the token count before making an API call.
+     */
+    private TokenizerType tokenizerType = TokenizerType.ESTIMATE;
+
     /** The internal cache of loaded API keys, reloaded from disk on change. */
     private volatile List<String> keyPool;
-    /** The human-readable and logical identifier for this provider (e.g., 'Gemini'). */
-    private final String providerId;
+
     /** Atomic counter for round-robin key selection. */
     private final AtomicInteger round = new AtomicInteger(0);
-    
-    // Transient cache for the models
+
     /** Lazy-loaded cache of models discovered via the provider's API. */
     private transient List<? extends AbstractModel> models;
 
     /**
-     * Constructs a new provider instance.
-     * @param providerId The unique ID for this provider (e.g., "gemini").
+     * No-arg constructor required for Kryo serialization and dynamic instantiation.
      */
-    public AbstractAgiProvider(String providerId) {
-        this.providerId = providerId;
+    public AbstractAgiProvider() {
+        this.uuid = UUID.randomUUID().toString();
+    }
+
+    /**
+     * Constructs a new provider instance with a specific UUID.
+     * @param uuid The unique ID for this instance.
+     */
+    public AbstractAgiProvider(String uuid) {
+        this.uuid = uuid;
     }
 
     /**
@@ -54,6 +81,16 @@ public abstract class AbstractAgiProvider {
      * @return A list of provider-specific {@link AbstractModel} objects.
      */
     public abstract List<? extends AbstractModel> listModels();
+
+    /**
+     * Compatibility alias for {@code getUuid()} to maintain integration with existing 
+     * IDE and UI components that expect a provider ID.
+     * 
+     * @return The unique UUID of this provider instance.
+     */
+    public String getProviderId() {
+        return uuid;
+    }
 
     /**
      * Gets the list of models, using a lazy-loaded cache.
@@ -74,7 +111,7 @@ public abstract class AbstractAgiProvider {
         }
         return this.models;
     }
-    
+
     /**
      * Finds a single model by its unique ID within this provider.
      *
@@ -83,8 +120,8 @@ public abstract class AbstractAgiProvider {
      */
     public Optional<? extends AbstractModel> findModel(String modelId) {
         return getModels().stream()
-            .filter(model -> model.getModelId().equals(modelId))
-            .findFirst();
+                .filter(model -> model.getModelId().equals(modelId))
+                .findFirst();
     }
 
     /**
@@ -107,28 +144,28 @@ public abstract class AbstractAgiProvider {
                 .flatMap(model -> model.getSupportedActions().stream())
                 .collect(Collectors.toCollection(HashSet::new));
     }
-    
+
     /**
      * Gets the current api key this provider is using.
      * 
      * @return The current API key.
      */
     public abstract String getCurrentApiKey();
-    
+
     /**
      * Gets the URI where users can acquire API keys for this provider.
      * 
      * @return The acquisition URI.
      */
     public abstract java.net.URI getKeysAcquisitionUri();
-    
+
     /**
      * Gets a template or hint string to display when the API keys file is empty.
      * 
      * @return The API key hint text.
      */
     public abstract String getApiKeyHint();
-    
+
     /**
      * Checks if there are any valid (non-comment, non-empty) API keys 
      * configured for this provider.
@@ -146,7 +183,7 @@ public abstract class AbstractAgiProvider {
         keyPool = readApiKeysFile();
         hokusPocus();
     }
-    
+
     /**
      * Hook to reset the provider-specific API client (e.g., when keys change).
      * Subclasses should override this to set their native client to null.
@@ -154,7 +191,7 @@ public abstract class AbstractAgiProvider {
     public void hokusPocus() {
         // Default implementation does nothing
     }
-    
+
     /**
      * Gets the next API key for the specific provider implementation using a round-robin selection from the loaded key pool.
      * 
@@ -165,11 +202,11 @@ public abstract class AbstractAgiProvider {
         if (keyPool == null) {
             keyPool = readApiKeysFile();
         }
-        
+
         if (keyPool.isEmpty()) {
             return null;
         }
-        
+
         // Round-robin key selection
         int nextIdx = round.getAndIncrement() % keyPool.size();
         String key = keyPool.get(nextIdx);
@@ -183,9 +220,9 @@ public abstract class AbstractAgiProvider {
      * @return The path to the provider's directory.
      */
     public Path getProviderDirectory() {
-        return AbstractAsiContainer.getWorkDirSubDir(providerId);
+        return AbstractAsiContainer.getWorkDirSubDir(uuid);
     }
-    
+
     public Path getKeysFilePath() {
         Path providerDir = getProviderDirectory();
         Path keysFilePath = providerDir.resolve("api_keys.txt");
@@ -226,7 +263,7 @@ public abstract class AbstractAgiProvider {
     private List<String> readApiKeysFile() {
         ensureKeysFileExists();
         Path keysFilePath = getKeysFilePath();
-        
+
         try (Stream<String> lines = Files.lines(keysFilePath)) {
             List<String> keys = lines
                     .map(String::trim)

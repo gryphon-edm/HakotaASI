@@ -8,8 +8,11 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -39,6 +42,13 @@ public class AsiContainerPreferences extends BasicPropertyChangeSource {
      * is the user's stored preference for that tool.
      */
     private Map<String, ToolPermission> toolPermissions = new HashMap<>();
+
+    /**
+     * The master list of configured AI provider instances (e.g., 'Gemini Native', 'Ollama Local').
+     * These instances are serialized directly to disk, allowing custom URLs and tokenizers 
+     * to be persisted without code changes.
+     */
+    private List<AbstractAgiProvider> registeredProviders = new ArrayList<>();
 
     /**
      * A blueprint configuration for new Agi sessions. 

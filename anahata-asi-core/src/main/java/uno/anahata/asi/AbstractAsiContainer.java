@@ -51,10 +51,10 @@ public abstract class AbstractAsiContainer extends BasicPropertyChangeSource {
     private final List<Agi> activeAgis = new ArrayList<>();
     
     /** 
-     * A master registry of AI provider instances. This follows the 'DataSource' pattern,
-     * ensuring that all sessions share the same provider logic and key pools.
+     * A master registry of AI provider instances.
+     * Keyed by the provider's unique UUID.
      */
-    private final Map<Class<? extends AbstractAgiProvider>, AbstractAgiProvider> providerRegistry = new ConcurrentHashMap<>();
+    private final Map<String, AbstractAgiProvider> providerRegistry = new ConcurrentHashMap<>();
 
     /** 
      * A shared executor for container-level background tasks. 
@@ -86,26 +86,37 @@ public abstract class AbstractAsiContainer extends BasicPropertyChangeSource {
         this.preferences = AsiContainerPreferences.load(this);
         this.preferences.ensureTemplatesInitialized(this);
         this.executor = AsiExecutors.newCachedThreadPoolExecutor(hostApplicationId);
+        
+        // Populate the registry from persisted providers
+        for (AbstractAgiProvider provider : preferences.getRegisteredProviders()) {
+            providerRegistry.put(provider.getUuid(), provider);
+        }
     }
 
     /**
-     * Retrieves a shared provider instance from the master registry.
-     * If the provider has not been instantiated yet, it is created and cached.
+     * Retrieves a shared provider instance from the master registry by its UUID.
      * 
-     * @param <T> The type of the provider.
-     * @param providerClass The class of the provider to retrieve.
-     * @return The shared provider instance.
+     * @param uuid The unique UUID of the provider instance.
+     * @return The shared provider instance, or null if not found.
      */
-    public <T extends AbstractAgiProvider> T getProvider(Class<T> providerClass) {
-        return (T) providerRegistry.computeIfAbsent(providerClass, clazz -> {
-            try {
-                log.info("Instantiating shared provider in master registry: {}", clazz.getName());
-                return clazz.getDeclaredConstructor().newInstance();
-            } catch (Exception e) {
-                log.error("Failed to instantiate provider class: {}", clazz.getName(), e);
-                return null;
-            }
-        });
+    public AbstractAgiProvider getProvider(String uuid) {
+        if (uuid == null) return null;
+        return providerRegistry.get(uuid);
+    }
+    
+    /**
+     * Registers a new provider instance in the master registry and persists it 
+     * to preferences.
+     * 
+     * @param provider The provider instance to register.
+     */
+    public void registerProvider(@NonNull AbstractAgiProvider provider) {
+        log.info("Registering AI provider instance: {} ({})", provider.getDisplayName(), provider.getUuid());
+        providerRegistry.put(provider.getUuid(), provider);
+        if (!preferences.getRegisteredProviders().contains(provider)) {
+            preferences.getRegisteredProviders().add(provider);
+            savePreferences();
+        }
     }
 
     /**
@@ -158,8 +169,8 @@ public abstract class AbstractAsiContainer extends BasicPropertyChangeSource {
      */
     public boolean hasAnyApiKeysConfigured() {
         AgiConfig template = preferences.getAgiTemplate();
-        for (Class<? extends AbstractAgiProvider> providerClass : template.getProviderClasses()) {
-            AbstractAgiProvider provider = getProvider(providerClass);
+        for (String uuid : template.getProviderUuids()) {
+            AbstractAgiProvider provider = getProvider(uuid);
             if (provider != null && provider.hasKeys()) {
                 return true;
             }
@@ -198,20 +209,14 @@ public abstract class AbstractAsiContainer extends BasicPropertyChangeSource {
     /**
      * Notifies all active sessions that the API keys for a specific provider 
      * have been updated.
-     * <p>
-     * Implementation details: Since we now use a shared provider registry,
-     * this simply triggers a reload on the master instance. All sessions
-     * automatically benefit from the updated pool.
-     * </p>
      * 
-     * @param providerId The ID of the provider whose keys changed.
+     * @param uuid The UUID of the provider whose keys changed.
      */
-    public void onProviderKeysChanged(String providerId) {
-        log.info("Processing API key update for shared provider: {}", providerId);
-        for (AbstractAgiProvider provider : providerRegistry.values()) {
-            if (provider.getProviderId().equalsIgnoreCase(providerId)) {
-                provider.reloadKeyPool();
-            }
+    public void onProviderKeysChanged(String uuid) {
+        log.info("Processing API key update for shared provider instance: {}", uuid);
+        AbstractAgiProvider provider = getProvider(uuid);
+        if (provider != null) {
+            provider.reloadKeyPool();
         }
     }
 
@@ -346,8 +351,8 @@ public abstract class AbstractAsiContainer extends BasicPropertyChangeSource {
     protected void configureNewAgi(Agi agi) {
         AgiConfig template = preferences.getAgiTemplate();
         
-        if (agi.getConfig().getSelectedProviderClass() == null) {
-            agi.getConfig().setSelectedProviderClass(template.getSelectedProviderClass());
+        if (agi.getConfig().getSelectedProviderUuid() == null) {
+            agi.getConfig().setSelectedProviderUuid(template.getSelectedProviderUuid());
         }
         
         if (agi.getConfig().getSelectedModelId() == null) {

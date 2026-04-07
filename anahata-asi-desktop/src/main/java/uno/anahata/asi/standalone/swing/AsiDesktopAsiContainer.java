@@ -8,6 +8,7 @@ import java.util.Map;
 import lombok.Setter;
 import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.agi.AgiConfig;
+import uno.anahata.asi.gemini.GeminiAgiProvider;
 import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.swing.AbstractSwingAsiContainer;
 import uno.anahata.asi.swing.agi.AgiPanel;
@@ -21,7 +22,7 @@ import uno.anahata.asi.swing.agi.resources.ResourceUiRegistry;
  * @author anahata
  */
 @Slf4j
-public class StandaloneAsiContainer extends AbstractSwingAsiContainer {
+public class AsiDesktopAsiContainer extends AbstractSwingAsiContainer {
     
     static {
         log.info("Performing global Standalone environment configuration...");
@@ -34,13 +35,16 @@ public class StandaloneAsiContainer extends AbstractSwingAsiContainer {
     
     /** Reference to the main UI panel for tab management. */
     @Setter
-    private StandaloneMainPanel mainPanel;
+    private AsiDesktopMainPanel mainPanel;
     
     /**
      * Constructs a new StandaloneAsiContainer.
      */
-    public StandaloneAsiContainer() {
-        super("swing-standalone");
+    public AsiDesktopAsiContainer() {
+        super("AsiDesktop");
+        if (getProvider("Gemini") == null) {
+            registerProvider(new GeminiAgiProvider());
+        }
     }
 
     @Override
@@ -70,6 +74,6 @@ public class StandaloneAsiContainer extends AbstractSwingAsiContainer {
     /** {@inheritDoc} */
     @Override
     public AgiConfig createNewAgiConfig() {
-        return new StandaloneAgiConfig(this);
+        return new AsiDesktopAgiConfig(this);
     }
 }

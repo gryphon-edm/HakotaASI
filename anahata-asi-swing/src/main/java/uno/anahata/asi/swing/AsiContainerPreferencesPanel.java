@@ -43,7 +43,7 @@ public class AsiContainerPreferencesPanel extends JPanel {
     private final AsiContainerPreferences prefs;
     
     /** Dropdown for selecting the default AI provider for the container. */
-    private JComboBox<Class<? extends AbstractAgiProvider>> providerDropdown;
+    private JComboBox<String> providerDropdown;
     /** Dropdown for selecting the default AI model for the container. */
     private JComboBox<String> modelDropdown;
 
@@ -108,30 +108,30 @@ public class AsiContainerPreferencesPanel extends JPanel {
         panel.add(new JLabel("Default AI Provider:"));
         providerDropdown = new JComboBox<>();
         AgiConfig template = prefs.getAgiTemplate();
-        DefaultComboBoxModel<Class<? extends AbstractAgiProvider>> providerModel = new DefaultComboBoxModel<>();
-        template.getProviderClasses().forEach(providerModel::addElement);
+        DefaultComboBoxModel<String> providerModel = new DefaultComboBoxModel<>();
+        template.getProviderUuids().forEach(providerModel::addElement);
         providerDropdown.setModel(providerModel);
         
         providerDropdown.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof Class<?> c) {
-                    AbstractAgiProvider p = container.getProvider((Class<? extends AbstractAgiProvider>) c);
+                if (value instanceof String uuid) {
+                    AbstractAgiProvider p = container.getProvider(uuid);
                     if (p != null) {
-                        setText(p.getProviderId());
+                        setText(p.getDisplayName() + " (" + p.getUuid() + ")");
                     } else {
-                        setText(c.getSimpleName());
+                        setText(uuid);
                     }
                 }
                 return this;
             }
         });
         
-        providerDropdown.setSelectedItem(template.getSelectedProviderClass());
+        providerDropdown.setSelectedItem(template.getSelectedProviderUuid());
         providerDropdown.addActionListener(e -> {
-            Class<? extends AbstractAgiProvider> selected = (Class<? extends AbstractAgiProvider>) providerDropdown.getSelectedItem();
-            template.setSelectedProviderClass(selected);
+            String selected = (String) providerDropdown.getSelectedItem();
+            template.setSelectedProviderUuid(selected);
             refreshModelDropdown();
         });
         panel.add(providerDropdown, "wrap");
@@ -154,8 +154,8 @@ public class AsiContainerPreferencesPanel extends JPanel {
 
     private void refreshModelDropdown() {
         AgiConfig template = prefs.getAgiTemplate();
-        Class<? extends AbstractAgiProvider> providerClass = template.getSelectedProviderClass();
-        if (providerClass == null) return;
+        String providerUuid = template.getSelectedProviderUuid();
+        if (providerUuid == null) return;
 
         modelDropdown.setEnabled(false);
         modelDropdown.setToolTipText("Discovering models...");
@@ -163,7 +163,7 @@ public class AsiContainerPreferencesPanel extends JPanel {
         new SwingWorker<List<String>, Void>() {
             @Override
             protected List<String> doInBackground() throws Exception {
-                AbstractAgiProvider provider = container.getProvider(providerClass);
+                AbstractAgiProvider provider = container.getProvider(providerUuid);
                 if (provider == null) return new ArrayList<>();
                 return provider.getModels().stream()
                         .map(AbstractModel::getModelId)
@@ -220,13 +220,13 @@ public class AsiContainerPreferencesPanel extends JPanel {
         JTabbedPane providerTabs = new JTabbedPane(JTabbedPane.LEFT);
 
         AgiConfig template = prefs.getAgiTemplate();
-        List<Class<? extends AbstractAgiProvider>> providerClasses = template.getProviderClasses();
+        List<String> providerUuids = template.getProviderUuids();
 
-        for (Class<? extends AbstractAgiProvider> providerClass : providerClasses) {
-            AbstractAgiProvider provider = container.getProvider(providerClass);
+        for (String uuid : providerUuids) {
+            AbstractAgiProvider provider = container.getProvider(uuid);
             if (provider != null) {
                 ProviderKeysPanel keysPanel = new ProviderKeysPanel(provider);
-                providerTabs.addTab(provider.getProviderId(), keysPanel);
+                providerTabs.addTab(provider.getDisplayName(), keysPanel);
             }
         }
 
