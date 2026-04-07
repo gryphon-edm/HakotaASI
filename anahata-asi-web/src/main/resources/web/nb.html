@@ -356,11 +356,11 @@
             <!-- NbJava Toolkit -->
             <section id="nbjava" class="toolkit-section">
                 <div class="toolkit-header"><i class="fab fa-java"></i><h2>NbJava Toolkit (2 Tools)</h2></div>
-                <p>NetBeans-aware Java execution engine that manages NBM-specific classpath isolation and hot-reloading.</p>
+                <p>On-The-Fly, NetBeans-aware, Swing-aware, User-editable, Java execution engine that can execute any java code directly on the NetBeans JVM without any secondary java process.</p>
                 <ul class="toolkit-highlights">
-                    <li><b>Visual Library API</b>: The model can programmatically generate and display interactive architecture diagrams or custom UI components.</li>
-                    <li><b>Progress API Hooks</b>: Model tasks hook directly into the native NetBeans progress bar for real-time visual feedback.</li>
-                    <li><b>Diff Engine Access</b>: Leverage high-fidelity IDE diff viewers for AI-to-Code comparison directly on the JVM.</li>
+                    <li><b>Default Classpath</b>: The model can literally execute any java code using 450+ netbeans jars and the ASI platform's jars (e.g. anything you can do with NetBeans apis or creating new AGI containers).</li>
+                    <li><b>Project's classpath</b>: The model can extend the default classpath with your projects compile or test classpaths to prototype and test code on-the-fly</li>
+                    <li><b>Infinity classpath</b>: The model can download any jar on Earth and execute code against it directly on the NetBeans JVM (no restarts, no separate process).</li>
                 </ul>
                 <div class="tool-grid">
                     <div class="tool-card"><span class="tool-sig">compileAndExecuteInProject(...) <span class="badge-perm perm-prompt">Prompt</span></span><p class="tool-desc">Executes model code using the project's own target/classes.</p></div>
