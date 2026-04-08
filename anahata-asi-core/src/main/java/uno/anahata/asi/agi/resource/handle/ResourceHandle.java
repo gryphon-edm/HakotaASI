@@ -212,4 +212,12 @@ public interface ResourceHandle extends Rebindable {
      * Performs any necessary cleanup (e.g., removing listeners). 
      */
     default void dispose() {}
+
+    /**
+     * Returns the total length of the resource content in characters/bytes.
+     * @return The length, or -1 if the length is unknown or streaming.
+     */
+    default long length() {
+        return -1L;
+    }
 }
