@@ -41,7 +41,11 @@ public class ProjectAlertsContextProvider extends AbstractProjectContextProvider
      */
     @Override
     public void populateMessage(RagMessage ragMessage) throws Exception {
-        SourceUtils.waitScanFinished();
+        
+        while(SourceUtils.isScanInProgress()) {
+            log.info("Waiting 500 ms. for NetBeans source scaneer to finish");
+            Thread.sleep(500);
+        }
         
         ProjectDiagnostics diags = projectsToolkit.getProjectAlerts(projectPath);
         
