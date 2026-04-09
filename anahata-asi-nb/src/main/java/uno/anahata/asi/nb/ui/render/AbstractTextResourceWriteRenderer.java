@@ -193,6 +193,12 @@ public abstract class AbstractTextResourceWriteRenderer<T extends AbstractTextRe
      * @return true if valid, false if rejected.
      */
     private boolean validatePreFlight() {
+        
+        //bad model
+        if (update == null || update.getResourceUuid() == null) {
+            return false;
+        }
+        
         if (call.getResponse().getStatus() != ToolExecutionStatus.PENDING) {
             return true; 
         }
@@ -274,9 +280,11 @@ public abstract class AbstractTextResourceWriteRenderer<T extends AbstractTextRe
      */
     @Override
     public boolean render() {
-        if (update == null) {
+        if (update == null || update.getResourceUuid() == null) {
             return false;
         }
+        
+        log.info("pre flight validation for resource uuid {} {}", update.getResourceUuid(), update);
 
         // 1. Validation check
         if (!validatePreFlight()) {
