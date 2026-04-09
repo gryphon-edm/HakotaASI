@@ -115,11 +115,20 @@ public abstract class AbstractTextResourceWrite {
      * @throws Exception if validation fails.
      */
     public void validate(Agi agi) throws Exception {
+        
+        if (resourceUuid == null) {
+            throw new AgiToolException("Resource uuid not provided");
+        }
+        
+        Resource res = agi.getResourceManager().getResources().get(resourceUuid);
+        if (res == null) {
+            throw new AgiToolException("Resource not in context: " + resourceUuid);
+        }
+        
         // 1. Authoritative state capture
         captureOriginalContent(agi);
 
         // 2. Optimistic Locking Check
-        Resource res = agi.getResourceManager().getResources().get(resourceUuid);
         long actualLm = res.getHandle().getLastModified();
         if (lastModified > 0 && lastModified != actualLm) {
             throw new AgiToolException("Optimistic locking failure for " + res.getName() + ". The time stamp provided doesn't match the last modified timestamp on disk: " + actualLm + " (provided: " + lastModified + ").");
