@@ -126,7 +126,7 @@ public class CodeModel extends AnahataToolkit {
      * @return the Javadoc comment.
      * @throws Exception if the Javadoc cannot be found or ambiguous.
      */
-    @AgiTool("Gets the Javadoc for a type specified by its fully qualified name. Fails if the FQN is ambiguous.")
+    @AgiTool(value = "Gets the Javadoc for a type specified by its fully qualified name. Fails if the FQN is ambiguous.", permission = ToolPermission.APPROVE_ALWAYS)
     public String getTypeJavadocsByFqn(
             @AgiToolParam("The fully qualified name of the type.") String fqn) throws Exception {
         return resolveUniqueType(fqn).getJavadoc().getJavadoc();
@@ -150,7 +150,7 @@ public class CodeModel extends AnahataToolkit {
      * @return the source code of the member.
      * @throws Exception if the member is not found or ambiguous.
      */
-    @AgiTool("Gets the source code for a member specified by its fully qualified name. Fails if the FQN is ambiguous.")
+    @AgiTool(value = "Gets the source code for a member specified by its fully qualified name. Fails if the FQN is ambiguous.", permission = ToolPermission.APPROVE_ALWAYS)
     public String getMemberSourcesByFqn(
             @AgiToolParam("The fully qualified name of the member.") String memberFqn) throws Exception {
         return resolveUniqueMember(memberFqn).getSource().getContent();
@@ -174,7 +174,7 @@ public class CodeModel extends AnahataToolkit {
      * @return the Javadoc comment.
      * @throws Exception if the Javadoc cannot be found or ambiguous.
      */
-    @AgiTool("Gets the Javadoc for a member specified by its fully qualified name. Fails if the FQN is ambiguous.")
+    @AgiTool(value = "Gets the Javadoc for a member specified by its fully qualified name. Fails if the FQN is ambiguous.", permission = ToolPermission.APPROVE_ALWAYS)
     public String getMemberJavadocsByFqn(
             @AgiToolParam("The fully qualified name of the member.") String memberFqn) throws Exception {
         return resolveUniqueMember(memberFqn).getJavadoc().getJavadoc();
@@ -237,7 +237,7 @@ public class CodeModel extends AnahataToolkit {
      * @return a paginated result of JavaMember objects.
      * @throws Exception if the type is not found or ambiguous.
      */
-    @AgiTool("Gets a paginated list of all members for a type specified by its fully qualified name. Fails if the FQN is ambiguous.")
+    @AgiTool(value = "Gets a paginated list of all members for a type specified by its fully qualified name. Fails if the FQN is ambiguous.", permission = ToolPermission.APPROVE_ALWAYS)
     public Page<JavaMember> getMembersByFqn(
             @AgiToolParam("The fully qualified name of the type.") String fqn,
             @AgiToolParam(value = "Optional query string to filter members by name (uses memberName.contains(nameQuery))", required = false) String nameQuery,
@@ -323,7 +323,7 @@ public class CodeModel extends AnahataToolkit {
      * @return A recursive JavaHierarchyNode structure.
      * @throws Exception if the type is not found or ambiguous.
      */
-    @AgiTool("Recursively searches for all subtypes of a type specified by its fully qualified name. Fails if the FQN is ambiguous.")
+    @AgiTool(value = "Recursively searches for all subtypes of a type specified by its fully qualified name. Fails if the FQN is ambiguous.", permission = ToolPermission.APPROVE_ALWAYS)
     public JavaHierarchyNode getSubtypesByFqn(
             @AgiToolParam("The fully qualified name of the type.") String fqn,
             @AgiToolParam(value = "The maximum depth to recurse. Defaults to 3.", required = false) Integer maxDepth) throws Exception {
@@ -353,7 +353,7 @@ public class CodeModel extends AnahataToolkit {
      * @return A recursive JavaHierarchyNode structure.
      * @throws Exception if the type is not found or ambiguous.
      */
-    @AgiTool("Recursively searches for all supertypes of a type specified by its fully qualified name. Fails if the FQN is ambiguous.")
+    @AgiTool(value = "Recursively searches for all supertypes of a type specified by its fully qualified name. Fails if the FQN is ambiguous.", permission = ToolPermission.APPROVE_ALWAYS)
     public JavaHierarchyNode getSupertypesByFqn(
             @AgiToolParam("The fully qualified name of the type.") String fqn,
             @AgiToolParam(value = "The maximum depth to recurse up. Defaults to 3.", required = false) Integer maxDepth) throws Exception {
