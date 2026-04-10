@@ -10,6 +10,8 @@ import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.agi.AgiConfig;
 import uno.anahata.asi.gemini.GeminiAgiProvider;
 import lombok.extern.slf4j.Slf4j;
+import uno.anahata.asi.agi.provider.AbstractAgiProvider;
+import uno.anahata.asi.openai.OpenAiCompatibleProvider;
 import uno.anahata.asi.swing.AbstractSwingAsiContainer;
 import uno.anahata.asi.swing.agi.AgiPanel;
 import uno.anahata.asi.swing.agi.resources.DefaultResourceUI;
@@ -56,7 +58,7 @@ public class AsiDesktopAsiContainer extends AbstractSwingAsiContainer {
         }
         
         if (getProvider("Z") == null) {
-            registerProvider(new uno.anahata.asi.openai.OpenAiCompatibleProvider(
+            registerProvider(new OpenAiCompatibleProvider(
                     "Z", "Z", "https://api.z.ai/api/paas/v4/", "Z"));
         }
     }
