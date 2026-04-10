@@ -18,9 +18,6 @@ import uno.anahata.asi.swing.agi.SwingAgiConfig;
 public class AsiDesktopAgiConfig extends SwingAgiConfig {
     
     {
-        // Automatically register the Gemini provider for standalone use.
-        getProviderUuids().add("Gemini");
-        
         setSelectedProviderUuid("Gemini");
         setSelectedModelId("models/gemini-3-flash-preview");
     }

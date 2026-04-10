@@ -42,8 +42,22 @@ public class AsiDesktopAsiContainer extends AbstractSwingAsiContainer {
      */
     public AsiDesktopAsiContainer() {
         super("AsiDesktop");
-        if (getProvider("Gemini") == null) {
+        
+        // Ensure Gemini is registered with stable UUID
+        AbstractAgiProvider gemini = getProviderByClass(GeminiAgiProvider.class);
+        if (gemini == null) {
             registerProvider(new GeminiAgiProvider());
+        } else if (!"Gemini".equals(gemini.getUuid())) {
+            log.info("Migrating legacy Gemini provider ({}) to stable ID", gemini.getUuid());
+            unregisterProvider(gemini.getUuid());
+            gemini.setUuid("Gemini");
+            gemini.setFolderName("Gemini");
+            registerProvider(gemini);
+        }
+        
+        if (getProvider("Z") == null) {
+            registerProvider(new uno.anahata.asi.openai.OpenAiCompatibleProvider(
+                    "Z", "Z", "https://api.z.ai/api/paas/v4/", "Z"));
         }
     }
 

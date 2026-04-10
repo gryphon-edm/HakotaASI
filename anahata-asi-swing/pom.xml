@@ -24,6 +24,13 @@
             <artifactId>anahata-asi-yam</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <!-- OpenAI Compatible Provider -->
+        <dependency>
+            <groupId>uno.anahata</groupId>
+            <artifactId>anahata-asi-openai</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         
         <!-- Look and Feel & UI Components -->
         <dependency>

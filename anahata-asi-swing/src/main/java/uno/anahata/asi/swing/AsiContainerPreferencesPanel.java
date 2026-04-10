@@ -8,6 +8,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.DefaultComboBoxModel;
@@ -17,7 +18,10 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.SwingWorker;
 import lombok.extern.slf4j.Slf4j;
 import net.miginfocom.swing.MigLayout;
@@ -26,6 +30,7 @@ import uno.anahata.asi.agi.AgiConfig;
 import uno.anahata.asi.agi.provider.AbstractAgiProvider;
 import uno.anahata.asi.agi.provider.AbstractModel;
 import uno.anahata.asi.swing.agi.config.SessionConfigPanel;
+import uno.anahata.asi.swing.icons.DeleteIcon;
 import uno.anahata.asi.swing.icons.OkIcon;
 
 /**
@@ -219,19 +224,117 @@ public class AsiContainerPreferencesPanel extends JPanel {
         JPanel panel = new JPanel(new BorderLayout());
         JTabbedPane providerTabs = new JTabbedPane(JTabbedPane.LEFT);
 
-        AgiConfig template = prefs.getAgiTemplate();
-        List<String> providerUuids = template.getProviderUuids();
-
-        for (String uuid : providerUuids) {
-            AbstractAgiProvider provider = container.getProvider(uuid);
-            if (provider != null) {
-                ProviderKeysPanel keysPanel = new ProviderKeysPanel(provider);
-                providerTabs.addTab(provider.getDisplayName(), keysPanel);
-            }
-        }
+        refreshProviderTabs(providerTabs);
 
         panel.add(providerTabs, BorderLayout.CENTER);
+
+        // Toolbar for adding/removing providers
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton addBtn = new JButton("Add OpenAI Compatible Provider");
+        addBtn.addActionListener(e -> {
+            showAddOpenAiProviderDialog(providerTabs);
+        });
+        toolbar.add(addBtn);
+
+        JButton removeBtn = new JButton("Remove Selected Provider", new DeleteIcon(16));
+        removeBtn.addActionListener(e -> {
+            int idx = providerTabs.getSelectedIndex();
+            if (idx != -1) {
+                removeProviderAt(idx, providerTabs);
+            }
+        });
+        toolbar.add(removeBtn);
+
+        panel.add(toolbar, BorderLayout.NORTH);
+
         return panel;
+    }
+
+    private void refreshProviderTabs(JTabbedPane providerTabs) {
+        providerTabs.removeAll();
+        for (AbstractAgiProvider provider : container.getAllProviders()) {
+            ProviderKeysPanel keysPanel = new ProviderKeysPanel(provider);
+            providerTabs.addTab(provider.getDisplayName(), keysPanel);
+        }
+    }
+
+    private void showAddOpenAiProviderDialog(JTabbedPane providerTabs) {
+        JTextField nameField = new JTextField();
+        JTextField urlField = new JTextField("https://api.openai.com/v1");
+        JTextField folderField = new JTextField();
+        JTextArea keysArea = new JTextArea(5, 20);
+
+        JPanel dialogPanel = new JPanel(new MigLayout("fillx", "[right]10[grow,fill]"));
+        dialogPanel.add(new JLabel("Display Name:"));
+        dialogPanel.add(nameField, "wrap");
+        dialogPanel.add(new JLabel("Base URL:"));
+        dialogPanel.add(urlField, "wrap");
+        dialogPanel.add(new JLabel("Folder Name:"));
+        dialogPanel.add(folderField, "wrap");
+        dialogPanel.add(new JLabel("API Keys (one per line):"), "span, wrap");
+        dialogPanel.add(new JScrollPane(keysArea), "span, grow, wrap");
+
+        int result = javax.swing.JOptionPane.showConfirmDialog(this, dialogPanel, 
+                "Add OpenAI Compatible Provider", javax.swing.JOptionPane.OK_CANCEL_OPTION);
+
+        if (result == javax.swing.JOptionPane.OK_OPTION) {
+            String name = nameField.getText().trim();
+            String url = urlField.getText().trim();
+            String folder = folderField.getText().trim();
+            String keys = keysArea.getText().trim();
+
+            if (name.isEmpty() || url.isEmpty()) {
+                javax.swing.JOptionPane.showMessageDialog(this, "Name and URL are required.");
+                return;
+            }
+
+            String uuid = java.util.UUID.randomUUID().toString();
+            uno.anahata.asi.openai.OpenAiCompatibleProvider provider = 
+                    new uno.anahata.asi.openai.OpenAiCompatibleProvider(uuid, name, url, folder);
+            
+            // Save keys to the provider's directory
+            try {
+                java.nio.file.Files.createDirectories(provider.getProviderDirectory());
+                java.nio.file.Files.writeString(provider.getKeysFilePath(), keys);
+            } catch (java.io.IOException ex) {
+                log.error("Failed to save provider keys", ex);
+            }
+
+            container.registerProvider(provider);
+            prefs.getAgiTemplate().getProviderUuids().add(uuid);
+            container.savePreferences();
+            
+            refreshProviderTabs(providerTabs);
+            refreshProviderDropdown();
+        }
+    }
+
+    private void removeProviderAt(int index, JTabbedPane providerTabs) {
+        AbstractAgiProvider provider = container.getAllProviders().get(index);
+        String uuid = provider.getUuid();
+        String name = provider.getDisplayName();
+        
+        int choice = javax.swing.JOptionPane.showConfirmDialog(this, 
+                "Are you sure you want to remove the provider '" + name + "'?\n" +
+                "This will unregister it from the container preferences.", 
+                "Remove Provider", javax.swing.JOptionPane.YES_NO_OPTION);
+        
+        if (choice == javax.swing.JOptionPane.YES_OPTION) {
+            prefs.getAgiTemplate().getProviderUuids().remove(uuid);
+            container.unregisterProvider(uuid);
+            // Note: We don't delete the provider's directory, just unregister it
+            container.savePreferences();
+            refreshProviderTabs(providerTabs);
+            refreshProviderDropdown();
+        }
+    }
+
+    private void refreshProviderDropdown() {
+        AgiConfig template = prefs.getAgiTemplate();
+        DefaultComboBoxModel<String> providerModel = new DefaultComboBoxModel<>();
+        template.getProviderUuids().forEach(providerModel::addElement);
+        providerDropdown.setModel(providerModel);
+        providerDropdown.setSelectedItem(template.getSelectedProviderUuid());
     }
 
 }

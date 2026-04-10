@@ -105,6 +105,14 @@ public abstract class AbstractAsiContainer extends BasicPropertyChangeSource {
     }
     
     /**
+     * Gets an unmodifiable list of all registered provider instances.
+     * @return All providers.
+     */
+    public List<AbstractAgiProvider> getAllProviders() {
+        return new ArrayList<>(providerRegistry.values());
+    }
+    
+    /**
      * Registers a new provider instance in the master registry and persists it 
      * to preferences.
      * 
@@ -113,10 +121,48 @@ public abstract class AbstractAsiContainer extends BasicPropertyChangeSource {
     public void registerProvider(@NonNull AbstractAgiProvider provider) {
         log.info("Registering AI provider instance: {} ({})", provider.getDisplayName(), provider.getUuid());
         providerRegistry.put(provider.getUuid(), provider);
-        if (!preferences.getRegisteredProviders().contains(provider)) {
-            preferences.getRegisteredProviders().add(provider);
+        
+        List<AbstractAgiProvider> registered = preferences.getRegisteredProviders();
+        registered.removeIf(p -> p.getUuid().equals(provider.getUuid()));
+        registered.add(provider);
+        
+        // Sync the template's UUID list
+        AgiConfig template = preferences.getAgiTemplate();
+        if (template != null && !template.getProviderUuids().contains(provider.getUuid())) {
+            template.getProviderUuids().add(provider.getUuid());
+        }
+        
+        savePreferences();
+    }
+
+    /**
+     * Unregisters a provider instance, removing it from the registry and 
+     * the persistent preferences.
+     * 
+     * @param uuid The UUID of the provider to unregister.
+     */
+    public void unregisterProvider(String uuid) {
+        log.info("Unregistering AI provider instance: {}", uuid);
+        AbstractAgiProvider provider = providerRegistry.remove(uuid);
+        if (provider != null) {
+            preferences.getRegisteredProviders().remove(provider);
             savePreferences();
         }
+    }
+
+    /**
+     * Finds a registered provider instance of a specific class.
+     * 
+     * @param <T> The provider type.
+     * @param providerClass The class to look for.
+     * @return The first matching instance, or null if none registered.
+     */
+    public <T extends AbstractAgiProvider> T getProviderByClass(Class<T> providerClass) {
+        return providerRegistry.values().stream()
+                .filter(providerClass::isInstance)
+                .map(providerClass::cast)
+                .findFirst()
+                .orElse(null);
     }
 
     /**

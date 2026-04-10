@@ -48,6 +48,11 @@ A pure-Java Swing application providing a full-fidelity interface for desktop an
 - **Included Toolkits**: Screen Capture, Audio Device Management, Online Radio, Chrome Automation, Speech Synthesis (TTS), Shell Execution, and JIT Java Compilation.
 - **Get it**: [Latest Release](https://github.com/anahata-os/anahata-asi/releases/latest) | [Latest Snapshot (Bleeding Edge)](https://github.com/anahata-os/anahata-asi/releases/tag/latest-snapshot)
 
+> [!TIP]
+> **MacOS "Damaged File" Workaround**
+> If you see a message saying the file is damaged on macOS, it is simply Gatekeeper blocking an unsigned app. Run this in your terminal:
+> `sudo xattr -rd com.apple.quarantine /Applications/Anahata\ ASI\ Desktop.app`
+
 #### **[Anahata ASI Studio](https://asi.anahata.uno/nb.html)**
 *Enterprise Java-Ready Autonomous Coding Agent*
 A deep NetBeans IDE integration that transforms your development environment into an ASI studio.

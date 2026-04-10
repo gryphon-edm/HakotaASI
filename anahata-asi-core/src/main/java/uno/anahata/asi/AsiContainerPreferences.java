@@ -105,6 +105,14 @@ public class AsiContainerPreferences extends BasicPropertyChangeSource {
         clone.setAsiContainer(container);
         // Ensure the new session gets its own unique identity
         clone.setSessionId(java.util.UUID.randomUUID().toString());
+        
+        // Sync: ensure all currently registered enabled providers are available in the new session
+        for (AbstractAgiProvider p : container.getAllProviders()) {
+            if (p.isEnabled() && !clone.getProviderUuids().contains(p.getUuid())) {
+                clone.getProviderUuids().add(p.getUuid());
+            }
+        }
+        
         return clone;
     }
 

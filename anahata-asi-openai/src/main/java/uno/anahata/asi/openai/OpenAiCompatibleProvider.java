@@ -47,9 +47,22 @@ public class OpenAiCompatibleProvider extends AbstractAgiProvider {
      * @param baseUrl The API endpoint.
      */
     public OpenAiCompatibleProvider(String uuid, String displayName, String baseUrl) {
+        this(uuid, displayName, baseUrl, null);
+    }
+
+    /**
+     * Constructs a new universal provider with a custom folder name.
+     * 
+     * @param uuid The unique ID.
+     * @param displayName The display name.
+     * @param baseUrl The API endpoint.
+     * @param folderName The custom folder name for configuration.
+     */
+    public OpenAiCompatibleProvider(String uuid, String displayName, String baseUrl, String folderName) {
         super(uuid);
         setDisplayName(displayName);
         this.baseUrl = baseUrl;
+        setFolderName(folderName);
         setTokenizerType(TokenizerType.CL100K_BASE);
     }
 

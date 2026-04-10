@@ -39,6 +39,12 @@ public abstract class AbstractAgiProvider {
     private String uuid;
 
     /**
+     * An optional custom folder name for this provider's configuration.
+     * If null or empty, the uuid is used as the directory name.
+     */
+    private String folderName;
+
+    /**
      * The user-facing display name for this instance (e.g., 'Groq Cloud').
      */
     private String displayName;
@@ -50,7 +56,13 @@ public abstract class AbstractAgiProvider {
      */
     private TokenizerType tokenizerType = TokenizerType.ESTIMATE;
 
-    /** The internal cache of loaded API keys, reloaded from disk on change. */
+    /**
+     * Whether this provider is enabled and should be offered to the user.
+     */
+    private boolean enabled = true;
+
+    /**
+     * The internal cache of loaded API keys, reloaded from disk on change. */
     private volatile List<String> keyPool;
 
     /** Atomic counter for round-robin key selection. */
@@ -220,7 +232,8 @@ public abstract class AbstractAgiProvider {
      * @return The path to the provider's directory.
      */
     public Path getProviderDirectory() {
-        return AbstractAsiContainer.getWorkDirSubDir(uuid);
+        String dirName = (folderName != null && !folderName.isBlank()) ? folderName : uuid;
+        return AbstractAsiContainer.getWorkDirSubDir(dirName);
     }
 
     public Path getKeysFilePath() {

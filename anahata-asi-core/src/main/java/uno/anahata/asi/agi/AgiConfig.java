@@ -104,6 +104,13 @@ public class AgiConfig extends BasicPropertyChangeSource {
     public AgiConfig(@NonNull AbstractAsiContainer asiConfig, @NonNull String sessionId) {
         this.asiContainer = asiConfig;
         this.sessionId = sessionId;
+        
+        // Populate available providers from the container's registry
+        for (AbstractAgiProvider provider : asiConfig.getAllProviders()) {
+            if (provider.isEnabled()) {
+                providerUuids.add(provider.getUuid());
+            }
+        }
     }
 
     //<editor-fold defaultstate="collapsed" desc="Session Loop">

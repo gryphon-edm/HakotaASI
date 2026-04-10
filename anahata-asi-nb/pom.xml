@@ -12,7 +12,9 @@
     
     <name>Anahata ASI Studio - NetBeans</name>
     <description>The Best Java AI Assistant On Earth.</description>
-
+    <properties>
+        <!-- <netbeans.installation>/usr/lib/apache-netbeans</netbeans.installation> -->
+    </properties>
     <dependencies>
         <!-- External Libraries -->
         <dependency>

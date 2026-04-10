@@ -13,6 +13,7 @@ import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import javax.swing.JCheckBox;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -59,8 +60,15 @@ public class ProviderKeysPanel extends JPanel {
         // Add acquisition link and Round-Robin explanation
         JPanel headerPanel = new JPanel(new MigLayout("fillx, insets 0", "[grow]", "[]0[]"));
         
+        JCheckBox enabledCheck = new JCheckBox("Provider Enabled", provider.isEnabled());
+        enabledCheck.setFont(enabledCheck.getFont().deriveFont(Font.BOLD));
+        enabledCheck.addActionListener(e -> {
+            provider.setEnabled(enabledCheck.isSelected());
+        });
+        headerPanel.add(enabledCheck, "wrap, gapbottom 10");
+        
         if (provider.getKeysAcquisitionUri() != null) {
-            JLabel linkLabel = new JLabel("<html><a href=''>Get " + provider.getProviderId() + " API Keys</a></html>");
+            JLabel linkLabel = new JLabel("<html><a href=''>Get " + provider.getDisplayName() + " API Keys</a></html>");
             linkLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
             linkLabel.addMouseListener(new MouseAdapter() {
                 @Override
@@ -115,7 +123,7 @@ public class ProviderKeysPanel extends JPanel {
             Files.writeString(path, textArea.getText());
             provider.reloadKeyPool();
             JOptionPane.showMessageDialog(this, 
-                    "API keys for '" + provider.getProviderId() + "' saved and reloaded.", 
+                    "API keys for '" + provider.getDisplayName() + "' saved and reloaded.", 
                     "Success", JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException e) {
             log.error("Failed to save keys to {}", path, e);
