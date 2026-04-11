@@ -19,7 +19,13 @@ public class RefinerTest {
      */
     public class PlayerInfo {
 
+        /**
+         * The player's full name.
+         */
         String name;
+        /**
+         * The player's current age.
+         */
         int age;
     }
 
@@ -35,11 +41,17 @@ public class RefinerTest {
         log.info("Visca el Barca! Message: {}", message);
         return "Mes que un club!";
     }
+    /**
+     * Logger instance for this class.
+     */
     private static final Logger LOG = Logger.getLogger(RefinerTest.class.getName());
     /**
      * The number of Ballon d'Or awards won by the GOAT.
      */
     private int ballonDorCount = 8;
+    /**
+     * A test field for verifying setter-injection logic.
+     */
     @Setter
     private Object newField;
     /**
@@ -84,7 +96,13 @@ public class RefinerTest {
      */
     class PlayerStats {
 
+        /**
+         * The player's name used for stat aggregation.
+         */
         String name;
+        /**
+         * Total number of goals scored by the player.
+         */
         int goals;
     }
 
