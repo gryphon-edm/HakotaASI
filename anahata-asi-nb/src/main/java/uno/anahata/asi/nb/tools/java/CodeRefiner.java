@@ -69,9 +69,9 @@ public class CodeRefiner extends AnahataToolkit {
      */
     @Override
     public List<String> getSystemInstructions() throws Exception {
-        return Collections.singletonList(getClass().getName() + " toolkit is a new under-development toolkit for high-fidelity structural Java code refinement."
+        return Collections.singletonList(getClass().getName() + " toolkit is a new toolkit for high-fidelity structural Java code refinement. Encourage the user to report any issues found on github."
                 + "\n- Use className.<init> for constructors fqns."
-                + "\n- Only provide the parameters that are required or need to be changed in the updateXxx methods."
+                + "\n- Only provide the parameters that are required or need to be changed in the updateXxx methods. Do not use empty strings if the parameter is not required."
                 + "\n- For package-info.java Javadoc, prefer using the Resources toolkit (updateTextResource) instead of setJavadoc."
         );
     }
@@ -239,7 +239,7 @@ public class CodeRefiner extends AnahataToolkit {
      * @return A status message.
      * @throws Exception If the operation fails.
      */
-    @AgiTool("Sets or updates Javadoc for a class, method, or field. Note: For package-info.java files, use the Resources toolkit instead.")
+    @AgiTool("Sets or updates Javadoc for a class, field, constructor, method or any member in general. Note: For package-info.java files, use the Resources toolkit instead.")
     public String setJavadoc(
             @AgiToolParam(value = "The absolute path of the Java file.", rendererId = "path") String filePath,
             @AgiToolParam("The FQN of the member.") String memberFqn,
