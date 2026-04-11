@@ -14,6 +14,13 @@ import java.util.List;
 @Data
 public abstract class AbstractLineEdit {
     
+    /**
+     * The semantic justification for this specific line mutation.
+     * <p>
+     * This field is utilized for logging, auditing, and providing human-readable
+     * feedback in the UI during the resource application lifecycle.
+     * </p>
+     */
     @Schema(description = "The reason for this specific change.", required = true)
     protected String reason;
 
