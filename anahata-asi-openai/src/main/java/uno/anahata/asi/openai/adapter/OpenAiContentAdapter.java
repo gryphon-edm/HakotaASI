@@ -219,7 +219,12 @@ public class OpenAiContentAdapter {
     }
 
     /**
-     * Checks metadata injection policy.
+     * Determines if in-band metadata headers should be injected into the payload.
+     * <p>
+     * This check combines the global request configuration policy with the
+     * message's individual metadata capability.
+     * </p>
+     * @return {@code true} if metadata injection is enabled and applicable.
      */
     private boolean shouldInjectInbandMetadata() {
         return anahataMessage.getAgi().getRequestConfig().isInjectInbandMetadata() && anahataMessage.shouldCreateMetadata();
