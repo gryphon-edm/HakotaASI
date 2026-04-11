@@ -24,10 +24,23 @@ import uno.anahata.asi.agi.tool.schema.SchemaProvider;
  * @author anahata-ai
  */
 public class JavaMethodToolTest {
+    /**
+     * A reference to the Jackson type for a standard map, used for
+     * schema deserialization verification.
+     */
     private static final TypeReference<Map<String, Object>> MAP_TYPE_REF = new TypeReference<>() {};
+    /**
+     * The active AGI session used for tool lookup.
+     */
     private static Agi agi;
+    /**
+     * The manager instance being tested.
+     */
     private static ToolManager toolManager;
 
+    /**
+     * Initializes the test environment with a mock container and toolkit.
+     */
     @BeforeAll
     public static void setUp() {
         AbstractAsiContainer container = new MockAsiContainer("test-app");
@@ -37,6 +50,11 @@ public class JavaMethodToolTest {
         toolManager = agi.getToolManager();
     }
 
+    /**
+     * Verifies that @AgiToolParam descriptions and schemas are correctly
+     * extracted from Java methods.
+     * @throws Exception If schema parsing fails.
+     */
     @Test
     public void testParameterAnnotationsAreParsedCorrectly() throws Exception {
         JavaMethodTool sayHelloTool = (JavaMethodTool) toolManager.getAllTools().stream()
@@ -54,6 +72,10 @@ public class JavaMethodToolTest {
         assertEquals(String.class.getName(), schema.get("title"));
     }
 
+    /**
+     * Ensures that tools inherit the maximum execution depth from their
+     * parent toolkit.
+     */
     @Test
     public void testMaxDepthPolicyIsInheritedFromToolkit() {
         JavaMethodTool doNothingTool = (JavaMethodTool) toolManager.getAllTools().stream()
