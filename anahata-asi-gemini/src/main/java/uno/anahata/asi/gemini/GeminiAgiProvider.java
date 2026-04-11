@@ -26,7 +26,7 @@ public class GeminiAgiProvider extends AbstractAgiProvider {
     public GeminiAgiProvider() {
         super("Gemini");
         setFolderName("Gemini");
-        setDisplayName("Gemini (genai-java-sdk)");
+        setDisplayName("Gemini (java-genai)");
         setTokenizerType(TokenizerType.GEMINI);
     }
 
