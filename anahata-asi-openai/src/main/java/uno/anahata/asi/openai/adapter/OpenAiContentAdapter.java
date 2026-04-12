@@ -1,6 +1,7 @@
 /* Licensed under the Anahata Software License (ASL) v 108. See the LICENSE file for details. Força Barça! */
 package uno.anahata.asi.openai.adapter;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.ArrayList;
@@ -8,6 +9,8 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import uno.anahata.asi.agi.provider.TokenizerType;
+import uno.anahata.asi.internal.TokenizerUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.agi.message.AbstractMessage;
@@ -53,6 +56,9 @@ public class OpenAiContentAdapter {
     
     /** Whether to include the full content of parts that have been effectively pruned. */
     private final boolean includePruned;
+    
+    /** The tokenizer used to count parts accurately for the CwGC. */
+    private final TokenizerType tokenizerType;
 
     /**
      * Translates the Anahata message into a list of OpenAI-style JSON message nodes.
@@ -204,14 +210,18 @@ public class OpenAiContentAdapter {
 
         if (shouldIncludeContent) {
             if (part instanceof ModelTextPart mtp) {
-                textContent.append(mtp.getText());
+                String text = mtp.getText();
+                part.setTokenCount(TokenizerUtils.countTokens(text, tokenizerType));
+                textContent.append(text);
             } else if (part instanceof AbstractToolCall<?, ?> tc) {
                 ObjectNode callNode = toolCalls.addObject();
                 callNode.put("id", tc.getId());
                 callNode.put("type", "function");
                 ObjectNode funcNode = callNode.putObject("function");
                 funcNode.put("name", tc.getToolName());
-                funcNode.set("arguments", SchemaProvider.OBJECT_MAPPER.valueToTree(tc.getArgs()));
+                JsonNode argsNode = SchemaProvider.OBJECT_MAPPER.valueToTree(tc.getEffectiveArgs());
+                funcNode.set("arguments", argsNode);
+                part.setTokenCount(TokenizerUtils.countTokens(argsNode.toString(), tokenizerType));
             } else if (part instanceof BlobPart bp) {
                  textContent.append(String.format("\n[Output Blob: %s]\n", bp.getMimeType()));
             }

@@ -9,6 +9,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import com.fasterxml.jackson.databind.JsonNode;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 import uno.anahata.asi.internal.JacksonUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +45,11 @@ public class OpenAiCompatibleProvider extends AbstractAgiProvider {
      * </p>
      */
     private String baseUrl;
+    /**
+     * Optional custom HTTP headers to be sent with every request.
+     * Essential for providers requiring specific vendor headers (e.g., 'X-Title', 'OpenAI-Organization').
+     */
+    private Map<String, String> customHeaders;
 
     /**
      * Constructs a default OpenAI-compatible provider.
@@ -55,6 +63,8 @@ public class OpenAiCompatibleProvider extends AbstractAgiProvider {
         super();
         setDisplayName("OpenAI Compatible (Universal)");
         setTokenizerType(TokenizerType.CL100K_BASE);
+        setKeysAcquisitionUri("https://platform.openai.com/api-keys");
+        this.customHeaders = new HashMap<>();
     }
 
     /**
@@ -118,27 +128,25 @@ public class OpenAiCompatibleProvider extends AbstractAgiProvider {
             log.warn("Cannot list models: baseUrl or API key missing for provider '{}'", getProviderId());
             return Collections.emptyList();
         }
-
         try {
             String modelsUrl = url.endsWith("/") ? url + "models" : url + "/models";
-            HttpRequest httpRequest = HttpRequest.newBuilder()
+            HttpRequest.Builder requestBuilder = HttpRequest
+                    .newBuilder()
                     .uri(URI.create(modelsUrl))
                     .header("Authorization", "Bearer " + apiKey)
                     .header("Accept", "application/json")
-                    .GET()
-                    .build();
-
+                    .GET();
+            getCustomHeaders().forEach(requestBuilder::header);
+            HttpRequest httpRequest = requestBuilder.build();
             try (HttpClient client = HttpClient.newBuilder()
-                    .connectTimeout(java.time.Duration.ofSeconds(10))
+                    .connectTimeout(Duration.ofSeconds(10))
                     .build()) {
                 
                 HttpResponse<String> httpResponse = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-
                 if (httpResponse.statusCode() != 200) {
                     log.error("Failed to fetch models from {}. Status: {}. Response: {}", modelsUrl, httpResponse.statusCode(), httpResponse.body());
                     return Collections.emptyList();
                 }
-
                 JsonNode root = JacksonUtils.parse(httpResponse.body(), JsonNode.class);
                 JsonNode data = root.get("data");
                 if (data != null && data.isArray()) {
@@ -156,21 +164,9 @@ public class OpenAiCompatibleProvider extends AbstractAgiProvider {
         } catch (Exception e) {
             log.error("Error fetching models for provider '{}' at {}", getProviderId(), baseUrl, e);
         }
-
         return Collections.emptyList();
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Implementation details: Returns the official OpenAI key management URI as
-     * the default fallback.
-     * </p>
-     */
-    @Override
-    public URI getKeysAcquisitionUri() {
-        return URI.create("https://platform.openai.com/api-keys");
-    }
 
     /**
      * {@inheritDoc}

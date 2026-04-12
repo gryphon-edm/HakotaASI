@@ -4,15 +4,20 @@
 package uno.anahata.asi.swing;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Desktop;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -55,6 +60,8 @@ public class AiProviderPanel extends JPanel {
     private String currentFolderName;
     private final JComboBox<TokenizerType> tokenizerCombo;
     private JTextField baseUrlField;
+    private JTextField keysAcquisitionUriField;
+    private JTextArea customHeadersArea;
 
     /**
      * Constructs a new panel for the specified provider.
@@ -66,21 +73,14 @@ public class AiProviderPanel extends JPanel {
         super(new BorderLayout(5, 5));
         this.provider = provider;
         this.currentFolderName = provider.getFolderName();
-
         this.textArea = new JTextArea();
         this.textArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
-        
-        // Setup PromptSupport for the template hint
         PromptSupport.setPrompt(provider.getApiKeyHint(), textArea);
         PromptSupport.setFocusBehavior(PromptSupport.FocusBehavior.HIDE_PROMPT, textArea);
-        PromptSupport.setForeground(java.awt.Color.GRAY, textArea);
-        
-        // 1. Config Form Panel
+        PromptSupport.setForeground(Color.GRAY, textArea);
         JPanel configPanel = new JPanel(new MigLayout("fillx, insets 10", "[right]10[grow,fill]5[]"));
-        
         folderLabel = new JLabel();
         updateFolderLabel();
-
         configPanel.add(new JLabel("Provider Class:"));
         JTextField classField = new JTextField(provider.getClass().getName());
         classField.setEditable(false);
@@ -88,12 +88,10 @@ public class AiProviderPanel extends JPanel {
         classField.setOpaque(false);
         classField.setFont(classField.getFont().deriveFont(Font.ITALIC, 11f));
         configPanel.add(classField, "span 2, wrap");
-
         configPanel.add(new JLabel("Display Name:"));
         displayNameField = new JTextField(provider.getDisplayName());
         displayNameField.getDocument().addDocumentListener(new AnyChangeDocumentListener(() -> {
             if (currentFolderName == null || currentFolderName.isBlank()) {
-                // Smart defaulting if no folder set yet
                 String suggested = displayNameField.getText().trim().replaceAll("[^a-zA-Z0-9.-]", "_");
                 if (!suggested.isEmpty()) {
                     folderLabel.setText("<html><i>Suggested: </i><b>" + suggested + "</b></html>");
@@ -103,13 +101,11 @@ public class AiProviderPanel extends JPanel {
             }
         }));
         configPanel.add(displayNameField, "span 2, wrap");
-        
         configPanel.add(new JLabel("Storage Folder:"));
         configPanel.add(folderLabel);
-        
         JPanel folderButtons = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
         JButton chooseFolderBtn = new JButton("Choose...");
-        chooseFolderBtn.addActionListener(e -> {
+        chooseFolderBtn.addActionListener(e-> {
             JFileChooser chooser = new JFileChooser();
             Path current = provider.getProviderDirectory();
             if (Files.exists(current)) {
@@ -122,10 +118,9 @@ public class AiProviderPanel extends JPanel {
             }
         });
         folderButtons.add(chooseFolderBtn);
-        
         JButton openFolderBtn = new JButton(new ExternalIcon(16));
         openFolderBtn.setToolTipText("Open Provider Folder in Desktop");
-        openFolderBtn.addActionListener(e -> {
+        openFolderBtn.addActionListener(e-> {
             try {
                 Desktop.getDesktop().open(provider.getProviderDirectory().toFile());
             } catch (Exception ex) {
@@ -135,26 +130,31 @@ public class AiProviderPanel extends JPanel {
         });
         folderButtons.add(openFolderBtn);
         configPanel.add(folderButtons, "wrap");
-
-        JLabel folderLegend = new JLabel("<html><font color='#707070' size='-2'>Folder where the api_keys.txt file will be stored</font></html>");
-        configPanel.add(folderLegend, "skip 1, span 2, wrap");
-        
         configPanel.add(new JLabel("Tokenizer Type:"), "gaptop 5");
         tokenizerCombo = new JComboBox<>(TokenizerType.values());
         tokenizerCombo.setSelectedItem(provider.getTokenizerType());
         configPanel.add(tokenizerCombo, "span 2, wrap");
-        
+        configPanel.add(new JLabel("Key Acquisition URL:"));        
+        keysAcquisitionUriField = new JTextField(provider.getKeysAcquisitionUri() != null ? provider.getKeysAcquisitionUri().toString() : "");
+        configPanel.add(keysAcquisitionUriField, "span 2, wrap");
         if (provider instanceof OpenAiCompatibleProvider oai) {
             configPanel.add(new JLabel("Base URL:"));
             baseUrlField = new JTextField(oai.getBaseUrl());
             configPanel.add(baseUrlField, "span 2, wrap");
+            configPanel.add(new JLabel("Custom Headers:"), "top");
+            customHeadersArea = new JTextArea(3, 20);
+            customHeadersArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+            if (oai.getCustomHeaders() != null) {
+                String headers = oai.getCustomHeaders().entrySet().stream().map(entry -> entry.getKey() + ": " + entry.getValue()).collect(Collectors.joining("\n"));
+                customHeadersArea.setText(headers);
+            }
+            PromptSupport.setPrompt("Header-Name: Header-Value\nOne per line...", customHeadersArea);
+            configPanel.add(new JScrollPane(customHeadersArea), "span 2, growx, wrap");
         }
-        
         JCheckBox enabledCheck = new JCheckBox("Provider Enabled", provider.isEnabled());
         enabledCheck.setFont(enabledCheck.getFont().deriveFont(Font.BOLD));
         enabledCheck.addActionListener(e -> provider.setEnabled(enabledCheck.isSelected()));
         configPanel.add(enabledCheck, "span 3, wrap, gapbottom 5");
-        
         if (provider.getKeysAcquisitionUri() != null) {
             JLabel linkLabel = new JLabel("<html><a href=''>Get " + provider.getDisplayName() + " API Keys</a></html>");
             linkLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -170,24 +170,18 @@ public class AiProviderPanel extends JPanel {
             });
             configPanel.add(linkLabel, "span 3, wrap");
         }
-        
         JLabel tipLabel = new JLabel("<html><font color='#707070'><i><b>Pro Tip:</b> You can add multiple keys to create a 'Key Pool'. The ASI will rotate through them in a <b>Round-Robin</b> fashion.</i></font></html>");
         configPanel.add(tipLabel, "span 3, growx, wrap, gaptop 5, gapbottom 5");
-        
         JButton removeBtn = new JButton("Remove", new DeleteIcon(16));
         removeBtn.addActionListener(e -> removeCallback.run());
-
         JButton saveBtn = new JButton("Save Config & Keys", new SaveIcon(16));
         saveBtn.addActionListener(e -> saveProviderConfig());
-        
         JPanel footerPanel = new JPanel(new BorderLayout());
         footerPanel.add(removeBtn, BorderLayout.WEST);
         footerPanel.add(saveBtn, BorderLayout.EAST);
-
         add(configPanel, BorderLayout.NORTH);
         add(new JScrollPane(textArea), BorderLayout.CENTER);
         add(footerPanel, BorderLayout.SOUTH);
-
         loadKeys();
     }
 
@@ -220,20 +214,31 @@ public class AiProviderPanel extends JPanel {
      */
     private void saveProviderConfig() {
         provider.setDisplayName(displayNameField.getText().trim());
-        
         if (currentFolderName == null || currentFolderName.isBlank()) {
-            // If still blank, use the smart default from display name
             currentFolderName = displayNameField.getText().trim().replaceAll("[^a-zA-Z0-9.-]", "_");
         }
         provider.setFolderName(currentFolderName);
         updateFolderLabel();
-
         provider.setTokenizerType((TokenizerType) tokenizerCombo.getSelectedItem());
-        
-        if (provider instanceof OpenAiCompatibleProvider oai && baseUrlField != null) {
-            oai.setBaseUrl(baseUrlField.getText().trim());
+        provider.setKeysAcquisitionUri(keysAcquisitionUriField.getText().trim());
+        if (provider instanceof OpenAiCompatibleProvider oai) {
+            if (baseUrlField != null) {
+                oai.setBaseUrl(baseUrlField.getText().trim());
+            }
+            if (customHeadersArea != null) {
+                Map<String, String> headers = new HashMap<>();
+                String text = customHeadersArea.getText().trim();
+                if (!text.isEmpty()) {
+                    for (String line : text.split("\n")) {
+                        int colon = line.indexOf(":");
+                        if (colon > 0) {
+                            headers.put(line.substring(0, colon).trim(), line.substring(colon + 1).trim());
+                        }
+                    }
+                }
+                oai.setCustomHeaders(headers);
+            }
         }
-
         Path path = provider.getKeysFilePath();
         try {
             Files.writeString(path, textArea.getText());

@@ -50,6 +50,11 @@ public abstract class AbstractAgiProvider {
     private String displayName;
 
     /**
+     * The URI where users can acquire API keys for this provider.
+     */
+    private String keysAcquisitionUri;
+
+    /**
      * The type of tokenizer used by this provider.
      * This determines how accurately the Context Window Garbage Collector
      * can estimate the token count before making an API call.
@@ -167,9 +172,19 @@ public abstract class AbstractAgiProvider {
     /**
      * Gets the URI where users can acquire API keys for this provider.
      * 
-     * @return The acquisition URI.
+     * @return The acquisition URI, or null if not set.
      */
-    public abstract java.net.URI getKeysAcquisitionUri();
+    public java.net.URI getKeysAcquisitionUri() {
+        if (keysAcquisitionUri == null || keysAcquisitionUri.isBlank()) {
+            return null;
+        }
+        try {
+            return java.net.URI.create(keysAcquisitionUri);
+        } catch (Exception e) {
+            log.error("Invalid keysAcquisitionUri: {}", keysAcquisitionUri);
+            return null;
+        }
+    }
 
     /**
      * Gets a template or hint string to display when the API keys file is empty.

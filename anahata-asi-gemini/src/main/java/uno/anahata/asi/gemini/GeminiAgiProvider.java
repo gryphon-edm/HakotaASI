@@ -24,10 +24,10 @@ public class GeminiAgiProvider extends AbstractAgiProvider {
     private transient Client client;
 
     public GeminiAgiProvider() {
-        super("Gemini");
-        setFolderName("Gemini");
-        setDisplayName("Gemini (java-genai)");
+        super();
+        setDisplayName("Google Gemini");
         setTokenizerType(TokenizerType.GEMINI);
+        setKeysAcquisitionUri("https://aistudio.google.com/app/apikey");
     }
 
     /**
@@ -88,20 +88,6 @@ public class GeminiAgiProvider extends AbstractAgiProvider {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Returns the official Google AI Studio API key management URI.
-     * </p>
-     */
-    @Override
-    public java.net.URI getKeysAcquisitionUri() {
-        try {
-            return new java.net.URI("https://aistudio.google.com/app/apikey");
-        } catch (java.net.URISyntaxException e) {
-            return null;
-        }
-    }
 
     /**
      * {@inheritDoc}
