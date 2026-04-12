@@ -24,7 +24,7 @@ import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.persistence.kryo.KryoUtils;
 import uno.anahata.asi.agi.provider.AbstractAgiProvider;
 import uno.anahata.asi.agi.provider.AbstractModel;
-import uno.anahata.asi.swing.icons.SaveSessionIcon;
+import uno.anahata.asi.swing.icons.SaveIcon;
 import uno.anahata.asi.swing.icons.SearchIcon;
 import uno.anahata.asi.swing.internal.SwingTask;
 import uno.anahata.asi.swing.provider.AgiProviderRegistryViewer;
@@ -86,7 +86,7 @@ public class HeaderPanel extends JPanel {
         add(nicknameField, "w 150!");
 
         // Session Buttons
-        saveSessionButton = new JButton(new SaveSessionIcon(ICON_SIZE));
+        saveSessionButton = new JButton(new SaveIcon(ICON_SIZE));
         saveSessionButton.setToolTipText("Save Session");
         saveSessionButton.addActionListener(e -> saveSession());
         add(saveSessionButton);
