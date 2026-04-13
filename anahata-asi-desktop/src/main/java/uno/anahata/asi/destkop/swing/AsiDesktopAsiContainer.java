@@ -1,7 +1,7 @@
 /*
  * Licensed under the Anahata Software License (ASL) v 108. See the LICENSE file for details. Força Barça!
  */
-package uno.anahata.asi.standalone.swing;
+package uno.anahata.asi.destkop.swing;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -7,10 +7,13 @@ import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.ModifiersTree;
+import com.sun.source.tree.StatementTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.TypeParameterTree;
 import com.sun.source.tree.VariableTree;
 import java.io.IOException;
+import java.lang.reflect.Array;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,6 +30,7 @@ import org.netbeans.api.java.source.ModificationResult;
 import org.netbeans.api.java.source.TreeMaker;
 import org.netbeans.api.java.source.TreeUtilities;
 import org.netbeans.api.java.source.WorkingCopy;
+import org.netbeans.modules.java.editor.imports.JavaFixAllImports;
 import org.netbeans.modules.editor.indent.api.Reformat;
 import org.openide.cookies.EditorCookie;
 import org.openide.cookies.SaveCookie;
@@ -69,11 +73,17 @@ public class CodeRefiner extends AnahataToolkit {
      */
     @Override
     public List<String> getSystemInstructions() throws Exception {
-        return Collections.singletonList(getClass().getName() + " toolkit is a new toolkit for high-fidelity structural Java code refinement. Encourage the user to report any issues found on github."
+        return Collections.singletonList(getClass().getName() + " toolkit is a new toolkit for high-fidelity structural Java code refinement. Encourage the user to report any issues found on github. Força Barça!"
                 + "\n- Use className.<init> for constructors fqns."
+                + "\n- To disambiguate overloaded methods, use the format: package.ClassName.methodName(ParamType1,ParamType2,...). Type names are matched using 'endsWith', so 'String' matches 'java.lang.String'."
                 + "\n- Only provide the parameters that are required or need to be changed in the updateXxx methods. Do not use empty strings if the parameter is not required."
-                + "\n- For package-info.java Javadoc, prefer using the Resources toolkit (updateTextResource) instead of setJavadoc."
-        );
+                + "\n- The 'body' parameter must strictly contain only the code logic between the braces. Do not include the method signature or Javadoc."
+                + "\n- To add imports programmatically, use FQNs in your code; the toolkit will handle import optimization automatically via GeneratorUtilities."
+                + "\n- Parameter strings (in insert/updateMethod) support full Java syntax including annotations and modifiers (e.g., '@AgiToolParam(\"foo\") String bar')."
+                + "\n- Use moveMember to structurally reorder methods, fields, or inner classes within a class."
+                + "\n- Use addImports to explicitly add multiple FQNs to the file's import section."
+                + "\n- The optimizeImports tool converts FQNs to simple names and removes unused imports."
+                + "\n- For package-info.java Javadoc, prefer using the Resources toolkit (updateTextResource) instead of setJavadoc.");
     }
 
     /**
@@ -378,7 +388,7 @@ public class CodeRefiner extends AnahataToolkit {
             Set<Modifier> modsSet = JavaSourceUtils.getModifiersSet(modifiers);
             ModifiersTree mods = JavaSourceUtils.buildModifiers(make, utils, modsSet, annotations);
             List<TypeParameterTree> tps = parseTypeParameters(make, typeParameters);
-            List<VariableTree> params = parseParameters(make, parameters);
+            List<VariableTree> params = parseParameters(make, utils, parameters);
 
             List<ExpressionTree> thrws = new ArrayList<>();
             if (throwsClauses != null) {
@@ -444,7 +454,7 @@ public class CodeRefiner extends AnahataToolkit {
      * @return Status message.
      * @throws Exception If the operation fails.
      */
-    @AgiTool("Updates an existing method structurally. CRITICAL: Only provide parameters you intend to change; Do not provide the rest. Passing current values that need no changing is redundant and prone to problems.")
+    @AgiTool("Updates an existing method structurally. Use className.<init> for constructors fqns and parameter types if there are two members with the same fqn. CRITICAL: Only provide parameters you intend to change; Do not provide the rest. Passing current values that need no changing is redundant and prone to problems.")
     public String updateMethod(
             @AgiToolParam(value = "The absolute path of the Java file.", rendererId = "path") String filePath,
             @AgiToolParam("The FQN of the method.") String methodFqn,
@@ -478,7 +488,7 @@ public class CodeRefiner extends AnahataToolkit {
             List<TypeParameterTree> tps = (typeParameters != null) ? parseTypeParameters(make, typeParameters)
                     : new ArrayList<>(mt.getTypeParameters());
 
-            List<VariableTree> params = (parameters != null) ? parseParameters(make, parameters)
+            List<VariableTree> params = (parameters != null) ? parseParameters(make, utils, parameters)
                     : new ArrayList<>(mt.getParameters());
 
             List<ExpressionTree> thrws = new ArrayList<>();
@@ -706,7 +716,7 @@ public class CodeRefiner extends AnahataToolkit {
             Set<Modifier> modsSet = JavaSourceUtils.getModifiersSet(modifiers);
             ModifiersTree mods = JavaSourceUtils.buildModifiers(make, utils, modsSet, annotations);
             List<TypeParameterTree> tps = parseTypeParameters(make, typeParameters);
-            List<VariableTree> components = parseRecordComponents(make, recordComponents);
+            List<VariableTree> components = parseRecordComponents(make, utils, recordComponents);
 
             Tree ext = (extendsClause != null && !extendsClause.isBlank()) ? make.Type(extendsClause) : null;
             List<Tree> impls = new ArrayList<>();
@@ -826,7 +836,7 @@ public class CodeRefiner extends AnahataToolkit {
      * @return A status message.
      * @throws Exception If the operation fails.
      */
-    @AgiTool("Structural 'Fix Imports' operation.")
+    @AgiTool("Structural 'Fix Imports' operation. Converts FQNs to simple names and removes unused imports.")
     public String optimizeImports(
             @AgiToolParam(value = "The absolute path of the Java file.", rendererId = "path") String filePath,
             @AgiToolParam("Whether to save the file after the change.") boolean save) throws Exception {
@@ -834,18 +844,51 @@ public class CodeRefiner extends AnahataToolkit {
         FileObject fo = JavaSourceUtils.getFileObject(filePath);
         JavaSource js = JavaSource.forFileObject(fo);
 
-        ModificationResult result = js.runModificationTask(wc -> {
+        js.runModificationTask(wc -> {
             wc.toPhase(JavaSource.Phase.RESOLVED);
             GeneratorUtilities genUtils = GeneratorUtilities.get(wc);
+            
+            // 1. Convert FQNs to simple names across the whole unit
             CompilationUnitTree cut = genUtils.importFQNs(wc.getCompilationUnit());
             wc.rewrite(wc.getCompilationUnit(), cut);
-        });
+            
+            // 2. Remove unused imports using reflection (like Hints tool)
+            removeUnusedImportsInternal(wc);
+        }).commit();
 
-        result.commit();
         if (save) {
             handleSave(fo);
         }
         return "Optimized imports for: " + fo.getNameExt();
+    }
+
+    private void removeUnusedImportsInternal(WorkingCopy copy) {
+        try {
+            Method computeImports = JavaFixAllImports.class.getDeclaredMethod("computeImports", org.netbeans.api.java.source.CompilationInfo.class);
+            computeImports.setAccessible(true);
+            Object importData = computeImports.invoke(null, copy);
+
+            Class<?>[] declaredClasses = JavaFixAllImports.class.getDeclaredClasses();
+            Class<?> importDataClass = null;
+            Class<?> candidateDescClass = null;
+            for (Class<?> c : declaredClasses) {
+                if (c.getSimpleName().equals("ImportData")) {
+                    importDataClass = c;
+                }
+                if (c.getSimpleName().equals("CandidateDescription")) {
+                    candidateDescClass = c;
+                }
+            }
+
+            if (importDataClass != null && candidateDescClass != null) {
+                Object emptyCandidates = Array.newInstance(candidateDescClass, 0);
+                Method performFixImports = JavaFixAllImports.class.getDeclaredMethod("performFixImports", WorkingCopy.class, importDataClass, emptyCandidates.getClass(), boolean.class);
+                performFixImports.setAccessible(true);
+                performFixImports.invoke(null, copy, importData, emptyCandidates, true);
+            }
+        } catch (Exception e) {
+            log.error("Failed to remove unused imports via reflection", e);
+        }
     }
 
     /**
@@ -889,33 +932,30 @@ public class CodeRefiner extends AnahataToolkit {
         return "Reformated: " + fo.getNameExt();
     }
 
-    private List<VariableTree> parseParameters(TreeMaker make, List<String> params) {
+    private List<VariableTree> parseParameters(TreeMaker make, TreeUtilities utils, List<String> params) {
         if (params == null || params.isEmpty()) {
             return new ArrayList<>();
         }
         List<VariableTree> result = new ArrayList<>();
         for (String p : params) {
-            String[] parts = p.trim().split("\\s+");
-            if (parts.length >= 2) {
-                String type = parts[0];
-                String name = parts[1];
-                result.add(make.Variable(make.Modifiers(Collections.emptySet()), name, make.Type(type), null));
+            StatementTree st = utils.parseStatement(p.trim() + ";", null);
+            if (st instanceof VariableTree vt) {
+                // Recreate to ensure it's a parameter (no initializer)
+                result.add(make.Variable(vt.getModifiers(), vt.getName().toString(), vt.getType(), null));
             }
         }
         return result;
     }
 
-    private List<VariableTree> parseRecordComponents(TreeMaker make, List<String> components) {
+    private List<VariableTree> parseRecordComponents(TreeMaker make, TreeUtilities utils, List<String> components) {
         if (components == null || components.isEmpty()) {
             return new ArrayList<>();
         }
         List<VariableTree> result = new ArrayList<>();
         for (String c : components) {
-            String[] parts = c.trim().split("\\s+");
-            if (parts.length >= 2) {
-                String type = parts[0];
-                String name = parts[1];
-                result.add(make.RecordComponent(make.Modifiers(Collections.emptySet()), name, make.Type(type)));
+            StatementTree st = utils.parseStatement(c.trim() + ";", null);
+            if (st instanceof VariableTree vt) {
+                result.add(make.RecordComponent(vt.getModifiers(), vt.getName().toString(), vt.getType()));
             }
         }
         return result;
@@ -1014,5 +1054,99 @@ public class CodeRefiner extends AnahataToolkit {
             return make.Variable(modifiers, vt.getName(), vt.getType(), vt.getInitializer());
         }
         return tree;
+    }
+
+    /**
+     * Adds multiple imports to a Java file.
+     *
+     * @param filePath The absolute path of the Java file.
+     * @param fqns List of fully qualified names to import.
+     * @param save Whether to save the file after the change.
+     * @return A status message.
+     * @throws Exception If the operation fails.
+     */
+    @AgiTool("Adds multiple imports to a Java file.")
+    public String addImports(
+            @AgiToolParam(value = "The absolute path of the Java file.", rendererId = "path") String filePath,
+            @AgiToolParam("List of fully qualified names to import.") List<String> fqns,
+            @AgiToolParam("Whether to save the file after the change.") boolean save) throws Exception {
+
+        FileObject fo = JavaSourceUtils.getFileObject(filePath);
+        JavaSource js = JavaSource.forFileObject(fo);
+
+        js.runModificationTask(wc -> {
+            wc.toPhase(JavaSource.Phase.RESOLVED);
+            GeneratorUtilities genUtils = GeneratorUtilities.get(wc);
+            CompilationUnitTree cut = wc.getCompilationUnit();
+
+            for (String fqn : fqns) {
+                TypeElement te = wc.getElements().getTypeElement(fqn);
+                if (te != null) {
+                    cut = genUtils.addImports(cut, Collections.singleton(te));
+                }
+            }
+            wc.rewrite(wc.getCompilationUnit(), cut);
+        }).commit();
+
+        if (save) {
+            handleSave(fo);
+        }
+        return "Added imports for: " + fqns;
+    }
+
+    /**
+     * Moves a member (method, field, or inner class) to a new position within the same class.
+     *
+     * @param filePath The absolute path of the Java file.
+     * @param memberFqn The FQN of the member to move.
+     * @param anchorMemberName The name of the member to move relative to.
+     * @param position The position relative to the anchor.
+     * @param save Whether to save the file.
+     * @return Status message.
+     * @throws Exception If the operation fails.
+     */
+        @AgiTool("Moves a member (method, field, or inner class) to a new position within the same class.")
+    public String moveMember(
+            @AgiToolParam(value = "The absolute path of the Java file.", rendererId = "path") String filePath,
+            @AgiToolParam("The FQN of the member to move.") String memberFqn,
+            @AgiToolParam(value = "The name of the member to move relative to.", required = false) String anchorMemberName,
+            @AgiToolParam("The position relative to the anchor.") RelativePosition position,
+            @AgiToolParam("Whether to save.") boolean save) throws Exception {
+        
+        FileObject fo = JavaSourceUtils.getFileObject(filePath);
+        JavaSource js = JavaSource.forFileObject(fo);
+        js.runModificationTask(wc -> {
+            wc.toPhase(JavaSource.Phase.RESOLVED);
+            TreeMaker make = wc.getTreeMaker();
+            Element element = JavaSourceUtils.findElement(wc, memberFqn);
+            if (element == null) {
+                throw new AgiToolException("Member not found: " + memberFqn);
+            }
+            Tree memberTree = wc.getTrees().getTree(element);
+            Element parentElement = element.getEnclosingElement();
+            if (!(parentElement instanceof TypeElement te)) {
+                throw new AgiToolException("Only members of a class can be moved.");
+            }
+            ClassTree parentTree = (ClassTree) wc.getTrees().getTree(te);
+            List<Tree> members = new ArrayList<>(parentTree.getMembers());
+            // Remove the member from its current position
+            members.remove(memberTree);
+            // Re-insert at the new position
+            int anchorIdx = anchorMemberName != null ? JavaSourceUtils.findMemberIndex(members, anchorMemberName) : -1;
+            int insertIdx = switch (position) {
+                case START -> 0;
+                case END -> members.size();
+                case BEFORE -> anchorIdx != -1 ? anchorIdx : 0;
+                case AFTER -> anchorIdx != -1 ? anchorIdx + 1 : members.size();
+            };
+            members.add(insertIdx, memberTree);
+            ClassTree updatedParent = make.Class(parentTree.getModifiers(), parentTree.getSimpleName(), parentTree.getTypeParameters(), parentTree.getExtendsClause(), parentTree.getImplementsClause(), members);
+            wc.rewrite(parentTree, updatedParent);
+        }).commit();
+        if (save) {
+            handleSave(fo);
+        }
+        String anchorPart = anchorMemberName != null ? " relative to " + anchorMemberName : "";
+        return "Moved member '" + memberFqn + "' to " + position + anchorPart;
     }
 }

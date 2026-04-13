@@ -20,4 +20,4 @@
  * 
  * @author anahata
  */
-package uno.anahata.asi.standalone;
+package uno.anahata.asi.desktop;
