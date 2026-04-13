@@ -138,9 +138,7 @@ public class OpenAiCompatibleProvider extends AbstractAgiProvider {
                     .GET();
             getCustomHeaders().forEach(requestBuilder::header);
             HttpRequest httpRequest = requestBuilder.build();
-            try (HttpClient client = HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(10))
-                    .build()) {
+            try (HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build()) {
                 
                 HttpResponse<String> httpResponse = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
                 if (httpResponse.statusCode() != 200) {
