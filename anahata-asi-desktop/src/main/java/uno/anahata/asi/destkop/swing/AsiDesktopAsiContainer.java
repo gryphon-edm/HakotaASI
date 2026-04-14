@@ -70,7 +70,7 @@ public class AsiDesktopAsiContainer extends AbstractSwingAsiContainer {
         
         if (getProvider("HuggingFace") == null) {
             registerProvider(new OpenAiCompatibleProvider(                    
-                    "HuggingFace", "Hugging Face", "https://router.huggingface.co/v1", "HuggingFace"));
+                    "HuggingFace", "Hugging Face", "https://router.huggingface.co/v1", "HuggingFace", "https://huggingface.co/settings/tokens"));
         }
         
         

@@ -296,7 +296,7 @@ public class AsiContainerPreferencesPanel extends JPanel {
 
             String uuid = java.util.UUID.randomUUID().toString();
             uno.anahata.asi.openai.OpenAiCompatibleProvider provider = 
-                    new uno.anahata.asi.openai.OpenAiCompatibleProvider(uuid, name, url, folder);
+                    new uno.anahata.asi.openai.OpenAiCompatibleProvider(uuid, name, url, folder, null);
             
             // Save keys to the provider's directory
             try {

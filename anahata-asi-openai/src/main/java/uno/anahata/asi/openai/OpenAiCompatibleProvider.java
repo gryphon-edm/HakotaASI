@@ -74,7 +74,7 @@ public class OpenAiCompatibleProvider extends AbstractAgiProvider {
      * @param baseUrl The API endpoint URL.
      */
     public OpenAiCompatibleProvider(String uuid, String displayName, String baseUrl) {
-        this(uuid, displayName, baseUrl, null);
+        this(uuid, displayName, baseUrl, null, null);
     }
 
     /**
@@ -84,10 +84,11 @@ public class OpenAiCompatibleProvider extends AbstractAgiProvider {
      * @param baseUrl The API endpoint URL.
      * @param folderName The custom folder name for configuration and key storage.
      */
-    public OpenAiCompatibleProvider(String uuid, String displayName, String baseUrl, String folderName) {
+    public OpenAiCompatibleProvider(String uuid, String displayName, String baseUrl, String folderName, String apiKeyAdquisitionUri) {
         super(uuid);
         setDisplayName(displayName);
         setBaseUrl(baseUrl);
+        setKeysAcquisitionUri(apiKeyAdquisitionUri);
         setFolderName(folderName);
         setTokenizerType(TokenizerType.CL100K_BASE);
     }

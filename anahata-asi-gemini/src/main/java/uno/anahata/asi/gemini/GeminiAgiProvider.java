@@ -24,8 +24,8 @@ public class GeminiAgiProvider extends AbstractAgiProvider {
     private transient Client client;
 
     public GeminiAgiProvider() {
-        super();
-        setDisplayName("Google Gemini");
+        super("Gemini");
+        setDisplayName("Gemini-genai");
         setTokenizerType(TokenizerType.GEMINI);
         setKeysAcquisitionUri("https://aistudio.google.com/app/apikey");
     }
