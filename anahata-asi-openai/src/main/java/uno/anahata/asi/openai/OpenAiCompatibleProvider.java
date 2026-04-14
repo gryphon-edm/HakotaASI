@@ -49,7 +49,7 @@ public class OpenAiCompatibleProvider extends AbstractAgiProvider {
      * Optional custom HTTP headers to be sent with every request.
      * Essential for providers requiring specific vendor headers (e.g., 'X-Title', 'OpenAI-Organization').
      */
-    private Map<String, String> customHeaders;
+    private Map<String, String> customHeaders = new HashMap<>();
 
     /**
      * Constructs a default OpenAI-compatible provider.
