@@ -25,7 +25,6 @@ import uno.anahata.asi.agi.message.AbstractMessage;
 import uno.anahata.asi.agi.message.AbstractModelMessage;
 import uno.anahata.asi.agi.event.BasicPropertyChangeSource;
 import uno.anahata.asi.agi.provider.GenerationRequest;
-import uno.anahata.asi.agi.message.InputUserMessage;
 import uno.anahata.asi.agi.message.UserMessage;
 import uno.anahata.asi.agi.provider.RequestConfig;
 import uno.anahata.asi.agi.provider.Response;
