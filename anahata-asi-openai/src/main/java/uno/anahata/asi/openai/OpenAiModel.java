@@ -14,11 +14,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Stream;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.agi.message.AbstractMessage;
 import uno.anahata.asi.agi.message.AbstractModelMessage;
-import uno.anahata.asi.agi.provider.AbstractAgiProvider;
+import uno.anahata.asi.agi.provider.AbstractAiProvider;
 import uno.anahata.asi.agi.provider.AbstractModel;
 import uno.anahata.asi.agi.provider.GenerationRequest;
 import uno.anahata.asi.agi.provider.RequestConfig;
@@ -35,13 +38,20 @@ import uno.anahata.asi.openai.adapter.OpenAiContentAdapter;
  * OpenAI-compatible Chat Completion API using the standard JDK HttpClient.
  */
 @Slf4j
+@Getter
+@Setter
 public class OpenAiModel extends AbstractModel {
 
     private final OpenAiCompatibleProvider provider;
     private final String modelId;
     private final String displayName;
+    private String version = "N/A";
     private int maxInputTokens = 128000;
     private int maxOutputTokens = 4096;
+    
+    private ReasoningStyle reasoningStyle = ReasoningStyle.NONE;
+    private String reasoningFieldName;
+    private List<String> reasoningTags;
 
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(30))
@@ -54,46 +64,8 @@ public class OpenAiModel extends AbstractModel {
     }
 
     @Override
-    public AbstractAgiProvider getProvider() {
-        return provider;
-    }
-
-    @Override
-    public String getModelId() {
-        return modelId;
-    }
-
-    @Override
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    @Override
     public String getDescription() {
         return "OpenAI-compatible model: " + modelId;
-    }
-
-    @Override
-    public String getVersion() {
-        return "N/A";
-    }
-
-    @Override
-    public int getMaxInputTokens() {
-        return maxInputTokens;
-    }
-
-    @Override
-    public int getMaxOutputTokens() {
-        return maxOutputTokens;
-    }
-
-    public void setMaxInputTokens(int maxInputTokens) {
-        this.maxInputTokens = maxInputTokens;
-    }
-
-    public void setMaxOutputTokens(int maxOutputTokens) {
-        this.maxOutputTokens = maxOutputTokens;
     }
 
     @Override
@@ -177,6 +149,10 @@ public class OpenAiModel extends AbstractModel {
         String historyJson = payload.get("messages").toString();
 
         try {
+            if (provider.isApiKeyRequired() && (provider.getCurrentApiKey() == null || provider.getCurrentApiKey().isBlank())) {
+                throw new RuntimeException("API key is required for provider: " + provider.getDisplayName());
+            }
+
             String trimmedBaseUrl = provider.getBaseUrl() != null ? provider.getBaseUrl().trim() : "";
             HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                     .uri(URI.create(trimmedBaseUrl.endsWith("/") ? trimmedBaseUrl + "chat/completions" : trimmedBaseUrl + "/chat/completions"))
@@ -197,7 +173,7 @@ public class OpenAiModel extends AbstractModel {
                 throw new RuntimeException("API error (" + httpResponse.statusCode() + "): " + httpResponse.body());
             }
             
-            return new OpenAiResponse(agi, modelId, httpResponse.body(), jsonPayload, historyJson);
+            return new OpenAiResponse(agi, modelId, httpResponse.body(), jsonPayload, historyJson, this);
         } catch (IOException | InterruptedException e) {
             log.error("Failed to execute OpenAI request", e);
             throw new RuntimeException(e);
@@ -210,48 +186,47 @@ public class OpenAiModel extends AbstractModel {
         ObjectNode payload = preparePayload(request, true);
         String jsonPayload = payload.toString();
         String historyJson = payload.get("messages").toString();
-
         try {
             String trimmedBaseUrl = provider.getBaseUrl() != null ? provider.getBaseUrl().trim() : "";
-            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                    .uri(URI.create(trimmedBaseUrl.endsWith("/") ? trimmedBaseUrl + "chat/completions" : trimmedBaseUrl + "/chat/completions"))
+            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder().uri(URI.create(trimmedBaseUrl.endsWith("/") ? trimmedBaseUrl + "chat/completions" : trimmedBaseUrl + "/chat/completions"))
                     .header("Content-Type", "application/json")
-                    .header("Authorization", "Bearer " + provider.getCurrentApiKey());
-            
+                    .header("Authorization", "Bearer " + provider.getCurrentApiKey())
+                    .timeout(Duration.ofSeconds(60));
             provider.getCustomHeaders().forEach(requestBuilder::header);
-            
             HttpRequest httpRequest = requestBuilder.POST(HttpRequest.BodyPublishers.ofString(jsonPayload)).build();
-
             List<OpenAiModelMessage> targets = new ArrayList<>();
             AtomicBoolean started = new AtomicBoolean(false);
-
-            HTTP_CLIENT.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofLines()).thenAccept(response -> {
-                if (response.statusCode() != 200) {
-                    if (isRetryable(response.statusCode())) {
-                        provider.hokusPocus();
-                        observer.onError(new RetryableApiException(provider.getCurrentApiKey(), "OpenAI Stream Error (" + response.statusCode() + ")", null));
-                    } else {
-                        observer.onError(new RuntimeException("OpenAI Stream Error (" + response.statusCode() + ")"));
-                    }
-                    return;
+            HttpResponse<Stream<String>> response = HTTP_CLIENT.send(httpRequest, HttpResponse.BodyHandlers.ofLines());
+            if (response.statusCode() != 200) {
+                if (isRetryable(response.statusCode())) {
+                    provider.hokusPocus();
+                    observer.onError(new RetryableApiException(provider.getCurrentApiKey(), "OpenAI Stream Error (" + response.statusCode() + ")", null));
+                } else {
+                    observer.onError(new RuntimeException("OpenAI Stream Error (" + response.statusCode() + ")"));
                 }
-                
-                response.body().forEach(line -> {
-                    if (line == null || line.isBlank()) return;
-                    if (!line.startsWith("data: ")) return;
-                    
+                return;
+            }
+            try (Stream<String> lines = response.body()) {
+                var it = lines.iterator();
+                while (it.hasNext()) {
+                    String line = it.next();
+                    if (line == null || line.isBlank()) continue;
+                    if (!line.startsWith("data: ")) continue;
                     String data = line.substring(6).trim();
                     if ("[DONE]".equals(data)) {
                         targets.forEach(OpenAiModelMessage::flushToolCalls);
                         observer.onComplete();
-                        return;
+                        break;
                     }
-                    
                     try {
                         JsonNode chunk = JacksonUtils.parse(data, JsonNode.class);
+                        if (chunk.has("error")) {
+                            log.error("Error in OpenAI stream chunk: {}", data);
+                            observer.onError(new RuntimeException("OpenAI Stream Chunk Error: " + chunk.get("error").path("message").asText()));
+                            return;
+                        }
                         JsonNode choices = chunk.get("choices");
-                        
-                        if (choices != null && choices.isArray()) {
+                        if (choices != null && choices.isArray() && choices.size() > 0) {
                             if (!started.get()) {
                                 for (int i = 0; i < choices.size(); i++) {
                                     targets.add(new OpenAiModelMessage(agi, modelId));
@@ -259,29 +234,56 @@ public class OpenAiModel extends AbstractModel {
                                 observer.onStart((List) targets);
                                 started.set(true);
                             }
-                            
                             for (int i = 0; i < Math.min(choices.size(), targets.size()); i++) {
                                 JsonNode choice = choices.get(i);
                                 OpenAiModelMessage target = targets.get(i);
-                                target.parseChoice(choice);
+                                routeChunk(choice, target);
                             }
                         }
-                        
-                        observer.onNext(new OpenAiResponse(agi, modelId, data, jsonPayload, historyJson));
-                        
+                        observer.onNext(new OpenAiResponse(agi, modelId, data, jsonPayload, historyJson, this));
                     } catch (Exception e) {
                         log.error("Failed to parse OpenAI stream chunk: {}", data, e);
                     }
-                });
-            }).exceptionally(ex -> {
-                log.error("OpenAI stream request failed", ex);
-                observer.onError(ex);
-                return null;
-            });
+                }
+            }
 
         } catch (Exception e) {
-            log.error("Failed to initiate OpenAI stream", e);
+            log.error("Failed to execute OpenAI stream", e);
             observer.onError(e);
+        }
+    }
+
+    private void routeChunk(JsonNode choice, OpenAiModelMessage target) {
+        JsonNode delta = choice.get("delta");
+        if (delta == null) delta = choice.get("message");
+        if (delta == null) return;
+
+        // 1. Handle Reasoning (Field style - e.g. DeepSeek)
+        if (reasoningStyle == ReasoningStyle.FIELD && reasoningFieldName != null 
+                && delta.has(reasoningFieldName) && !delta.get(reasoningFieldName).isNull()) {
+            target.appendThoughts(delta.get(reasoningFieldName).asText());
+        }
+
+        // 2. Handle Content (might contain TAGS style reasoning)
+        if (delta.has("content") && !delta.get("content").isNull()) {
+            String text = delta.get("content").asText();
+            if (reasoningStyle == ReasoningStyle.TAGS && reasoningTags != null && reasoningTags.size() >= 2) {
+                target.appendTaggedContent(text, reasoningTags.get(0), reasoningTags.get(1));
+            } else {
+                target.appendContent(text);
+            }
+        }
+
+        // 3. Tool Calls (Metadata parsing still handled by message for now)
+        if (delta.has("tool_calls")) {
+            for (JsonNode callNode : delta.get("tool_calls")) {
+                target.updateToolCall(callNode);
+            }
+        }
+
+        // 4. Finish Reason
+        if (choice.has("finish_reason") && !choice.get("finish_reason").isNull()) {
+            target.setFinishReasonFromOpenAi(choice.get("finish_reason").asText());
         }
     }
 

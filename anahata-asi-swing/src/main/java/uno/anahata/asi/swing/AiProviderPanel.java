@@ -30,7 +30,7 @@ import javax.swing.JTextField;
 import lombok.extern.slf4j.Slf4j;
 import net.miginfocom.swing.MigLayout;
 import org.jdesktop.swingx.prompt.PromptSupport;
-import uno.anahata.asi.agi.provider.AbstractAgiProvider;
+import uno.anahata.asi.agi.provider.AbstractAiProvider;
 import uno.anahata.asi.agi.provider.TokenizerType;
 import uno.anahata.asi.openai.OpenAiCompatibleProvider;
 import javax.swing.JFileChooser;
@@ -55,7 +55,7 @@ import uno.anahata.asi.swing.internal.SwingTask;
 public class AiProviderPanel extends JPanel {
 
     /** The domain entity representing the AI provider being configured. */
-    private final AbstractAgiProvider provider;
+    private final AbstractAiProvider provider;
     /** Monospace editor for the 'api_keys.txt' file, supporting multiple keys. */
     private final JTextArea textArea;
     /** User-facing name for this provider instance. */
@@ -88,7 +88,7 @@ public class AiProviderPanel extends JPanel {
      * @param removeCallback Callback to trigger when the user deletes the provider.
      * @param saveSuccessCallback Callback to notify the container of preference updates.
      */
-    public AiProviderPanel(AbstractAgiProvider provider, Runnable removeCallback, Runnable saveSuccessCallback) {
+    public AiProviderPanel(AbstractAiProvider provider, Runnable removeCallback, Runnable saveSuccessCallback) {
         super(new BorderLayout(5, 5));
         this.provider = provider;
         this.saveSuccessCallback = saveSuccessCallback;

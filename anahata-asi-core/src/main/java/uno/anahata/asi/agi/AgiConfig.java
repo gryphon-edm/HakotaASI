@@ -13,7 +13,7 @@ import lombok.NonNull;
 import lombok.Setter;
 import uno.anahata.asi.AbstractAsiContainer;
 import uno.anahata.asi.agi.event.BasicPropertyChangeSource;
-import uno.anahata.asi.agi.provider.AbstractAgiProvider;
+import uno.anahata.asi.agi.provider.AbstractAiProvider;
 import uno.anahata.asi.agi.resource.handle.PathHandle;
 import uno.anahata.asi.agi.resource.handle.ResourceHandle;
 import uno.anahata.asi.toolkit.resources.Resources;
@@ -106,7 +106,7 @@ public class AgiConfig extends BasicPropertyChangeSource {
         this.sessionId = sessionId;
         
         // Populate available providers from the container's registry
-        for (AbstractAgiProvider provider : asiConfig.getAllProviders()) {
+        for (AbstractAiProvider provider : asiConfig.getAllProviders()) {
             if (provider.isEnabled()) {
                 providerUuids.add(provider.getUuid());
             }

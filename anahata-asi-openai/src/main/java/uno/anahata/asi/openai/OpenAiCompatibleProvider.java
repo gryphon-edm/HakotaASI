@@ -16,7 +16,7 @@ import uno.anahata.asi.internal.JacksonUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.Setter;
-import uno.anahata.asi.agi.provider.AbstractAgiProvider;
+import uno.anahata.asi.agi.provider.AbstractAiProvider;
 import uno.anahata.asi.agi.provider.AbstractModel;
 import uno.anahata.asi.agi.provider.TokenizerType;
 
@@ -34,7 +34,7 @@ import uno.anahata.asi.agi.provider.TokenizerType;
 @Getter
 @Setter
 @Slf4j
-public class OpenAiCompatibleProvider extends AbstractAgiProvider {
+public class OpenAiCompatibleProvider extends AbstractAiProvider {
 
     /**
      * The base URL of the OpenAI-compatible API endpoint.

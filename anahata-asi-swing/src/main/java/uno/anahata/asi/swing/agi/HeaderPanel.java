@@ -21,7 +21,7 @@ import org.jdesktop.swingx.JXTextField;
 import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
 import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.persistence.kryo.KryoUtils;
-import uno.anahata.asi.agi.provider.AbstractAgiProvider;
+import uno.anahata.asi.agi.provider.AbstractAiProvider;
 import uno.anahata.asi.agi.provider.AbstractModel;
 import uno.anahata.asi.swing.icons.SaveIcon;
 import uno.anahata.asi.swing.icons.SearchIcon;
@@ -50,7 +50,7 @@ public class HeaderPanel extends JPanel {
     /** The button to trigger a manual session save and export to a file. */
     private JButton saveSessionButton;
     /** The selector for the AI provider, populates the model selector on change. */
-    private JComboBox<AbstractAgiProvider> providerComboBox;
+    private JComboBox<AbstractAiProvider> providerComboBox;
     /** The selector for the specific AI model, supports autocompletion via {@link AutoCompleteDecorator}. */
     private JComboBox<AbstractModel> modelComboBox;
     /** The button to open the global model registry viewer for deep exploration. */
@@ -119,7 +119,7 @@ public class HeaderPanel extends JPanel {
         if (selectedAgiModel != null) {
             // First, find and set the provider
             for (int i = 0; i < providerComboBox.getItemCount(); i++) {
-                AbstractAgiProvider provider = providerComboBox.getItemAt(i);
+                AbstractAiProvider provider = providerComboBox.getItemAt(i);
                 if (provider.getProviderId().equals(selectedAgiModel.getProviderId())) {
                     log.info("Preselecting provider " + provider);
                     providerComboBox.setSelectedItem(provider);
@@ -165,8 +165,8 @@ public class HeaderPanel extends JPanel {
      * Fetches all registered providers from the agi session and adds them to the combo box.
      */
     private void populateProviders() {
-        List<AbstractAgiProvider> providers = agi.getProviders();
-        for (AbstractAgiProvider provider : providers) {
+        List<AbstractAiProvider> providers = agi.getProviders();
+        for (AbstractAiProvider provider : providers) {
             providerComboBox.addItem(provider);
         }
     }
@@ -215,7 +215,7 @@ public class HeaderPanel extends JPanel {
      * Updates the model combo box items based on the currently selected provider.
      */
     private void updateModelsForSelectedProvider() {
-        AbstractAgiProvider selectedProvider = (AbstractAgiProvider) providerComboBox.getSelectedItem();
+        AbstractAiProvider selectedProvider = (AbstractAiProvider) providerComboBox.getSelectedItem();
         modelComboBox.removeAllItems();
         if (selectedProvider != null) {
             List<? extends AbstractModel> models = selectedProvider.getModels();

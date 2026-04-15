@@ -24,12 +24,12 @@ import uno.anahata.asi.AbstractAsiContainer;
  * The abstract base class for all AI model providers, now with model caching.
  * Its primary responsibilities are to discover available models and manage API keys.
  *
- * @author anahata-gemini-pro-2.5
+ * @author anahata
  */
 @Getter
 @Setter
 @Slf4j
-public abstract class AbstractAgiProvider {
+public abstract class AbstractAiProvider {
 
     /**
      * The unique UUID for this specific provider instance.
@@ -85,7 +85,7 @@ public abstract class AbstractAgiProvider {
     /**
      * No-arg constructor required for Kryo serialization and dynamic instantiation.
      */
-    public AbstractAgiProvider() {
+    public AbstractAiProvider() {
         this.uuid = UUID.randomUUID().toString();
     }
 
@@ -93,7 +93,7 @@ public abstract class AbstractAgiProvider {
      * Constructs a new provider instance with a specific UUID.
      * @param uuid The unique ID for this instance.
      */
-    public AbstractAgiProvider(String uuid) {
+    public AbstractAiProvider(String uuid) {
         this.uuid = uuid;
     }
 

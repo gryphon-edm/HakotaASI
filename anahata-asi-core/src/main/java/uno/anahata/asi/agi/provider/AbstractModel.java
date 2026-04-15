@@ -35,7 +35,7 @@ public abstract class AbstractModel {
      * Gets the provider that owns this model.
      * @return The parent AI provider.
      */
-    public abstract AbstractAgiProvider getProvider();
+    public abstract AbstractAiProvider getProvider();
 
     /**
      * Gets the unique identifier for this model (e.g., "models/gemini-1.5-pro").

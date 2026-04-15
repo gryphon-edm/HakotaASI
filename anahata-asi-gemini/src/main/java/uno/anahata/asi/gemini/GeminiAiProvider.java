@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import lombok.Getter;
-import uno.anahata.asi.agi.provider.AbstractAgiProvider;
+import uno.anahata.asi.agi.provider.AbstractAiProvider;
 import uno.anahata.asi.agi.provider.AbstractModel;
 import uno.anahata.asi.agi.provider.TokenizerType;
 
@@ -19,7 +19,7 @@ import uno.anahata.asi.agi.provider.TokenizerType;
  * @author anahata-gemini-pro-2.5
  */
 @Getter
-public class GeminiAiProvider extends AbstractAgiProvider {
+public class GeminiAiProvider extends AbstractAiProvider {
 
     private transient Client client;
 

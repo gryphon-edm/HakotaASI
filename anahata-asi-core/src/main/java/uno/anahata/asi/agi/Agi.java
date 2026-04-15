@@ -29,7 +29,7 @@ import uno.anahata.asi.agi.message.UserMessage;
 import uno.anahata.asi.agi.provider.RequestConfig;
 import uno.anahata.asi.agi.provider.Response;
 import uno.anahata.asi.agi.provider.StreamObserver;
-import uno.anahata.asi.agi.provider.AbstractAgiProvider;
+import uno.anahata.asi.agi.provider.AbstractAiProvider;
 import uno.anahata.asi.agi.provider.AbstractModel;
 import uno.anahata.asi.agi.provider.ApiCallInterruptedException;
 import uno.anahata.asi.agi.provider.ServerTool;
@@ -48,7 +48,7 @@ import uno.anahata.asi.agi.tool.ToolManager;
  * managing the high-level lifecycle of an agentic turn. It orchestrates the
  * flow between user input, tool execution, context assembly via
  * {@link ContextManager}, and multimodal generation via registered
- * {@link AbstractAgiProvider}s.
+ * {@link AbstractAiProvider}s.
  * </p>
  * <p>
  * <b>Thread Safety:</b> This class is designed to be thread-safe, utilizing
@@ -200,10 +200,11 @@ public class Agi extends BasicPropertyChangeSource {
      * </p>
      * @return The list of shared provider instances.
      */
-    public List<AbstractAgiProvider> getProviders() {
+    public List<AbstractAiProvider> getProviders() {
         return config.getProviderUuids().stream()
                 .map(config.getAsiContainer()::getProvider)
                 .filter(Objects::nonNull)
+                .filter((t) -> t.isEnabled())
                 .collect(Collectors.toList());
     }
 

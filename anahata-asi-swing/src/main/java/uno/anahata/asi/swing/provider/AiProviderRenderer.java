@@ -4,10 +4,10 @@ package uno.anahata.asi.swing.provider;
 import java.awt.Component;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JList;
-import uno.anahata.asi.agi.provider.AbstractAgiProvider;
+import uno.anahata.asi.agi.provider.AbstractAiProvider;
 
 /**
- * A standard cell renderer for {@link AbstractAgiProvider} objects.
+ * A standard cell renderer for {@link AbstractAiProvider} objects.
  * Shows the display name and the UUID in parentheses.
  * 
  * @author anahata
@@ -16,7 +16,7 @@ public class AiProviderRenderer extends DefaultListCellRenderer {
     @Override
     public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
         super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-        if (value instanceof AbstractAgiProvider p) {
+        if (value instanceof AbstractAiProvider p) {
             setText(p.getDisplayName());
         }
         return this;

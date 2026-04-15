@@ -23,7 +23,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.agi.AgiConfig;
-import uno.anahata.asi.agi.provider.AbstractAgiProvider;
+import uno.anahata.asi.agi.provider.AbstractAiProvider;
 import uno.anahata.asi.agi.status.AgiStatus;
 import uno.anahata.asi.persistence.kryo.KryoUtils;
 import uno.anahata.asi.agi.event.BasicPropertyChangeSource;
@@ -56,7 +56,7 @@ public abstract class AbstractAsiContainer extends BasicPropertyChangeSource {
      * A master registry of AI provider instances.
      * Keyed by the provider's unique UUID.
      */
-    private final Map<String, AbstractAgiProvider> providerRegistry = new ConcurrentHashMap<>();
+    private final Map<String, AbstractAiProvider> providerRegistry = new ConcurrentHashMap<>();
 
     /** 
      * A shared executor for container-level background tasks. 
@@ -90,7 +90,7 @@ public abstract class AbstractAsiContainer extends BasicPropertyChangeSource {
         this.executor = AsiExecutors.newCachedThreadPoolExecutor(hostApplicationId);
         
         // Populate the registry from persisted providers
-        for (AbstractAgiProvider provider : preferences.getRegisteredProviders()) {
+        for (AbstractAiProvider provider : preferences.getRegisteredProviders()) {
             providerRegistry.put(provider.getUuid(), provider);
         }
     }
@@ -101,7 +101,7 @@ public abstract class AbstractAsiContainer extends BasicPropertyChangeSource {
      * @param uuid The unique UUID of the provider instance.
      * @return The shared provider instance, or null if not found.
      */
-    public AbstractAgiProvider getProvider(String uuid) {
+    public AbstractAiProvider getProvider(String uuid) {
         if (uuid == null) return null;
         return providerRegistry.get(uuid);
     }
@@ -110,7 +110,7 @@ public abstract class AbstractAsiContainer extends BasicPropertyChangeSource {
      * Gets an unmodifiable list of all registered provider instances.
      * @return All providers.
      */
-    public List<AbstractAgiProvider> getAllProviders() {
+    public List<AbstractAiProvider> getAllProviders() {
         return new ArrayList<>(providerRegistry.values());
     }
     
@@ -120,11 +120,11 @@ public abstract class AbstractAsiContainer extends BasicPropertyChangeSource {
      * 
      * @param provider The provider instance to register.
      */
-    public void registerProvider(@NonNull AbstractAgiProvider provider) {
+    public void registerProvider(@NonNull AbstractAiProvider provider) {
         log.info("Registering AI provider instance: {} ({})", provider.getDisplayName(), provider.getUuid());
         providerRegistry.put(provider.getUuid(), provider);
         
-        List<AbstractAgiProvider> registered = preferences.getRegisteredProviders();
+        List<AbstractAiProvider> registered = preferences.getRegisteredProviders();
         registered.removeIf(p -> p.getUuid().equals(provider.getUuid()));
         registered.add(provider);
         
@@ -145,7 +145,7 @@ public abstract class AbstractAsiContainer extends BasicPropertyChangeSource {
      */
     public void unregisterProvider(String uuid) {
         log.info("Unregistering AI provider instance: {}", uuid);
-        AbstractAgiProvider provider = providerRegistry.remove(uuid);
+        AbstractAiProvider provider = providerRegistry.remove(uuid);
         if (provider != null) {
             preferences.getRegisteredProviders().remove(provider);
             savePreferences();
@@ -159,7 +159,7 @@ public abstract class AbstractAsiContainer extends BasicPropertyChangeSource {
      * @param providerClass The class to look for.
      * @return The first matching instance, or null if none registered.
      */
-    public <T extends AbstractAgiProvider> T getProviderByClass(Class<T> providerClass) {
+    public <T extends AbstractAiProvider> T getProviderByClass(Class<T> providerClass) {
         return providerRegistry.values().stream()
                 .filter(providerClass::isInstance)
                 .map(providerClass::cast)
@@ -218,7 +218,7 @@ public abstract class AbstractAsiContainer extends BasicPropertyChangeSource {
     public boolean hasAnyApiKeysConfigured() {
         AgiConfig template = preferences.getAgiTemplate();
         for (String uuid : template.getProviderUuids()) {
-            AbstractAgiProvider provider = getProvider(uuid);
+            AbstractAiProvider provider = getProvider(uuid);
             if (provider != null && provider.hasKeys()) {
                 return true;
             }
@@ -262,7 +262,7 @@ public abstract class AbstractAsiContainer extends BasicPropertyChangeSource {
      */
     public void onProviderKeysChanged(String uuid) {
         log.info("Processing API key update for shared provider instance: {}", uuid);
-        AbstractAgiProvider provider = getProvider(uuid);
+        AbstractAiProvider provider = getProvider(uuid);
         if (provider != null) {
             provider.reloadKeyPool();
         }
@@ -427,7 +427,7 @@ public abstract class AbstractAsiContainer extends BasicPropertyChangeSource {
         // Apply selected model state to the orchestrator if IDs are present
         if (agi.getConfig().getSelectedModelId() != null) {
             log.info("Applying DNA-defined default model ({}) to new session", agi.getConfig().getSelectedModelId());
-            AbstractAgiProvider prov = getProvider(agi.getConfig().getSelectedProviderUuid());
+            AbstractAiProvider prov = getProvider(agi.getConfig().getSelectedProviderUuid());
             Optional<? extends AbstractModel> am = prov.findModel(agi.getConfig().getSelectedModelId());
             if (am.isPresent()) {
                 agi.setSelectedModel(am.get());    

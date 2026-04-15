@@ -53,8 +53,9 @@ public class OpenAiResponse extends Response<OpenAiModelMessage> {
      * @param jsonResponse The raw JSON response string.
      * @param requestPayload The raw payload sent to the API.
      * @param historyJson The raw history segment of the payload.
+     * @param model The model instance to retrieve reasoning configuration from.
      */
-    public OpenAiResponse(Agi agi, String modelId, String jsonResponse, String requestPayload, String historyJson) {
+    public OpenAiResponse(Agi agi, String modelId, String jsonResponse, String requestPayload, String historyJson, OpenAiModel model) {
         this.rawJson = jsonResponse;
         this.rawRequestConfigJson = requestPayload;
         this.rawHistoryJson = historyJson;
@@ -78,7 +79,8 @@ public class OpenAiResponse extends Response<OpenAiModelMessage> {
         JsonNode choices = root.get("choices");
         if (choices != null && choices.isArray()) {
             for (JsonNode choice : choices) {
-                candidates.add(new OpenAiModelMessage(agi, modelId, choice, this));
+                candidates.add(new OpenAiModelMessage(agi, modelId, choice, this, 
+                        model.getReasoningStyle(), model.getReasoningFieldName(), model.getReasoningTags()));
             }
         }
     }

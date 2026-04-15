@@ -1,7 +1,6 @@
 /* Licensed under the Anahata Software License (ASL) v 108. See the LICENSE file for details. Força Barça! */
 package uno.anahata.ai.tool;
 
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Arrays;
@@ -10,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
 import java.util.logging.Level;
@@ -117,8 +117,13 @@ public class BigTestClass {
     /**
      * This is a new test method added via surgical line insertion.
      */
-    public void newTestMethod() {
-        log.fine("New test method executed. Força Barça!");
+    public void newTestMethod(String message, boolean shout) {
+        if (shout) {
+            log.info(message.toUpperCase() + "!!!");
+        } else {
+            log.info(message);
+        }
+        log.fine("New test method executed. For\u00e7a Bar\u00e7a!");
     }
 
     /**

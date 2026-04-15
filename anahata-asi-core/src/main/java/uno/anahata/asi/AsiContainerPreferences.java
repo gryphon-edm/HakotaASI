@@ -21,7 +21,7 @@ import uno.anahata.asi.agi.event.BasicPropertyChangeSource;
 import uno.anahata.asi.persistence.kryo.KryoUtils;
 import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.agi.AgiConfig;
-import uno.anahata.asi.agi.provider.AbstractAgiProvider;
+import uno.anahata.asi.agi.provider.AbstractAiProvider;
 import uno.anahata.asi.agi.provider.RequestConfig;
 import uno.anahata.asi.agi.tool.ToolPermission;
 
@@ -48,7 +48,7 @@ public class AsiContainerPreferences extends BasicPropertyChangeSource {
      * These instances are serialized directly to disk, allowing custom URLs and tokenizers 
      * to be persisted without code changes.
      */
-    private List<AbstractAgiProvider> registeredProviders = new ArrayList<>();
+    private List<AbstractAiProvider> registeredProviders = new ArrayList<>();
 
     /**
      * A blueprint configuration for new Agi sessions. 
@@ -107,7 +107,7 @@ public class AsiContainerPreferences extends BasicPropertyChangeSource {
         clone.setSessionId(java.util.UUID.randomUUID().toString());
         
         // Sync: ensure all currently registered enabled providers are available in the new session
-        for (AbstractAgiProvider p : container.getAllProviders()) {
+        for (AbstractAiProvider p : container.getAllProviders()) {
             if (p.isEnabled() && !clone.getProviderUuids().contains(p.getUuid())) {
                 clone.getProviderUuids().add(p.getUuid());
             }

@@ -29,22 +29,30 @@ public class OpenAiModelMessage extends AbstractModelMessage<OpenAiResponse> {
     private final transient Map<Integer, StringBuilder> callArgsBuffers;
     private final transient Map<Integer, String> callIds;
     private final transient Map<Integer, String> callNames;
+    
+    private boolean insideReasoningTags = false;
 
     /**
-     * Constructs a new OpenAI model message by parsing a specific choice
-     * from the API response.
+     * Constructs a new OpenAI model message.
      * @param agi The parent session.
      * @param modelId The ID of the model that generated the message.
      * @param choiceNode The JSON node containing the choice data.
      * @param response The parent response object.
+     * @param reasoningStyle Strategy used by the model.
+     * @param reasoningFieldName Field name for reasoning.
+     * @param reasoningTags Tags for reasoning.
      */
-    public OpenAiModelMessage(Agi agi, String modelId, JsonNode choiceNode, OpenAiResponse response) {
+    public OpenAiModelMessage(Agi agi, String modelId, JsonNode choiceNode, OpenAiResponse response,
+            ReasoningStyle reasoningStyle, String reasoningFieldName, List<String> reasoningTags) {
         super(agi, modelId);
         this.callArgsBuffers = new HashMap<>();
         this.callIds = new HashMap<>();
         this.callNames = new HashMap<>();
         setResponse(response);
-        parseChoice(choiceNode);
+        // We still need to handle non-streaming initial parse if model calls it
+        if (choiceNode != null) {
+            parseChoice(choiceNode, reasoningStyle, reasoningFieldName, reasoningTags);
+        }
     }
 
     /**
@@ -60,29 +68,25 @@ public class OpenAiModelMessage extends AbstractModelMessage<OpenAiResponse> {
         this.callNames = new HashMap<>();
     }
 
-    /**
-     * Extracts text content and tool calls from the OpenAI 'message' node.
-     * <p>
-     * Implementation details: Maps the 'content' field to a text part and
-     * recursively converts each 'tool_calls' entry into a native Anahata
-     * tool call via the {@link uno.anahata.asi.agi.tool.ToolManager}.
-     * </p>
-     * @param choice The choices array element node.
-     */
-    void parseChoice(JsonNode choice) {
+    private void parseChoice(JsonNode choice, ReasoningStyle reasoningStyle, String reasoningFieldName, List<String> reasoningTags) {
         JsonNode messageNode = choice.get("message");
-        if (messageNode == null) {
-            messageNode = choice.get("delta");
-        }
-        
+        if (messageNode == null) messageNode = choice.get("delta");
         if (messageNode == null) return;
         
         // 1. Text Content
         if (messageNode.has("content") && !messageNode.get("content").isNull()) {
             String text = messageNode.get("content").asText();
-            if (!text.isEmpty()) {
+            if (reasoningStyle == ReasoningStyle.TAGS && reasoningTags != null && reasoningTags.size() >= 2) {
+                appendTaggedContent(text, reasoningTags.get(0), reasoningTags.get(1));
+            } else {
                 appendContent(text);
             }
+        }
+        
+        // 1.1 Reasoning Content (FIELD style)
+        if (reasoningStyle == ReasoningStyle.FIELD && reasoningFieldName != null 
+                && messageNode.has(reasoningFieldName) && !messageNode.get(reasoningFieldName).isNull()) {
+            appendThoughts(messageNode.get(reasoningFieldName).asText());
         }
         
         // 2. Tool Calls
@@ -94,12 +98,14 @@ public class OpenAiModelMessage extends AbstractModelMessage<OpenAiResponse> {
         
         // 3. Finish Reason
         if (choice.has("finish_reason") && !choice.get("finish_reason").isNull()) {
-            String fr = choice.get("finish_reason").asText();
-            setFinishReason(mapFinishReason(fr));
-            // If the model is finished, flush any buffered tool calls
-            if ("stop".equals(fr) || "tool_calls".equals(fr)) {
-                flushToolCalls();
-            }
+            setFinishReasonFromOpenAi(choice.get("finish_reason").asText());
+        }
+    }
+
+    public void setFinishReasonFromOpenAi(String fr) {
+        setFinishReason(mapFinishReason(fr));
+        if ("stop".equals(fr) || "tool_calls".equals(fr)) {
+            flushToolCalls();
         }
     }
 
@@ -118,12 +124,42 @@ public class OpenAiModelMessage extends AbstractModelMessage<OpenAiResponse> {
         };
     }
 
-    void appendContent(String text) {
+    public void appendContent(String text) {
         List<AbstractPart> parts = getParts();
-        if (!parts.isEmpty() && parts.get(parts.size() - 1) instanceof ModelTextPart mtp) {
+        if (!parts.isEmpty() && parts.get(parts.size() - 1) instanceof ModelTextPart mtp && !mtp.isThought()) {
             mtp.appendText(text);
         } else {
             addTextPart(text);
+        }
+    }
+
+    public void appendThoughts(String text) {
+        List<AbstractPart> parts = getParts();
+        if (!parts.isEmpty() && parts.get(parts.size() - 1) instanceof ModelTextPart mtp && mtp.isThought()) {
+            mtp.appendText(text);
+        } else {
+            addTextPart(text, null, true);
+        }
+    }
+
+    public void appendTaggedContent(String text, String startTag, String endTag) {
+        // Simplified tag handling: if start tag in text, start thoughts. 
+        // If end tag, end thoughts.
+        if (!insideReasoningTags && text.contains(startTag)) {
+            int idx = text.indexOf(startTag);
+            String before = text.substring(0, idx);
+            if (!before.isEmpty()) appendContent(before);
+            insideReasoningTags = true;
+            appendTaggedContent(text.substring(idx + startTag.length()), startTag, endTag);
+        } else if (insideReasoningTags && text.contains(endTag)) {
+            int idx = text.indexOf(endTag);
+            String thoughts = text.substring(0, idx);
+            if (!thoughts.isEmpty()) appendThoughts(thoughts);
+            insideReasoningTags = false;
+            appendTaggedContent(text.substring(idx + endTag.length()), startTag, endTag);
+        } else {
+            if (insideReasoningTags) appendThoughts(text);
+            else appendContent(text);
         }
     }
 

@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.miginfocom.swing.MigLayout;
 import uno.anahata.asi.AsiContainerPreferences;
 import uno.anahata.asi.agi.AgiConfig;
-import uno.anahata.asi.agi.provider.AbstractAgiProvider;
+import uno.anahata.asi.agi.provider.AbstractAiProvider;
 import uno.anahata.asi.agi.provider.AbstractModel;
 import uno.anahata.asi.swing.agi.config.SessionConfigPanel;
 import uno.anahata.asi.swing.icons.AddIcon;
@@ -57,7 +57,7 @@ public class AsiContainerPreferencesPanel extends JPanel {
 
     private final JTabbedPane mainTabs;
     
-    private final List<AbstractAgiProvider> unsavedProviders = new ArrayList<>();
+    private final List<AbstractAiProvider> unsavedProviders = new ArrayList<>();
 
     /**
      * Constructs a new preferences Command Center, defaulting to the first tab.
@@ -127,7 +127,7 @@ public class AsiContainerPreferencesPanel extends JPanel {
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
                 if (value instanceof String uuid) {
-                    AbstractAgiProvider p = container.getProvider(uuid);
+                    AbstractAiProvider p = container.getProvider(uuid);
                     if (p != null) {
                         setText(p.getDisplayName() + " (" + p.getUuid() + ")");
                     } else {
@@ -173,7 +173,7 @@ public class AsiContainerPreferencesPanel extends JPanel {
         new SwingWorker<List<String>, Void>() {
             @Override
             protected List<String> doInBackground() throws Exception {
-                AbstractAgiProvider provider = container.getProvider(providerUuid);
+                AbstractAiProvider provider = container.getProvider(providerUuid);
                 if (provider == null) return new ArrayList<>();
                 return provider.getModels().stream()
                         .map(AbstractModel::getModelId)
@@ -249,7 +249,7 @@ public class AsiContainerPreferencesPanel extends JPanel {
     private void refreshProviderTabs(JTabbedPane providerTabs) {
         providerTabs.removeAll();
         // 1. Existing Providers
-        for (AbstractAgiProvider p : container.getAllProviders()) {
+        for (AbstractAiProvider p : container.getAllProviders()) {
             AiProviderPanel keysPanel = new AiProviderPanel(p, () -> {
                 removeProvider(p, providerTabs);
             }, () -> {
@@ -260,7 +260,7 @@ public class AsiContainerPreferencesPanel extends JPanel {
         }
         
         // 2. Draft/Unsaved Providers
-        for (AbstractAgiProvider p : unsavedProviders) {
+        for (AbstractAiProvider p : unsavedProviders) {
             AiProviderPanel keysPanel = new AiProviderPanel(p, () -> {
                 unsavedProviders.remove(p);
                 refreshProviderTabs(providerTabs);
@@ -286,7 +286,7 @@ public class AsiContainerPreferencesPanel extends JPanel {
         providerTabs.setSelectedIndex(providerTabs.getTabCount() - 1);
     }
 
-    private void removeProvider(AbstractAgiProvider provider, JTabbedPane providerTabs) {
+    private void removeProvider(AbstractAiProvider provider, JTabbedPane providerTabs) {
         String uuid = provider.getUuid();
         String name = provider.getDisplayName();
         

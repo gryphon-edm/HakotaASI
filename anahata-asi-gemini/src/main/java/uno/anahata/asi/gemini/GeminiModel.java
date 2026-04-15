@@ -41,7 +41,7 @@ import uno.anahata.asi.agi.message.ModelTextPart;
 import uno.anahata.asi.agi.provider.RequestConfig;
 import uno.anahata.asi.agi.provider.Response;
 import uno.anahata.asi.agi.provider.StreamObserver;
-import uno.anahata.asi.agi.provider.AbstractAgiProvider;
+import uno.anahata.asi.agi.provider.AbstractAiProvider;
 import uno.anahata.asi.agi.provider.AbstractModel;
 import uno.anahata.asi.agi.provider.ApiCallInterruptedException;
 import uno.anahata.asi.agi.provider.ServerTool;
@@ -81,7 +81,7 @@ public class GeminiModel extends AbstractModel {
     }
 
     @Override
-    public AbstractAgiProvider getProvider() {
+    public AbstractAiProvider getProvider() {
         return provider;
     }
 
