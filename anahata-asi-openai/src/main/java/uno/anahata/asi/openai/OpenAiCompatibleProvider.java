@@ -149,7 +149,7 @@ public class OpenAiCompatibleProvider extends AbstractAgiProvider {
             HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
             try (client) {
                 log.info("Listing models for {} modelsUrl={} ", getDisplayName(), modelsUrl);
-                Thread.dumpStack();
+                //Thread.dumpStack();
                 HttpResponse<String> httpResponse = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
                 log.info("Got response from listModels: " + httpResponse);
                 if (httpResponse.statusCode() != 200) {
