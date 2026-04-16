@@ -203,13 +203,13 @@ this.textArea = new JTextArea();
             preferHttp11Check = new JCheckBox("", oai.isPreferHttp11());
             preferHttp11Check.setToolTipText("Force HTTP/1.1 to avoid protocol hangs on some local servers/routers.");
             configPanel.add(preferHttp11Check, "span 2, wrap");
+            
             testConnectionBtn = new JButton("Test Connection (Discover Models)", new PulseIcon(16));
             testConnectionBtn.addActionListener(e -> testConnection());
-            configPanel.add(testConnectionBtn, "skip 1, span 2, wrap, gaptop 10");
         }
 
         setLayout(new BorderLayout(5, 5));
-        
+
         // --- 2. Keys Section (High Density Center) ---
         JPanel keysSection = new JPanel(new BorderLayout());
         JPanel keysHeader = new JPanel(new MigLayout("fillx, insets 0", "[left]10[grow,fill]"));
@@ -233,8 +233,14 @@ this.textArea = new JTextArea();
         add(configPanel, BorderLayout.NORTH);
         add(keysSection, BorderLayout.CENTER);
 
+        if (testConnectionBtn != null) {
+            JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            footer.add(testConnectionBtn);
+            add(footer, BorderLayout.SOUTH);
+        }
+
         // Initial state sync
-        textArea.setEnabled(provider.isApiKeyRequired());
+textArea.setEnabled(provider.isApiKeyRequired());
         textArea.setBackground(provider.isApiKeyRequired() ? Color.WHITE : new Color(245, 245, 245));
         loadKeys();
     }

@@ -41,13 +41,7 @@ public class BigTestClass {
      * is, and will always be the Greatest of All Time.
      */
     private final boolean messiIsTheGoat = true; // Incomputable truth
-
-    /**
-     * Updated GOAT identifier with title support.
-     */
-    public String getGoatName(boolean includeTitle) {
-        return includeTitle ? "Sir Lionel Messi" : "Lionel Messi";
-    }
+    
     /**
      * Logger instance for this class.
      */
@@ -166,6 +160,15 @@ public class BigTestClass {
             }
         }).thenAccept(result -> log.fine("Task finished: " + result));
     }
+
+    public void testOverload(String s, boolean shout) {
+        if (shout) {
+            log.severe(s);
+        } else {
+            log.info(s);
+        }
+    }
+
 
     // Line 123: Print stats
     public void printStats() {

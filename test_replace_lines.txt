@@ -1,4 +1,0 @@
-Línea 1: Inicio del archivo.
-Línea 2: Esta línea será reemplazada completamente.
-Línea 3: Debajo de esta insertaremos una nueva.
-Línea 4: Fin del archivo de prueba.

@@ -32,7 +32,9 @@ import uno.anahata.asi.agi.provider.AbstractAiProvider;
 import uno.anahata.asi.agi.provider.AbstractModel;
 import uno.anahata.asi.swing.agi.config.SessionConfigPanel;
 import uno.anahata.asi.swing.icons.AddIcon;
+import uno.anahata.asi.swing.icons.CancelIcon;
 import uno.anahata.asi.swing.icons.DeleteIcon;
+import uno.anahata.asi.swing.icons.SaveIcon;
 import uno.anahata.asi.swing.icons.OkIcon;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
@@ -95,11 +97,19 @@ public class AsiContainerPreferencesPanel extends JPanel {
 
         add(mainTabs, BorderLayout.CENTER);
         
-        // Footer: Save Button
+        // Footer: Save & Cancel Buttons
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton saveBtn = new JButton("Save & Apply Global Config", new OkIcon(16));
+        
+        JButton cancelBtn = new JButton("Cancel", new CancelIcon(16));
+        cancelBtn.addActionListener(e -> {
+            java.awt.Window w = javax.swing.SwingUtilities.getWindowAncestor(this);
+            if (w != null) w.dispose();
+        });
+        footer.add(cancelBtn);
+        
+        JButton saveBtn = new JButton("Save", new SaveIcon(16));
         saveBtn.addActionListener(e -> {
-            try {
+try {
                 // 1. Synchronize all open UI panels to their domain objects and key files
                 for (AiProviderPanel panel : new ArrayList<>(activeProviderPanels)) {
                     panel.syncToProvider();
