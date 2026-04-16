@@ -45,7 +45,7 @@ public class OpenAiCompatibleProvider extends AbstractAiProvider {
      * </p>
      */
     private String baseUrl;
-    
+
     /**
      * Optional custom HTTP headers to be sent with every request. Essential for
      * providers requiring specific vendor headers (e.g., 'X-Title',
@@ -103,15 +103,17 @@ public class OpenAiCompatibleProvider extends AbstractAiProvider {
         setFolderName(folderName);
         setTokenizerType(TokenizerType.CL100K_BASE);
     }
-    
-        /**
+
+    /**
      * Creates a pre-configured HttpClient based on the provider's protocol
      * preferences.
      *
      * @return A new HttpClient instance.
      */
     public HttpClient createHttpClient() {
-        HttpClient.Builder builder = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(15));
+        HttpClient.Builder builder = HttpClient.newBuilder()
+                .followRedirects(HttpClient.Redirect.ALWAYS)
+                .connectTimeout(Duration.ofSeconds(15));
         if (preferHttp11) {
             builder.version(HttpClient.Version.HTTP_1_1);
         }
@@ -137,15 +139,18 @@ public class OpenAiCompatibleProvider extends AbstractAiProvider {
                 .uri(URI.create(fullUrl))
                 .timeout(Duration.ofSeconds(60));
 
-        String apiKey = getCurrentApiKey();
-        if (apiKey != null && !apiKey.isBlank()) {
-            builder.header("Authorization", "Bearer " + apiKey);
+        if (super.isApiKeyRequired()) {
+            String apiKey = getCurrentApiKey();
+            if (apiKey != null && !apiKey.isBlank()) {
+                builder.header("Authorization", "Bearer " + apiKey);
+            } else {
+                log.warn("Provider {} says api key is required but no api key was found, attempting anyways without Authorization header", getDisplayName());
+            }
         }
 
         getCustomHeaders().forEach(builder::header);
         return builder;
     }
-
 
     /**
      * {@inheritDoc}
@@ -165,6 +170,10 @@ public class OpenAiCompatibleProvider extends AbstractAiProvider {
 
     public String getBaseUrl() {
         return baseUrl != null ? baseUrl.trim() : null;
+    }
+
+    public boolean isRetryable(int statusCode, String responseBody) {
+        return statusCode == 429 || statusCode == 503 || statusCode == 500 || statusCode == 499 || statusCode == 408;
     }
 
     /**

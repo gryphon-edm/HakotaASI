@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.Setter;
@@ -45,13 +46,19 @@ public class OpenAiModel extends AbstractModel {
     private final OpenAiCompatibleProvider provider;
     private final String modelId;
     private final String displayName;
-    private String version = "N/A";
+    private String version = "";
     private int maxInputTokens = 128000;
     private int maxOutputTokens = 4096;
 
     private ReasoningStyle reasoningStyle = ReasoningStyle.NONE;
     private String reasoningFieldName;
     private List<String> reasoningTags;
+
+    private boolean supportsFunctionCalling = true;
+    private boolean supportsContentGeneration = true;
+    private boolean supportsBatchEmbeddings = false;
+    private boolean supportsEmbeddings = false;
+    private boolean supportsCachedContent = false;
 
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(30))
@@ -70,7 +77,7 @@ public class OpenAiModel extends AbstractModel {
 
     @Override
     public List<String> getSupportedActions() {
-        return List.of("generateContent");
+        return List.of("chat/completions");
     }
 
     @Override
@@ -80,27 +87,27 @@ public class OpenAiModel extends AbstractModel {
 
     @Override
     public boolean isSupportsFunctionCalling() {
-        return true;
+        return supportsFunctionCalling;
     }
 
     @Override
     public boolean isSupportsContentGeneration() {
-        return true;
+        return supportsContentGeneration;
     }
 
     @Override
     public boolean isSupportsBatchEmbeddings() {
-        return false;
+        return supportsBatchEmbeddings;
     }
 
     @Override
     public boolean isSupportsEmbeddings() {
-        return false;
+        return supportsEmbeddings;
     }
 
     @Override
     public boolean isSupportsCachedContent() {
-        return false;
+        return supportsCachedContent;
     }
 
     @Override
@@ -137,10 +144,6 @@ public class OpenAiModel extends AbstractModel {
         return 0.95f;
     }
 
-    private boolean isRetryable(int statusCode) {
-        return statusCode == 429 || statusCode == 503 || statusCode == 500 || statusCode == 499 || statusCode == 408;
-    }
-
     @Override
     public Response generateContent(GenerationRequest request) {
         Agi agi = request.config().getAgi();
@@ -152,11 +155,13 @@ public class OpenAiModel extends AbstractModel {
             try (HttpClient client = provider.createHttpClient()) {
                 HttpResponse<String> httpResponse = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
                 if (httpResponse.statusCode() != 200) {
-                    if (isRetryable(httpResponse.statusCode())) {
+                    String errorBody = httpResponse.body();
+                    if (provider.isRetryable(httpResponse.statusCode(), errorBody)) {
+                        log.info("Retryable error detected ({}). Rotating key and retrying...", httpResponse.statusCode());
                         provider.hokusPocus();
-                        throw new RetryableApiException(provider.getCurrentApiKey(), "API error (" + httpResponse.statusCode() + "): " + httpResponse.body(), null);
+                        throw new RetryableApiException(provider.getCurrentApiKey(), "API error (" + httpResponse.statusCode() + "): " + errorBody, null);
                     }
-                    throw new RuntimeException("API error (" + httpResponse.statusCode() + "): " + httpResponse.body());
+                    throw new RuntimeException("API error (" + httpResponse.statusCode() + "): " + errorBody);
                 }
                 return new OpenAiResponse(agi, modelId, httpResponse.body(), jsonPayload, historyJson, this);
             }
@@ -179,11 +184,17 @@ public class OpenAiModel extends AbstractModel {
                 AtomicBoolean started = new AtomicBoolean(false);
                 HttpResponse<Stream<String>> response = client.send(httpRequest, HttpResponse.BodyHandlers.ofLines());
                 if (response.statusCode() != 200) {
-                    if (isRetryable(response.statusCode())) {
+                    String errorMsg = "No error body";
+                    try (Stream<String> bodyStream = response.body()) {
+                        errorMsg = bodyStream.collect(Collectors.joining("\n"));
+                    }
+
+                    if (provider.isRetryable(response.statusCode(), errorMsg)) {
+                        log.info("Retryable streaming error detected ({}). Rotating key and retrying...", response.statusCode());
                         provider.hokusPocus();
-                        observer.onError(new RetryableApiException(provider.getCurrentApiKey(), "OpenAI Stream Error (" + response.statusCode() + ")", null));
+                        observer.onError(new RetryableApiException(provider.getCurrentApiKey(), "OpenAI Stream Error (" + response.statusCode() + "): " + errorMsg, null));
                     } else {
-                        observer.onError(new RuntimeException("OpenAI Stream Error (" + response.statusCode() + ")"));
+                        observer.onError(new RuntimeException("OpenAIModel Stream Error (" + response.statusCode() + "): " + errorMsg));
                     }
                     return;
                 }
@@ -307,11 +318,27 @@ public class OpenAiModel extends AbstractModel {
         payload.put("stream", stream);
 
         ArrayNode messages = payload.putArray("messages");
-        boolean includePruned = request.config().isIncludePruned();
+        
+        // 1. Inject System Instructions if present in config
+        if (!request.config().getSystemInstructions().isEmpty()) {
+            for (String si : request.config().getSystemInstructions()) {
+                messages.addObject()
+                        .put("role", "system")
+                        .put("content", si);
+            }
+        }
 
+        // 2. Inject Conversation History
+        boolean includePruned = request.config().isIncludePruned();
         for (AbstractMessage msg : request.history()) {
             List<ObjectNode> translated = new OpenAiContentAdapter(msg, includePruned, getTokenizerType()).toOpenAi();
             messages.addAll(translated);
+        }
+
+        // 3. Handle Reasoning/Thinking flags
+        if (request.config().getAgi().getConfig().isIncludeThoughts()) {
+            // For DeepSeek/HuggingFace Router
+            payload.put("include_reasoning", true);
         }
 
         List<? extends AbstractTool> localTools = request.config().getLocalTools();
