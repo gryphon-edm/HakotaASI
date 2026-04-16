@@ -139,19 +139,21 @@ public class OpenAiCompatibleProvider extends AbstractAiProvider {
                     .header("Accept", "application/json")
                     .GET();
             
-            if (apiKey != null) {
+            if (isApiKeyRequired() && apiKey != null) {
                 log.info("listModels for {}", getDisplayName() + " will use apiKey ending with ..." + apiKey.substring(apiKey.length() - 4, apiKey.length()));
                 requestBuilder.header("Authorization", "Bearer " + apiKey);
+            } else{
+                log.info("listModels for {}", getDisplayName() + " will not use api keys...");
             }
             
             getCustomHeaders().forEach(requestBuilder::header);
             HttpRequest httpRequest = requestBuilder.build();
             HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
             try (client) {
-                log.info("Listing models for {} modelsUrl={} ", getDisplayName(), modelsUrl);
+                log.info("Listing models for {} modelsUrl={}", getDisplayName(), modelsUrl);
                 //Thread.dumpStack();
                 HttpResponse<String> httpResponse = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-                log.info("Got response from listModels: " + httpResponse);
+                log.info("Got response from /models endpoint: " + httpResponse);
                 if (httpResponse.statusCode() != 200) {
                     log.error("Failed to fetch models from {}. Status: {}. Response: {}", modelsUrl, httpResponse.statusCode(), httpResponse.body());
                     return Collections.emptyList();
@@ -171,7 +173,7 @@ public class OpenAiCompatibleProvider extends AbstractAiProvider {
                 }
             }
         } catch (Exception e) {
-            log.error("Error fetching models for provider '{}' at {}", getDisplayName(), baseUrl, e);
+            log.error("Error fetching models for provider '{}' baesURL  {}", getDisplayName(), baseUrl, e);
         }
         return Collections.emptyList();
     }

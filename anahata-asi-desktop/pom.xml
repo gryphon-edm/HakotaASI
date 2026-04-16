@@ -28,6 +28,12 @@
         
         <dependency>
             <groupId>uno.anahata</groupId>
+            <artifactId>anahata-asi-huggingface</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>uno.anahata</groupId>
             <artifactId>anahata-asi-openai</artifactId>
             <version>${project.version}</version>
         </dependency>

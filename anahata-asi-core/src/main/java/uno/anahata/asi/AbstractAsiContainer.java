@@ -91,6 +91,7 @@ public abstract class AbstractAsiContainer extends BasicPropertyChangeSource {
         
         // Populate the registry from persisted providers
         for (AbstractAiProvider provider : preferences.getRegisteredProviders()) {
+            provider.setAsiContainer(this);
             providerRegistry.put(provider.getUuid(), provider);
         }
     }
@@ -122,6 +123,7 @@ public abstract class AbstractAsiContainer extends BasicPropertyChangeSource {
      */
     public void registerProvider(@NonNull AbstractAiProvider provider) {
         log.info("Registering AI provider instance: {} ({})", provider.getDisplayName(), provider.getUuid());
+        provider.setAsiContainer(this);
         providerRegistry.put(provider.getUuid(), provider);
         
         List<AbstractAiProvider> registered = preferences.getRegisteredProviders();
@@ -146,10 +148,8 @@ public abstract class AbstractAsiContainer extends BasicPropertyChangeSource {
     public void unregisterProvider(String uuid) {
         log.info("Unregistering AI provider instance: {}", uuid);
         AbstractAiProvider provider = providerRegistry.remove(uuid);
-        if (provider != null) {
-            preferences.getRegisteredProviders().remove(provider);
-            savePreferences();
-        }
+        preferences.getRegisteredProviders().removeIf(p -> p.getUuid().equals(uuid));
+        savePreferences();
     }
 
     /**

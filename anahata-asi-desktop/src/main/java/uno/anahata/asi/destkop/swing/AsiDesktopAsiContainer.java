@@ -11,6 +11,7 @@ import uno.anahata.asi.agi.AgiConfig;
 import uno.anahata.asi.gemini.GeminiAiProvider;
 import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.agi.provider.AbstractAiProvider;
+import uno.anahata.asi.huggingface.HuggingFaceProvider;
 import uno.anahata.asi.openai.OpenAiCompatibleProvider;
 import uno.anahata.asi.swing.AbstractSwingAsiContainer;
 import uno.anahata.asi.swing.agi.AgiPanel;
@@ -52,9 +53,12 @@ public class AsiDesktopAsiContainer extends AbstractSwingAsiContainer {
         } else if (!"Gemini".equals(gemini.getUuid())) {
             log.info("Migrating legacy Gemini provider ({}) to stable ID", gemini.getUuid());
             unregisterProvider(gemini.getUuid());
+            registerProvider(new GeminiAiProvider());
+            /*
             gemini.setUuid("Gemini");
             gemini.setFolderName("Gemini");
             registerProvider(gemini);
+            */
         }
         /*
         if (getProvider("Z_1") == null) {
@@ -67,12 +71,12 @@ public class AsiDesktopAsiContainer extends AbstractSwingAsiContainer {
                     "Z_2", "Z Coding (OpenAI)", "https://api.z.ai/api/coding/paas/v4", "Z"));
         }
         */
-        
+        log.info("Registering HF");
         if (getProvider("HuggingFace") == null) {
-            registerProvider(new OpenAiCompatibleProvider(                    
-                    "HuggingFace", "Hugging Face", "https://router.huggingface.co/v1", "HuggingFace", "https://huggingface.co/settings/tokens"));
+            registerProvider(new HuggingFaceProvider());
         }
         
+        log.info("Registering Anahata");
         if (getProvider("Anahata") == null) {
             registerProvider(new OpenAiCompatibleProvider(                    
                     "Anahata", "Anahata (no SSL)", "http://a.anahata.uno:1234/v1", "Anahata", "https://asi.anahata.uno"));

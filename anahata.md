@@ -72,7 +72,7 @@ Comprehensive documentation is mandatory for this open-source project. Existing 
 
 ## 6. Lifecycle Management
 
-- **The rebind() Hook**: The `rebind()` method is strictly reserved for recovering transient fields and re-establishing listeners after deserialization (e.g., from Kryo). It must never be called programmatically from business logic or constructors. Implementations must always call `super.rebind()` to ensure parent recovery.
+- **The rebind() Hook**: The `rebind()` method in the `uno.anahata.asi.persistence.Rebindable` interface is strictly reserved for recovering transient fields and re-establishing listeners after deserialization (e.g., from Kryo). It must never be called programmatically from business logic or constructors. Implementations must always call `super.rebind()` to ensure parent recovery.
 
 ## 7. Evolutionary Status
 

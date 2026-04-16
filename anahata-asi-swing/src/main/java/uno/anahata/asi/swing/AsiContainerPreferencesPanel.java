@@ -17,6 +17,7 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
@@ -58,6 +59,7 @@ public class AsiContainerPreferencesPanel extends JPanel {
     private final JTabbedPane mainTabs;
     
     private final List<AbstractAiProvider> unsavedProviders = new ArrayList<>();
+    private final List<AiProviderPanel> activeProviderPanels = new ArrayList<>();
 
     /**
      * Constructs a new preferences Command Center, defaulting to the first tab.
@@ -97,8 +99,34 @@ public class AsiContainerPreferencesPanel extends JPanel {
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton saveBtn = new JButton("Save & Apply Global Config", new OkIcon(16));
         saveBtn.addActionListener(e -> {
-            container.savePreferences();
-            log.info("Global preferences persisted to disk.");
+            try {
+                // 1. Synchronize all open UI panels to their domain objects and key files
+                for (AiProviderPanel panel : new ArrayList<>(activeProviderPanels)) {
+                    panel.syncToProvider();
+                }
+                
+                // 2. Promote any "Draft" providers to the official container registry
+                if (!unsavedProviders.isEmpty()) {
+                    for (AbstractAiProvider p : new ArrayList<>(unsavedProviders)) {
+                        container.registerProvider(p);
+                        prefs.getAgiTemplate().getProviderUuids().add(p.getUuid());
+                    }
+                    unsavedProviders.clear();
+                }
+
+                // 3. Persist everything to preferences.kryo
+                container.savePreferences();
+                
+                // 4. Refresh UI state (dropdowns, tabs, etc.)
+                //refreshProviderTabs(providerTabs);
+                refreshProviderDropdown();
+                
+                JOptionPane.showMessageDialog(this, "Global configuration saved and applied.", "Success", JOptionPane.INFORMATION_MESSAGE);
+                log.info("Global preferences persisted to disk.");
+            } catch (IOException ex) {
+                log.error("Failed to save preferences", ex);
+                JOptionPane.showMessageDialog(this, "Failed to save: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
         });
         footer.add(saveBtn);
         add(footer, BorderLayout.SOUTH);
@@ -248,15 +276,14 @@ public class AsiContainerPreferencesPanel extends JPanel {
 
     private void refreshProviderTabs(JTabbedPane providerTabs) {
         providerTabs.removeAll();
+        activeProviderPanels.clear();
         // 1. Existing Providers
         for (AbstractAiProvider p : container.getAllProviders()) {
             AiProviderPanel keysPanel = new AiProviderPanel(p, () -> {
                 removeProvider(p, providerTabs);
-            }, () -> {
-                // On Save Success
-                refreshProviderDropdown();
             });
             providerTabs.addTab(p.getDisplayName(), keysPanel);
+            activeProviderPanels.add(keysPanel);
         }
         
         // 2. Draft/Unsaved Providers
@@ -264,16 +291,9 @@ public class AsiContainerPreferencesPanel extends JPanel {
             AiProviderPanel keysPanel = new AiProviderPanel(p, () -> {
                 unsavedProviders.remove(p);
                 refreshProviderTabs(providerTabs);
-            }, () -> {
-                // On Save Success: Register it!
-                container.registerProvider(p);
-                prefs.getAgiTemplate().getProviderUuids().add(p.getUuid());
-                container.savePreferences();
-                unsavedProviders.remove(p);
-                refreshProviderTabs(providerTabs);
-                refreshProviderDropdown();
             });
             providerTabs.addTab("<html><b>* " + p.getDisplayName() + "</b></html>", keysPanel);
+            activeProviderPanels.add(keysPanel);
         }
     }
 
@@ -290,10 +310,10 @@ public class AsiContainerPreferencesPanel extends JPanel {
         String uuid = provider.getUuid();
         String name = provider.getDisplayName();
         
-        int choice = javax.swing.JOptionPane.showConfirmDialog(this, 
+        int choice = JOptionPane.showConfirmDialog(this, 
                 "Are you sure you want to remove the provider '" + name + "'?\n" +
                 "This will unregister it from the container preferences.", 
-                "Remove Provider", javax.swing.JOptionPane.YES_NO_OPTION);
+                "Remove Provider", JOptionPane.YES_NO_OPTION);
         
         if (choice == javax.swing.JOptionPane.YES_OPTION) {
             prefs.getAgiTemplate().getProviderUuids().remove(uuid);

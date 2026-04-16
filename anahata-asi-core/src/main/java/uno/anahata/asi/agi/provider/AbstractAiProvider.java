@@ -20,6 +20,8 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.AbstractAsiContainer;
 
+import uno.anahata.asi.agi.event.BasicPropertyChangeSource;
+
 /**
  * The abstract base class for all AI model providers, now with model caching.
  * Its primary responsibilities are to discover available models and manage API keys.
@@ -29,7 +31,13 @@ import uno.anahata.asi.AbstractAsiContainer;
 @Getter
 @Setter
 @Slf4j
-public abstract class AbstractAiProvider {
+public abstract class AbstractAiProvider extends BasicPropertyChangeSource {
+
+    /**
+     * A transient reference to the parent container. 
+     * This allows providers to access shared resources like the executor service.
+     */
+    private transient AbstractAsiContainer asiContainer;
 
     /**
      * The unique UUID for this specific provider instance.

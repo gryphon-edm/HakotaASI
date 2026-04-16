@@ -48,7 +48,7 @@ public class OpenAiModel extends AbstractModel {
     private String version = "N/A";
     private int maxInputTokens = 128000;
     private int maxOutputTokens = 4096;
-    
+
     private ReasoningStyle reasoningStyle = ReasoningStyle.NONE;
     private String reasoningFieldName;
     private List<String> reasoningTags;
@@ -158,17 +158,17 @@ public class OpenAiModel extends AbstractModel {
                     .uri(URI.create(trimmedBaseUrl.endsWith("/") ? trimmedBaseUrl + "chat/completions" : trimmedBaseUrl + "/chat/completions"))
                     .header("Content-Type", "application/json")
                     .timeout(Duration.ofSeconds(60));
-            
+
             String apiKey = provider.getCurrentApiKey();
             if (apiKey != null && !apiKey.isBlank()) {
                 requestBuilder.header("Authorization", "Bearer " + apiKey);
             }
-            
+
             provider.getCustomHeaders().forEach(requestBuilder::header);
-            
+
             HttpRequest httpRequest = requestBuilder.POST(HttpRequest.BodyPublishers.ofString(jsonPayload)).build();
             HttpResponse<String> httpResponse = HTTP_CLIENT.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-            
+
             if (httpResponse.statusCode() != 200) {
                 if (isRetryable(httpResponse.statusCode())) {
                     provider.hokusPocus();
@@ -176,7 +176,7 @@ public class OpenAiModel extends AbstractModel {
                 }
                 throw new RuntimeException("API error (" + httpResponse.statusCode() + "): " + httpResponse.body());
             }
-            
+
             return new OpenAiResponse(agi, modelId, httpResponse.body(), jsonPayload, historyJson, this);
         } catch (IOException | InterruptedException e) {
             log.error("Failed to execute OpenAI request", e);
@@ -194,17 +194,17 @@ public class OpenAiModel extends AbstractModel {
             if (provider.isApiKeyRequired() && (provider.getCurrentApiKey() == null || provider.getCurrentApiKey().isBlank())) {
                 throw new RuntimeException("API key is required for provider: " + provider.getDisplayName());
             }
-            
+
             String trimmedBaseUrl = provider.getBaseUrl() != null ? provider.getBaseUrl().trim() : "";
             HttpRequest.Builder requestBuilder = HttpRequest.newBuilder().uri(URI.create(trimmedBaseUrl.endsWith("/") ? trimmedBaseUrl + "chat/completions" : trimmedBaseUrl + "/chat/completions"))
                     .header("Content-Type", "application/json")
                     .timeout(Duration.ofSeconds(60));
-            
+
             String apiKey = provider.getCurrentApiKey();
             if (apiKey != null && !apiKey.isBlank()) {
                 requestBuilder.header("Authorization", "Bearer " + apiKey);
             }
-            
+
             provider.getCustomHeaders().forEach(requestBuilder::header);
             HttpRequest httpRequest = requestBuilder.POST(HttpRequest.BodyPublishers.ofString(jsonPayload)).build();
             List<OpenAiModelMessage> targets = new ArrayList<>();
@@ -223,9 +223,14 @@ public class OpenAiModel extends AbstractModel {
                 var it = lines.iterator();
                 while (it.hasNext()) {
                     String line = it.next();
-                    if (line == null || line.isBlank()) continue;
-                    if (!line.startsWith("data: ")) continue;
-                    String data = line.substring(6).trim();
+                    if (line == null || line.isBlank()) {
+                        continue;
+                    }
+                    String trimmedLine = line.trim();
+                    if (!trimmedLine.startsWith("data:")) {
+                        continue;
+                    }
+                    String data = trimmedLine.substring(5).trim();
                     if ("[DONE]".equals(data)) {
                         targets.forEach(OpenAiModelMessage::flushToolCalls);
                         observer.onComplete();
@@ -268,11 +273,15 @@ public class OpenAiModel extends AbstractModel {
 
     private void routeChunk(JsonNode choice, OpenAiModelMessage target) {
         JsonNode delta = choice.get("delta");
-        if (delta == null) delta = choice.get("message");
-        if (delta == null) return;
+        if (delta == null) {
+            delta = choice.get("message");
+        }
+        if (delta == null) {
+            return;
+        }
 
         // 1. Handle Reasoning (Field style - e.g. DeepSeek)
-        if (reasoningStyle == ReasoningStyle.FIELD && reasoningFieldName != null 
+        if (reasoningStyle == ReasoningStyle.FIELD && reasoningFieldName != null
                 && delta.has(reasoningFieldName) && !delta.get(reasoningFieldName).isNull()) {
             target.appendThoughts(delta.get(reasoningFieldName).asText());
         }
@@ -307,7 +316,7 @@ public class OpenAiModel extends AbstractModel {
         ObjectNode funcNode = toolNode.putObject("function");
         funcNode.put("name", tool.getName());
         funcNode.put("description", tool.getDescription());
-        
+
         ObjectNode paramsNode = funcNode.putObject("parameters");
         paramsNode.put("type", "object");
         ObjectNode propsNode = paramsNode.putObject("properties");
@@ -360,6 +369,5 @@ public class OpenAiModel extends AbstractModel {
 
         return payload;
     }
-
 
 }

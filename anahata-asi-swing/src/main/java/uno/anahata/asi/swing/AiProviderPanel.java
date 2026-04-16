@@ -70,8 +70,6 @@ public class AiProviderPanel extends JPanel {
     private final JCheckBox apiKeyRequiredCheck;
     /** Selector for the tokenizer used for pre-flight metabolic estimations. */
     private final JComboBox<TokenizerType> tokenizerCombo;
-    /** Reactive callback invoked upon successful configuration persistence. */
-    private final Runnable saveSuccessCallback;
     
     // --- OpenAI Compatible Extensions ---
     /** The endpoint root for Chat Completion API calls. */
@@ -81,22 +79,26 @@ public class AiProviderPanel extends JPanel {
     /** Triggers an immediate model discovery probe to verify the URL and Auth. */
     private JButton testConnectionBtn;
 
+    /** Link to the API key acquisition page. */
+    private final JLabel acquisitionLinkLabel;
+
     /**
      * Constructs a new provider configuration panel.
      * 
      * @param provider The provider instance to bind to.
      * @param removeCallback Callback to trigger when the user deletes the provider.
-     * @param saveSuccessCallback Callback to notify the container of preference updates.
      */
-    public AiProviderPanel(AbstractAiProvider provider, Runnable removeCallback, Runnable saveSuccessCallback) {
+    public AiProviderPanel(AbstractAiProvider provider, Runnable removeCallback) {
         super(new BorderLayout(5, 5));
         this.provider = provider;
-        this.saveSuccessCallback = saveSuccessCallback;
         this.currentFolderName = provider.getFolderName();
         
         // 0. Initialize UI Components
         this.folderLabel = new JLabel();
         updateFolderLabel();
+        
+        this.acquisitionLinkLabel = new JLabel();
+        updateLinkLabel();
         
         this.textArea = new JTextArea();
         this.textArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
@@ -133,6 +135,17 @@ public class AiProviderPanel extends JPanel {
         configPanel.add(new JLabel("Display Name:"));
         displayNameField = new JTextField(provider.getDisplayName());
         displayNameField.getDocument().addDocumentListener(new AnyChangeDocumentListener(() -> {
+            updateLinkLabel();
+            
+            // Real-time tab title sync
+            java.awt.Container parent = getParent();
+            if (parent instanceof javax.swing.JTabbedPane tabs) {
+                int idx = tabs.indexOfComponent(this);
+                if (idx != -1) {
+                    tabs.setTitleAt(idx, displayNameField.getText().trim());
+                }
+            }
+            
             if (currentFolderName == null || currentFolderName.isBlank()) {
                 String suggested = displayNameField.getText().trim().replaceAll("[^a-zA-Z0-9.-]", "_");
                 if (!suggested.isEmpty()) {
@@ -227,20 +240,7 @@ public class AiProviderPanel extends JPanel {
         keysSection.add(scrollPane, BorderLayout.CENTER);
         
         if (provider.getKeysAcquisitionUri() != null) {
-            JLabel linkLabel = new JLabel("<html><a href=''>" + provider.getDisplayName() + " - Get API Keys</a></html>");
-            linkLabel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-            linkLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            linkLabel.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    try {
-                        Desktop.getDesktop().browse(provider.getKeysAcquisitionUri());
-                    } catch (Exception ex) {
-                        log.error("Failed to open acquisition URI", ex);
-                    }
-                }
-            });
-            keysSection.add(linkLabel, BorderLayout.SOUTH);
+            keysSection.add(acquisitionLinkLabel, BorderLayout.SOUTH);
         }
 
         add(configPanel, BorderLayout.NORTH);
@@ -254,28 +254,53 @@ public class AiProviderPanel extends JPanel {
 
     /**
      * Performs a non-blocking model discovery probe.
+     * Automatically synchronizes UI state to the object and key file before testing.
      */
     private void testConnection() {
         if (!(provider instanceof OpenAiCompatibleProvider oai)) return;
         
-        String originalUrl = oai.getBaseUrl();
-        oai.setBaseUrl(baseUrlField.getText().trim());
-        
-        new SwingTask<Integer>(this, "Testing Connection", () -> {
-            try {
+        try {
+            // Force sync to ensure keys and URL are latest
+            syncToProvider();
+            
+            new SwingTask<Integer>(this, "Testing Connection", () -> {
                 var models = oai.refreshModels();
                 if (models.isEmpty()) {
                     throw new Exception("Discovery returned 0 models. Check your URL and API Keys.");
                 }
                 return models.size();
-            } finally {
-                oai.setBaseUrl(originalUrl); 
+            }, count -> {
+                JOptionPane.showMessageDialog(this, 
+                    "Connection successful! Discovered " + count + " models.", 
+                    "Success", JOptionPane.INFORMATION_MESSAGE);
+            }).execute();
+        } catch (IOException ex) {
+            log.error("Failed to sync before test", ex);
+            JOptionPane.showMessageDialog(this, "Pre-test sync failed: " + ex.getMessage());
+        }
+    }
+
+    private void updateLinkLabel() {
+        if (provider.getKeysAcquisitionUri() == null) return;
+        String name = displayNameField != null ? displayNameField.getText().trim() : provider.getDisplayName();
+        if (name.isBlank()) name = "Provider";
+        
+        acquisitionLinkLabel.setText("<html><a href=''>" + name + " - Get API Keys</a></html>");
+        acquisitionLinkLabel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        acquisitionLinkLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        // Remove existing listeners to avoid duplicates
+        for (var l : acquisitionLinkLabel.getMouseListeners()) acquisitionLinkLabel.removeMouseListener(l);
+        
+        acquisitionLinkLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                try {
+                    Desktop.getDesktop().browse(provider.getKeysAcquisitionUri());
+                } catch (Exception ex) {
+                    log.error("Failed to open acquisition URI", ex);
+                }
             }
-        }, count -> {
-            JOptionPane.showMessageDialog(this, 
-                "Connection successful! Discovered " + count + " models.", 
-                "Success", JOptionPane.INFORMATION_MESSAGE);
-        }).execute();
+        });
     }
 
     /**
@@ -309,7 +334,7 @@ public class AiProviderPanel extends JPanel {
      * Synchronizes the UI state back to the provider domain and flushes 
      * the key pool to disk. This is called by the parent preferences panel.
      */
-    public void applyToProvider() throws IOException {
+    public void syncToProvider() throws IOException {
         provider.setDisplayName(displayNameField.getText().trim());
         provider.setEnabled(enabledCheck.isSelected());
         provider.setApiKeyRequired(apiKeyRequiredCheck.isSelected());
@@ -343,9 +368,5 @@ public class AiProviderPanel extends JPanel {
         Path path = provider.getKeysFilePath();
         Files.writeString(path, textArea.getText());
         provider.reloadKeyPool();
-        
-        if (saveSuccessCallback != null) {
-            saveSuccessCallback.run();
-        }
     }
 }
