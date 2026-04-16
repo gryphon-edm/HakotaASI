@@ -176,6 +176,12 @@ public class OpenAiCompatibleProvider extends AbstractAiProvider {
         return statusCode == 429 || statusCode == 503 || statusCode == 500 || statusCode == 499 || statusCode == 408;
     }
 
+    @Override
+    public void hokusPocus() {
+        super.hokusPocus(); 
+        getNextKey();
+    }
+
     /**
      * {@inheritDoc}
      * <p>
