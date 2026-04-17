@@ -13,16 +13,14 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListCellRenderer;
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
 import javax.swing.SwingWorker;
 import lombok.extern.slf4j.Slf4j;
 import net.miginfocom.swing.MigLayout;
@@ -32,13 +30,7 @@ import uno.anahata.asi.agi.provider.AbstractAiProvider;
 import uno.anahata.asi.agi.provider.AbstractModel;
 import uno.anahata.asi.swing.agi.config.SessionConfigPanel;
 import uno.anahata.asi.swing.icons.AddIcon;
-import uno.anahata.asi.swing.icons.CancelIcon;
-import uno.anahata.asi.swing.icons.DeleteIcon;
-import uno.anahata.asi.swing.icons.SaveIcon;
-import uno.anahata.asi.swing.icons.OkIcon;
 import uno.anahata.asi.swing.icons.RestartIcon;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
 
 /**
  * A centralized, multi-tabbed Command Center for managing the ASI container.
@@ -90,11 +82,13 @@ public class AsiContainerPreferencesPanel extends JPanel {
         
         if (prefs.isLoadFailed()) {
             JPanel alertPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-            alertPanel.setBackground(new java.awt.Color(235, 245, 255));
-            JLabel alertLabel = new JLabel("<html><div style='padding: 10px; text-align: center;'><b>Evolutionary Upgrade Detected!</b><br/>" +
-                "Your previous preferences were incompatible with this version of Anahata.<br/>" +
-                "We've archived your old settings and restored the latest high-performance defaults for you.</div></html>");
-            alertLabel.setForeground(new java.awt.Color(0, 102, 204));
+            alertPanel.setBackground(new java.awt.Color(0, 77, 152)); // Deep Barça Blue
+            alertPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 4, 0, new java.awt.Color(165, 0, 68))); // Garnet accent line
+            
+            JLabel alertLabel = new JLabel("<html><div style='padding: 15px; text-align: center; color: white;'>" +
+                "<span style='font-size: 14pt; color: #edbb00;'><b>Evolutionary Leap Detected!</b></span><br/>" +
+                "<div style='margin-top: 5px;'>Your previous configuration has been gracefully archived to make room for new high-performance DNA.</div>" +
+                "<i>Your previous settings were preserved as a 'Broken' backup in the preferences directory.</i></div></html>");
             alertPanel.add(alertLabel);
             add(alertPanel, BorderLayout.NORTH);
         }
