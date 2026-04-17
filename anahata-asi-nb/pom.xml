@@ -621,6 +621,26 @@
                             <id>org.netbeans.modules:org-netbeans-modules-java-hints</id>
                         </dependency>
                     </moduleDependencies>
+                    <publicPackages>
+                        <publicPackage>uno.anahata.asi.nb</publicPackage>
+                        <publicPackage>uno.anahata.asi.nb.annotation</publicPackage>
+                        <publicPackage>uno.anahata.asi.nb.mine</publicPackage>
+                        <publicPackage>uno.anahata.asi.nb.module</publicPackage>
+                        <publicPackage>uno.anahata.asi.nb.nodes</publicPackage>
+                        <publicPackage>uno.anahata.asi.nb.resources.handle</publicPackage>
+                        <publicPackage>uno.anahata.asi.nb.tools.ide</publicPackage>
+                        <publicPackage>uno.anahata.asi.nb.tools.ide.context</publicPackage>
+                        <publicPackage>uno.anahata.asi.nb.tools.java</publicPackage>
+                        <publicPackage>uno.anahata.asi.nb.tools.maven</publicPackage>
+                        <publicPackage>uno.anahata.asi.nb.tools.project</publicPackage>
+                        <publicPackage>uno.anahata.asi.nb.tools.project.actions</publicPackage>
+                        <publicPackage>uno.anahata.asi.nb.tools.project.alerts</publicPackage>
+                        <publicPackage>uno.anahata.asi.nb.tools.project.components</publicPackage>
+                        <publicPackage>uno.anahata.asi.nb.tools.project.context</publicPackage>
+                        <publicPackage>uno.anahata.asi.nb.ui.render</publicPackage>
+                        <publicPackage>uno.anahata.asi.nb.ui.resources</publicPackage>
+                        <publicPackage>uno.anahata.asi.nb.util</publicPackage>
+                    </publicPackages>
                 </configuration>
             </plugin>
             <plugin>
