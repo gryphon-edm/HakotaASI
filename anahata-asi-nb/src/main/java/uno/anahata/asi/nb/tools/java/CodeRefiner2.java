@@ -30,6 +30,8 @@ import org.netbeans.api.java.source.ElementHandle;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.ElementKind;
 import com.sun.source.util.TreePath;
+import org.netbeans.api.java.source.support.ReferencesCount;
+import org.netbeans.modules.editor.java.Utilities;
 
 /**
  * V2.5 of the structural Java code refinement toolkit. High-fidelity structural
@@ -398,12 +400,12 @@ public class CodeRefiner2 extends AnahataToolkit {
         FileObject fo = JavaSourceUtils.getFileObject(filePath);
         JavaSource js = JavaSource.forFileObject(fo);
         final Set<String> diagnostics = new LinkedHashSet<>();
-        js.runModificationTask(wc -> {
+        js.runModificationTask(wc-> {
             wc.toPhase(JavaSource.Phase.RESOLVED);
-            CompilationUnitTree oldCut = wc.getCompilationUnit();
-            CompilationUnitTree newCut = GeneratorUtilities
-                    .get(wc)
-                    .importFQNs(oldCut);
+            ReferencesCount rc = ReferencesCount.get(wc.getClasspathInfo());
+            CompilationUnitTree oldCut = wc
+                    .getCompilationUnit();
+            CompilationUnitTree newCut = GeneratorUtilities.get(wc).importFQNs(oldCut);
             wc.rewrite(oldCut, newCut);
             if (doRemove) {
                 removeUnusedImportsInternal(wc);
@@ -421,10 +423,27 @@ public class CodeRefiner2 extends AnahataToolkit {
                                     try {
                                         ClassIndex index = wc.getClasspathInfo().getClassIndex();
                                         Set<ClassIndex.SearchScope> scopes = EnumSet.allOf(ClassIndex.SearchScope.class);
-                                        Set<ElementHandle<TypeElement>> candidates = index.getDeclaredTypes(name, ClassIndex.NameKind.SIMPLE_NAME, scopes);
-                                        if (!candidates.isEmpty()) {
-                                            diagnostics.add("Found " + candidates.size() + " candidates for " + name + ":");
-                                            candidates.forEach(ch -> diagnostics.add(" - " + ch.getQualifiedName()));
+                                        Set<ElementHandle<TypeElement>> handles = index.getDeclaredTypes(name, ClassIndex.NameKind.SIMPLE_NAME, scopes);
+                                        if (!handles.isEmpty()) {
+                                            class Candidate {
+
+                                                final String fqn;
+                                                final int score;
+
+                                                Candidate(String fqn, int score) {
+                                                    this.fqn = fqn;
+                                                    this.score = score;
+                                                }
+                                            }
+                                            List<Candidate> candidates = new ArrayList<>();
+                                            for (ElementHandle<TypeElement> handle : handles) {
+                                                TypeElement te = handle.resolve(wc);
+                                                int score = te != null ? Utilities.getImportanceLevel(wc, rc, te) : Utilities.getImportanceLevel(handle.getQualifiedName());
+                                                candidates.add(new Candidate(handle.getQualifiedName(), score));
+                                            }
+                                            candidates.sort(Comparator.comparingInt(c -> c.score));
+                                            diagnostics.add("Found " + candidates.size() + " candidates for " + name + " (sorted by NetBeans Importance):");
+                                            candidates.forEach(c-> diagnostics.add(String.format(" - %-40s [Score: %d]", c.fqn, c.score)));
                                         } else {
                                             diagnostics.add("No candidates found in index for " + name);
                                         }
