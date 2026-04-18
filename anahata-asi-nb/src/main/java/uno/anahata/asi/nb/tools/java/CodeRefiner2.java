@@ -25,6 +25,11 @@ import org.openide.filesystems.FileUtil;
 import org.openide.loaders.DataObject;
 import uno.anahata.asi.agi.tool.*;
 import uno.anahata.asi.nb.tools.java.JavaSourceUtils.RelativePosition;
+import org.netbeans.api.java.source.ClassIndex;
+import org.netbeans.api.java.source.ElementHandle;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.ElementKind;
+import com.sun.source.util.TreePath;
 
 /**
  * V2.5 of the structural Java code refinement toolkit. High-fidelity structural
@@ -387,71 +392,64 @@ public class CodeRefiner2 extends AnahataToolkit {
      */
     @AgiTool("Optimizes imports (converts FQNs to simple names, removes unused).")
     public String optimizeImports(
-            @AgiToolParam(value = "The absolute path of the Java file.", rendererId = "path") String filePath, @AgiToolParam(value = "Whether to remove unused imports.", required = false) Boolean removeUnused, @AgiToolParam("Whether to save.") boolean save) throws Exception {
+            @AgiToolParam(value = "The absolute path of the Java file.", rendererId = "path")
+    String filePath, @AgiToolParam(value = "Whether to remove unused imports.", required = false)
+    Boolean removeUnused, @AgiToolParam("Whether to save.")
+    boolean save) throws Exception {
 
         final boolean doRemove = removeUnused == null || removeUnused;
         FileObject fo = JavaSourceUtils.getFileObject(filePath);
         JavaSource js = JavaSource.forFileObject(fo);
         final List<String> logLines = new ArrayList<>();
         final Set<String> diagnostics = new LinkedHashSet<>();
-        js.runModificationTask(wc -> {
+        js.runModificationTask(wc-> {
             wc.toPhase(JavaSource.Phase.RESOLVED);
             CompilationUnitTree oldCut = wc.getCompilationUnit();
-            Set<String> oldImports = oldCut.getImports().stream()
-                    .map(it -> it.getQualifiedIdentifier().toString())
-                    .collect(Collectors.toSet());
-            CompilationUnitTree newCut = GeneratorUtilities.get(wc).importFQNs(oldCut);
+            logLines.add("ClasspathInfo: " + wc.getClasspathInfo());
+            CompilationUnitTree newCut = GeneratorUtilities
+                    .get(wc)
+                    .importFQNs(oldCut);
             wc.rewrite(oldCut, newCut);
-            Set<String> newImports = newCut.getImports().stream()
-                    .map(it -> it.getQualifiedIdentifier().toString())
-                    .collect(Collectors.toSet());
-            Set<String> added = new HashSet<>(newImports);
-            added.removeAll(oldImports);
-            Set<String> removed = new HashSet<>(oldImports);
-            removed.removeAll(newImports);
-            added.forEach(i -> logLines.add("Added import: " + i));
-            removed.forEach(i -> logLines.add("Removed import: " + i));
             if (doRemove) {
                 removeUnusedImportsInternal(wc);
             }
             new TreePathScanner<Void, WorkingCopy>() {
                 @Override
                 public Void visitIdentifier(IdentifierTree node, WorkingCopy wc) {
-                    Element e = wc.getTrees().getElement(getCurrentPath());
-                    if (e == null || (e.asType() != null && e.asType().getKind() == TypeKind.ERROR)) {
-                        String name = node.getName().toString();
-                        if (Character.isUpperCase(name.charAt(0))) {
-                            if (diagnostics.add("Unresolved type: " + name)) {
-                                try {
-                                    Set<ElementHandle<TypeElement>> candidates = wc.getClasspathInfo().getClassIndex().getDeclaredTypes(name, ClassIndex.NameKind.SIMPLE_NAME, EnumSet.allOf(ClassIndex.SearchScope.class));
-                                    if (!candidates.isEmpty()) {
-                                        diagnostics.add("Found " + candidates.size() + " candidates for " + name + ":");
-                                        candidates.forEach(ch -> diagnostics.add(" - " + ch.getQualifiedName()));
-                                    } else {
-                                        diagnostics.add("No candidates found in classpath index for " + name);
+                    TreePath path = getCurrentPath();
+                    if (path != null) {
+                        Element e = wc.getTrees().getElement(path);
+                        if (e == null || (e.asType() != null && e.asType().getKind() == TypeKind.ERROR)) {
+                            String name = node.getName().toString();
+                            if (Character.isUpperCase(name.charAt(0))) {
+                                if (diagnostics.add("Unresolved type: " + name)) {
+                                    try {
+                                        ClassIndex index = wc.getClasspathInfo().getClassIndex();
+                                        Set<ClassIndex.SearchScope> scopes = EnumSet.allOf(ClassIndex.SearchScope.class);
+                                        Set<ElementHandle<TypeElement>> candidates = index.getDeclaredTypes(name, ClassIndex.NameKind.SIMPLE_NAME, scopes);
+                                        if (!candidates.isEmpty()) {
+                                            diagnostics.add("Found " + candidates.size() + " candidates for " + name + ":");
+                                            candidates.forEach(ch -> diagnostics.add(" - " + ch.getQualifiedName()));
+                                        } else {
+                                            diagnostics.add("No candidates found in index for " + name + " (Scopes: " + scopes + ")");
+                                            TypeElement list = wc.getElements().getTypeElement("java.util.List");
+                                            diagnostics.add("java.util.List visibility: " + (list != null ? "VISIBLE" : "NOT VISIBLE"));
+                                        }
+                                    } catch (Exception ex) {
                                     }
-                                } catch (Exception ex) {
                                 }
                             }
                         }
                     }
                     return super.visitIdentifier(node, wc);
                 }
-            }.scan(wc.getCompilationUnit(), wc);
+            }.scan(new TreePath(wc.getCompilationUnit()),wc);
 
         }).commit();
         logLines.forEach(this::log);
         diagnostics.forEach(this::log);
-        if (save) {
-            handleSave(fo);
-        }
-        StringBuilder sb = new StringBuilder("Optimized imports for: ").append(fo.getNameExt());
-        if (!logLines.isEmpty()) {
-            sb.append("\n").append(String.join("\n", logLines));
-        } else {
-            sb.append("\nNo changes detected. Check the Logs tab for unresolved symbol diagnostics.");
-        }
-        return sb.toString();
+        if (save) handleSave(fo);
+        return "Optimized imports for: " + fo.getNameExt() + ". Check logs for details.";
     }
 
     private void validatePosition(RelativePosition position, String anchor) throws AgiToolException {
