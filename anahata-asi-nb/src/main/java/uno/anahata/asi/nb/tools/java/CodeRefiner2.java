@@ -423,12 +423,12 @@ public class CodeRefiner2 extends AnahataToolkit {
                         if (Character.isUpperCase(name.charAt(0))) {
                             if (diagnostics.add("Unresolved type: " + name)) {
                                 try {
-                                    Set<? extends TypeElement> candidates = wc.getElements().getAllTypeElements(name);
+                                    Set<ElementHandle<TypeElement>> candidates = wc.getClasspathInfo().getClassIndex().getDeclaredTypes(name, ClassIndex.NameKind.SIMPLE_NAME, EnumSet.allOf(ClassIndex.SearchScope.class));
                                     if (!candidates.isEmpty()) {
-                                        diagnostics.add("Candidates for " + name + ":");
-                                        candidates.forEach(c -> diagnostics.add(" - " + c.getQualifiedName()));
+                                        diagnostics.add("Found " + candidates.size() + " candidates for " + name + ":");
+                                        candidates.forEach(ch -> diagnostics.add(" - " + ch.getQualifiedName()));
                                     } else {
-                                        diagnostics.add("No candidates found in classpath for " + name);
+                                        diagnostics.add("No candidates found in classpath index for " + name);
                                     }
                                 } catch (Exception ex) {
                                 }
