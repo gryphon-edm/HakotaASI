@@ -8,6 +8,7 @@ import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.ModifiersTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
+import com.sun.source.util.TreePath;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -218,7 +219,7 @@ public class JavaSourceUtils {
                     expected = parts[parts.length - 2];
                 }
             }
-            
+
             String actual = ee.getParameters().get(i).asType().toString();
 
             // Logic: If the user provided a raw type (no <), strip generics from actual for comparison.
@@ -292,7 +293,7 @@ public class JavaSourceUtils {
             if (m instanceof MethodTree mt) {
                 name = mt.getName().toString();
                 if (wc != null && memberName.contains("(") && memberName.startsWith(name)) {
-                    com.sun.source.util.TreePath path = com.sun.source.util.TreePath.getPath(wc.getCompilationUnit(), m);
+                    TreePath path = TreePath.getPath(wc.getCompilationUnit(), m);
                     Element e = wc.getTrees().getElement(path);
                     if (e instanceof ExecutableElement ee && matchSignature(ee, memberName)) {
                         return i;
@@ -303,7 +304,6 @@ public class JavaSourceUtils {
             } else if (m instanceof ClassTree ct) {
                 name = ct.getSimpleName().toString();
             }
-
             if (memberName.equals(name)) {
                 return i;
             }
@@ -344,7 +344,7 @@ public class JavaSourceUtils {
 
     /**
      * Parses a space-separated string of modifiers into a set.
-     * 
+     *
      * @param modifiersStr The string (e.g., 'public final').
      * @return The set of modifiers.
      */
@@ -412,7 +412,6 @@ public class JavaSourceUtils {
         if (js == null) {
             return;
         }
-
         js.runUserActionTask(new Task<CompilationController>() {
             @Override
             public void run(CompilationController parameter) throws Exception {
