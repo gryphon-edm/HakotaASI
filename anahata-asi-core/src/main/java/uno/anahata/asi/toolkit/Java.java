@@ -68,7 +68,7 @@ public class Java extends AnahataToolkit {
      * context. This prevents "Identity Crisis" issues where a child-loaded
      * script cannot access the engine's context.
      */
-    protected static final Set<String> PARENT_FIRST_CLASSES = Set.of(OnTheFlyAgiTool.class.getName(),
+    protected final Set<String> parentFirstClassess = Set.of(OnTheFlyAgiTool.class.getName(),
             Java.class.getName(),
             ToolContext.class.getName(),
             Agi.class.getName(),
@@ -380,7 +380,7 @@ public class Java extends AnahataToolkit {
                         // 2. PARENT-FIRST for critical infrastructure:
                         // These classes MUST maintain a single identity across all loaders
                         // to preserve ThreadLocals and static context anchors.
-                        if (PARENT_FIRST_CLASSES.contains(name)) {
+                        if (parentFirstClassess.contains(name)) {
                             ctx.log("Delegating infrastructure class to parent: " + name);
                             return super.loadClass(name, resolve);
                         }

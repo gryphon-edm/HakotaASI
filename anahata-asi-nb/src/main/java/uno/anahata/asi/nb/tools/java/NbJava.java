@@ -31,7 +31,6 @@ import uno.anahata.asi.swing.toolkit.SwingJava;
 import uno.anahata.asi.agi.tool.AgiToolkit;
 import uno.anahata.asi.agi.tool.AgiToolParam;
 import uno.anahata.asi.agi.tool.AgiTool;
-import uno.anahata.asi.agi.tool.ToolPermission;
 
 /**
  * A NetBeans-aware extension of the core {@link Java} toolkit.
