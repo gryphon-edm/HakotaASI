@@ -7,7 +7,6 @@ import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.ModifiersTree;
 import com.sun.source.tree.Tree;
-import com.sun.source.tree.Tree.Kind;
 import com.sun.source.tree.VariableTree;
 import java.io.File;
 import java.io.IOException;
@@ -19,6 +18,7 @@ import java.util.Set;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import lombok.extern.slf4j.Slf4j;
@@ -161,7 +161,7 @@ public class JavaSourceUtils {
         }
 
         // Try package
-        javax.lang.model.element.PackageElement pkg = wc.getElements().getPackageElement(pureFqn);
+        PackageElement pkg = wc.getElements().getPackageElement(pureFqn);
         if (pkg != null) {
             return pkg;
         }
@@ -274,11 +274,30 @@ public class JavaSourceUtils {
      * @return The index, or -1 if not found.
      */
     public static int findMemberIndex(List<? extends Tree> members, String memberName) {
+        return findMemberIndex(null, members, memberName);
+    }
+
+    /**
+     * Finds the index of a member by its name or canonical signature.
+     *
+     * @param wc The working copy for resolution.
+     * @param members The list of class members.
+     * @param memberName The name or signature to look for.
+     * @return The index, or -1 if not found.
+     */
+    public static int findMemberIndex(WorkingCopy wc, List<? extends Tree> members, String memberName) {
         for (int i = 0; i < members.size(); i++) {
             Tree m = members.get(i);
             String name = null;
             if (m instanceof MethodTree mt) {
                 name = mt.getName().toString();
+                if (wc != null && memberName.contains("(") && memberName.startsWith(name)) {
+                    com.sun.source.util.TreePath path = com.sun.source.util.TreePath.getPath(wc.getCompilationUnit(), m);
+                    Element e = wc.getTrees().getElement(path);
+                    if (e instanceof ExecutableElement ee && matchSignature(ee, memberName)) {
+                        return i;
+                    }
+                }
             } else if (m instanceof VariableTree vt) {
                 name = vt.getName().toString();
             } else if (m instanceof ClassTree ct) {
