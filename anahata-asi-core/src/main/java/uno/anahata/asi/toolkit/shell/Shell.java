@@ -86,7 +86,7 @@ public class Shell extends AnahataToolkit {
     public ShellExecutionResult runAndWait(
             @AgiToolParam("The command to run") String command,
             @AgiToolParam("The type of shell to use (BASH, CMD, POWERSHELL, SH). If null, it defaults to POWERSHELL on Windows and BASH on Unix.") ShellType type,
-            @AgiToolParam(value = "The working directory for the command. If null, it defaults to the Current Shell Working Directory provided in the RAG message.", required = false) String workingDirectory) throws Exception {
+            @AgiToolParam(value = "The directory where the command will be executed. If null, it defaults to the **Current Shell Working Directory** provided in the RAG message.", required = false) String workingDirectory) throws Exception {
         
         Thread currentThread = Thread.currentThread();
         log(String.format("[Shell] runAndWait started on thread: %s (ID: %d)", currentThread.getName(), currentThread.getId()));
