@@ -400,12 +400,10 @@ public class CodeRefiner2 extends AnahataToolkit {
         final boolean doRemove = removeUnused == null || removeUnused;
         FileObject fo = JavaSourceUtils.getFileObject(filePath);
         JavaSource js = JavaSource.forFileObject(fo);
-        final List<String> logLines = new ArrayList<>();
         final Set<String> diagnostics = new LinkedHashSet<>();
         js.runModificationTask(wc-> {
             wc.toPhase(JavaSource.Phase.RESOLVED);
             CompilationUnitTree oldCut = wc.getCompilationUnit();
-            logLines.add("ClasspathInfo: " + wc.getClasspathInfo());
             CompilationUnitTree newCut = GeneratorUtilities
                     .get(wc)
                     .importFQNs(oldCut);
@@ -431,9 +429,7 @@ public class CodeRefiner2 extends AnahataToolkit {
                                             diagnostics.add("Found " + candidates.size() + " candidates for " + name + ":");
                                             candidates.forEach(ch -> diagnostics.add(" - " + ch.getQualifiedName()));
                                         } else {
-                                            diagnostics.add("No candidates found in index for " + name + " (Scopes: " + scopes + ")");
-                                            TypeElement list = wc.getElements().getTypeElement("java.util.List");
-                                            diagnostics.add("java.util.List visibility: " + (list != null ? "VISIBLE" : "NOT VISIBLE"));
+                                            diagnostics.add("No candidates found in index for " + name);
                                         }
                                     } catch (Exception ex) {
                                     }
@@ -446,7 +442,6 @@ public class CodeRefiner2 extends AnahataToolkit {
             }.scan(new TreePath(wc.getCompilationUnit()),wc);
 
         }).commit();
-        logLines.forEach(this::log);
         diagnostics.forEach(this::log);
         if (save) handleSave(fo);
         return "Optimized imports for: " + fo.getNameExt() + ". Check logs for details.";
