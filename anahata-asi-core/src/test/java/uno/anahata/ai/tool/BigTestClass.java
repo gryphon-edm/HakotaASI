@@ -99,7 +99,13 @@ public class BigTestClass {
 
     public static class NestedA {
         public static class NestedB {
-            public void deepMethod() {}
+            private static class TacticalSnapshot {
+
+             
+            }
+            public void deepMethod() {
+                System.out.println("Deep tactical analysis complete: For\u00e7a Bar\u00e7a!");
+            }
         }
     }
 
