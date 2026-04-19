@@ -428,7 +428,7 @@ public class CodeModel extends AnahataToolkit {
             throw new AgiToolException("Multiple types found for FQN: " + fqn + ": " + results + ". Please use the tool that takes a JavaType as a parameter to specify or the Resources Toolkit if you now the url.");
         }
 
-        log.info("Successfully resolved unique type: {} -> {}", fqn, results.get(0).getUrl());
+        log("Successfully resolved unique type: fqn" + fqn + " > " + results.get(0).getUrl());
         return results.get(0);
     }
 
