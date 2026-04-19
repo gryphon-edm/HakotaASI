@@ -32,8 +32,6 @@ import javax.swing.text.Document;
 import lombok.Generated;
 import org.netbeans.api.java.source.support.ReferencesCount;
 import org.netbeans.modules.editor.java.Utilities;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * V2.5 of the structural Java code refinement toolkit. High-fidelity structural
@@ -106,20 +104,7 @@ public class CodeRefiner2 extends AnahataToolkit {
             applyJavadoc(wc, newMember, null, javadoc);
             newMember = GeneratorUtilities.get(wc).importFQNs(newMember);
 
-            int anchorIdx = anchorMemberName != null ? JavaSourceUtils.findMemberIndex(wc, members, anchorMemberName) : -1;
-            if (anchorMemberName != null && anchorIdx == -1) {
-                throw new AgiToolException("Anchor member not found: " + anchorMemberName);
-            }
-            int insertIdx = switch (position) {
-                case START ->
-                    0;
-                case END ->
-                    members.size();
-                case BEFORE ->
-                    anchorIdx;
-                case AFTER ->
-                    anchorIdx + 1;
-            };
+            int insertIdx = getInsertIndex(wc, members, position, anchorMemberName);
             members.add(insertIdx, newMember);
 
             if (parentTree instanceof ClassTree ct) {
@@ -137,12 +122,8 @@ public class CodeRefiner2 extends AnahataToolkit {
         if (save) {
             handleSave(fo);
         }
-        StringBuilder sb = new StringBuilder("Inserted member into ").append(classFqn == null || classFqn.isBlank() ? "file level" : classFqn);
-        if (!diagnostics.isEmpty()) {
-            sb.append(". Import diagnostics:\n");
-            diagnostics.forEach(d -> sb.append(" - ").append(d).append("\n"));
-        }
-        return sb.toString();
+        logDiagnostics(diagnostics);
+        return "Inserted member into " + (classFqn == null || classFqn.isBlank() ? "file level" : classFqn);
     }
 
     @AgiTool("Updates an existing member structurally (Signature, Body, or Javadoc). Does not work with Records (due to a known nb bug, use the Resources toolkit for updating or inserting records)."
@@ -175,15 +156,12 @@ public class CodeRefiner2 extends AnahataToolkit {
                 newTree = cloneTree(make, oldTree);
                 if (body != null) {
                     if (newTree instanceof MethodTree mt) {
-                        String b = body.trim().startsWith("{") ? body : "{" + body + "}";
-                        BlockTree parsedBody = (BlockTree) wc.getTreeUtilities().parseStatement(b, null);
-                        newTree = make.Method(mt.getModifiers(), mt.getName(), mt.getReturnType(), mt.getTypeParameters(), mt.getParameters(), mt.getThrows(), parsedBody, (AnnotationTree) mt.getDefaultValue());
+                        newTree = make.Method(mt.getModifiers(), mt.getName(), mt.getReturnType(), mt.getTypeParameters(), mt.getParameters(), mt.getThrows(), parseBody(wc, body), (AnnotationTree) mt.getDefaultValue());
                     } else if (newTree instanceof VariableTree vt) {
                         ExpressionTree finalInit = wc.getTreeUtilities().parseExpression(body, null);
                         newTree = make.Variable(vt.getModifiers(), vt.getName(), vt.getType(), finalInit);
                     } else if (newTree instanceof BlockTree bt) {
-                        String b = body.trim().startsWith("{") ? body : "{" + body + "}";
-                        BlockTree parsed = (BlockTree) wc.getTreeUtilities().parseStatement(b, null);
+                        BlockTree parsed = parseBody(wc, body);
                         newTree = make.Block(parsed.getStatements(), bt.isStatic());
                     }
                 }
@@ -203,12 +181,8 @@ public class CodeRefiner2 extends AnahataToolkit {
         if (save) {
             handleSave(fo);
         }
-        StringBuilder sb = new StringBuilder("Updated member ").append(memberFqn);
-        if (!diagnostics.isEmpty()) {
-            sb.append(". Import diagnostics:\n");
-            diagnostics.forEach(d -> sb.append(" - ").append(d).append("\n"));
-        }
-        return sb.toString();
+        logDiagnostics(diagnostics);
+        return "Updated member " + memberFqn;
     }
 
     @AgiTool("Removes a member structurally.")
@@ -254,12 +228,8 @@ public class CodeRefiner2 extends AnahataToolkit {
         if (save) {
             handleSave(fo);
         }
-        StringBuilder sb = new StringBuilder("Removed member '").append(memberFqn).append("' structurally.");
-        if (!diagnostics.isEmpty()) {
-            sb.append(". Import diagnostics:\n");
-            diagnostics.forEach(d -> sb.append(" - ").append(d).append("\n"));
-        }
-        return sb.toString();
+        logDiagnostics(diagnostics);
+        return "Removed member '" + memberFqn + "' structurally.";
     }
 
     @AgiTool("Moves a member to a new position within the same class.")
@@ -299,20 +269,7 @@ public class CodeRefiner2 extends AnahataToolkit {
             List<Tree> members = new ArrayList<>(parentTree.getMembers());
             members.remove(memberTree);
 
-            int anchorIdx = anchorMemberName != null ? JavaSourceUtils.findMemberIndex(wc, members, anchorMemberName) : -1;
-            if (anchorMemberName != null && anchorIdx == -1) {
-                throw new AgiToolException("Anchor member not found: " + anchorMemberName);
-            }
-            int insertIdx = switch (position) {
-                case START ->
-                    0;
-                case END ->
-                    members.size();
-                case BEFORE ->
-                    anchorIdx;
-                case AFTER ->
-                    anchorIdx + 1;
-            };
+            int insertIdx = getInsertIndex(wc, members, position, anchorMemberName);
             members.add(insertIdx, memberTree);
 
             ClassTree updatedParent = rebuildClassTree(make, parentTree, members);
@@ -739,6 +696,35 @@ public class CodeRefiner2 extends AnahataToolkit {
             sb.append("- ").append(c).append("\n");
         }
         throw new AgiToolException(sb.toString());
+    }
+
+    private int getInsertIndex(WorkingCopy wc, List<? extends Tree> members, RelativePosition position, String anchorMemberName) throws AgiToolException {
+        int anchorIdx = anchorMemberName != null ? JavaSourceUtils.findMemberIndex(wc, members, anchorMemberName) : -1;
+        if (anchorMemberName != null && anchorIdx == -1) {
+            throw new AgiToolException("Anchor member not found: " + anchorMemberName);
+        }
+        return switch (position) {
+            case START ->
+                0;
+            case END ->
+                members.size();
+            case BEFORE ->
+                anchorIdx;
+            case AFTER ->
+                anchorIdx + 1;
+        };
+    }
+
+    private BlockTree parseBody(WorkingCopy wc, String body) {
+        String b = body.trim().startsWith("{") ? body : "{" + body + "}";
+        return (BlockTree) wc.getTreeUtilities().parseStatement(b, null);
+    }
+
+    private void logDiagnostics(Set<String> diagnostics) {
+        if (!diagnostics.isEmpty()) {
+            log("Import diagnostics:");
+            diagnostics.forEach(d -> log(" - " + d));
+        }
     }
 
 }
