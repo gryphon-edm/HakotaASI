@@ -99,7 +99,7 @@ public class ResourceManager extends BasicPropertyChangeSource implements Rebind
     /**
      * Unregisters a resource and cleans up its handle.
      * @param id The resource UUID.
-     * @param the Resource unregistered or null
+     * @return the Resource unregistered or null
      */
     public Resource unregister(@NonNull String id) {
         Resource res;
