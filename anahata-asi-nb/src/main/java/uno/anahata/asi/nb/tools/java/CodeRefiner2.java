@@ -476,7 +476,9 @@ public class CodeRefiner2 extends AnahataToolkit {
     }
 
     /**
-     * Validates the consistency of the relative position and anchor member name for insertion and move operations.
+     * Validates the consistency of the relative position and anchor member name
+     * for insertion and move operations.
+     *
      * @param position the relative position
      * @param anchor the anchor member name
      * @throws AgiToolException if the position and anchor are inconsistent
@@ -505,10 +507,20 @@ public class CodeRefiner2 extends AnahataToolkit {
         };
     }
 
+    /**
+     * Parses a string-based member declaration and optional body into a
+     * {@link Tree}. This is achieved by creating a temporary file in a memory
+     * filesystem and running a PARSED phase task.
+     *
+     * @param wc the working copy
+     * @param declaration the member declaration string
+     * @param body the member body string (optional)
+     * @return the parsed tree
+     * @throws Exception if parsing fails
+     */
     private Tree parseMember(WorkingCopy wc, String declaration, String body) throws Exception {
         String decl = declaration.trim();
         boolean isStandaloneType = decl.startsWith("record ") || decl.contains(" record ") || decl.startsWith("class ") || decl.contains(" class ") || decl.startsWith("interface ") || decl.contains(" interface ") || decl.startsWith("enum ") || decl.contains(" enum ");
-
         if (!decl.endsWith(";") && !decl.endsWith("}")) {
             if (decl.contains("(")) {
                 String b = (body == null) ? "{}" : (body.trim().startsWith("{") ? body : "{" + body + "}");
@@ -555,6 +567,16 @@ public class CodeRefiner2 extends AnahataToolkit {
         return result[0];
     }
 
+    /**
+     * Applies Javadoc content to a target tree. It can also migrate comments
+     * from an old tree and ensures that existing preceding comments are
+     * preserved unless a new Javadoc is being applied.
+     *
+     * @param wc the working copy
+     * @param tree the target tree
+     * @param oldTree the original tree to migrate comments from (optional)
+     * @param javadocText the new Javadoc text (optional)
+     */
     private void applyJavadoc(WorkingCopy wc, Tree tree, Tree oldTree, String javadocText) {
         TreeMaker make = wc.getTreeMaker();
         TreeUtilities utils = wc.getTreeUtilities();
