@@ -7,7 +7,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Provides a description for a parameter of a method marked with {@link AiTool}.
+ * Provides a description for a parameter of a method marked with {@link AgiTool}.
  * This is essential for the model to understand how to use the tool correctly,
  * as it is used to generate the JSON schema for the tool's arguments.
  *
