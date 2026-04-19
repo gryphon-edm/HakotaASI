@@ -50,8 +50,9 @@ public class NbJava extends SwingJava {
      */
     @Override
     public void initialize() {
+        super.initialize();
         setDefaultClasspath(NetBeansModuleUtils.getNetBeansClasspath());
-        log.info("NbJava initialize() completed. default classPath:" + getDefaultClasspath());
+        log.info("initialize() default classPath:" + getDefaultClasspath());
     }
     
     /** 

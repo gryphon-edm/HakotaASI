@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -34,7 +35,6 @@ import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.internal.ClasspathPrinter;
 import uno.anahata.asi.internal.TextUtils;
 import uno.anahata.asi.agi.message.RagMessage;
-import uno.anahata.asi.agi.tool.ToolPermission;
 import uno.anahata.asi.agi.tool.spi.java.JavaMethodTool;
 import uno.anahata.asi.agi.tool.spi.java.JavaMethodToolResponse;
 import uno.anahata.asi.agi.tool.AgiToolException;
@@ -68,26 +68,40 @@ public class Java extends AnahataToolkit {
      * context. This prevents "Identity Crisis" issues where a child-loaded
      * script cannot access the engine's context.
      */
-    protected final Set<String> parentFirstClassess = Set.of(OnTheFlyAgiTool.class.getName(),
-            Java.class.getName(),
-            ToolContext.class.getName(),
-            Agi.class.getName(),
-            ToolManager.class.getName(),
-            AbstractToolkit.class.getName(),
-            JavaObjectToolkit.class.getName(),
-            JavaMethodTool.class.getName(),
-            JavaMethodToolCall.class.getName(),
-            JavaMethodToolResponse.class.getName(),
-            ToolResponseAttachment.class.getName(),
-            AgiToolException.class.getName()
-    );
-
+    protected final Set<String> parentFirstClassess = new HashSet<>();
+            
     /**
      * The base compiler and classloader classpath. Extra entries can be
      * provided at execution time.
      */
     public String defaultCompilerClasspath;
-
+    
+        /**
+     * Default constructor. Initializes the default classpath from the system's
+     * "java.class.path" property.
+     */
+    public Java() {
+        defaultCompilerClasspath = System.getProperty("java.class.path");
+        registerParentFirstClass(OnTheFlyAgiTool.class);
+        registerParentFirstClass(getClass());
+        registerParentFirstClass(ToolContext.class);
+        registerParentFirstClass(Agi.class);
+        registerParentFirstClass(ToolManager.class);
+        registerParentFirstClass(AbstractToolkit.class);
+        registerParentFirstClass(JavaObjectToolkit.class);
+        registerParentFirstClass(JavaMethodTool.class);
+        registerParentFirstClass(JavaMethodToolCall.class);
+        registerParentFirstClass(JavaMethodToolResponse.class);
+        registerParentFirstClass(ToolResponseAttachment.class);
+        registerParentFirstClass(AgiToolException.class);
+        log.info("Java toolkit instantiated:");
+    }
+    
+    @Override
+    public void initialize() {
+        log.info("initialize(): parentFirstClasses: " + parentFirstClassess);
+    }
+    
     /**
      * {@inheritDoc}
      */
@@ -145,6 +159,23 @@ public class Java extends AnahataToolkit {
     }
 
     /**
+     * Registers a class and all its superclasses and interfaces to be loaded
+     * by the parent classloader.
+     *
+     * @param c The class to register.
+     */
+    public final void registerParentFirstClass(Class<?> c) {
+        if (c == null || c.equals(Object.class) || parentFirstClassess.contains(c.getName())) {
+            return;
+        }
+        parentFirstClassess.add(c.getName());
+        registerParentFirstClass(c.getSuperclass());
+        for (Class<?> iface : c.getInterfaces()) {
+            registerParentFirstClass(iface);
+        }
+    }
+
+    /**
      * The class the model should extend when generating Agi tools.
      *
      * @return the base AgiTool class.
@@ -153,14 +184,6 @@ public class Java extends AnahataToolkit {
         return OnTheFlyAgiTool.class;
     }
 
-    /**
-     * Default constructor. Initializes the default classpath from the system's
-     * "java.class.path" property.
-     */
-    public Java() {
-        defaultCompilerClasspath = System.getProperty("java.class.path");
-        log.info("Java toolkit instantiated:");
-    }
 
     /**
      * Gets the current default classpath used for compilation and class

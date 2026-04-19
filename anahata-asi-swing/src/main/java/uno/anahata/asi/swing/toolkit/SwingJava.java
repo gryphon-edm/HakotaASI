@@ -28,7 +28,8 @@ public class SwingJava extends Java {
      * Constructs a new instance of the toolkit and adds SwingAgiTool to the list of parentFirstClassess.
      */
     public SwingJava() {
-        parentFirstClassess.add(SwingAgiTool.class.getName());
+        registerParentFirstClass(SwingAgiTool.class);
+        
     }
     
     /** 
