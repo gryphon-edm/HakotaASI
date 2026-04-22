@@ -162,6 +162,12 @@ public class CodeRefiner2 extends AnahataToolkit {
                             // Map comments from string for initializers
                             BlockTree parsed = parseBody(wc, body);
                             newTree = make.Block(parsed.getStatements(), bt.isStatic());
+                        } else if (newTree instanceof ClassTree ct) {
+                            // Parse the body as members of a dummy class
+                            Tree parsed = parseMember(wc, "class __BodyParser { " + body + " }", null);
+                            if (parsed instanceof ClassTree parsedCt) {
+                                newTree = rebuildClassTree(make, ct, new ArrayList<>(parsedCt.getMembers()));
+                            }
                         }
                     }
                 } else {
@@ -176,9 +182,14 @@ public class CodeRefiner2 extends AnahataToolkit {
                     }
                 }
 
-                // CRITICAL: Preserve surrounding and internal comments using GeneratorUtilities
+                // CRITICAL: Preserve Javadoc and preceding comments from the old tree.
                 gu.copyComments(oldTree, newTree, true);
-                gu.copyComments(oldTree, newTree, false);
+
+                // Only copy internal/trailing comments if we are NOT providing a new body.
+                // This prevents overwriting new comments with the "empty" state of the old member.
+                if (body == null) {
+                    gu.copyComments(oldTree, newTree, false);
+                }
 
                 make.asReplacementOf(newTree, oldTree);
                 rewriteMember(wc, oldTree, newTree);
