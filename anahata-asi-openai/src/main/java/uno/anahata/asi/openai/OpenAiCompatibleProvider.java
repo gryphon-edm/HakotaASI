@@ -187,7 +187,7 @@ public class OpenAiCompatibleProvider extends AbstractAiProvider {
      * <p>
      * Implementation details: Performs a GET request to the {@code /models}
      * endpoint of the configured {@code baseUrl}. Parses the standard OpenAI
-     * list-response and wraps each ID in an {@link OpenAiModel} instance.
+     * list-response and wraps each ID in an {@link OpenAiCompatibleModel} instance.
      * </p>
      */
     @Override
@@ -205,13 +205,13 @@ public class OpenAiCompatibleProvider extends AbstractAiProvider {
                 JsonNode root = JacksonUtils.parse(httpResponse.body(), JsonNode.class);
                 JsonNode data = root.get("data");
                 if (data != null && data.isArray()) {
-                    List<OpenAiModel> models = new ArrayList<>();
+                    List<OpenAiCompatibleModel> models = new ArrayList<>();
                     for (JsonNode modelNode : data) {
                         String id = modelNode.path("id").asText();
                         if (!id.isBlank()) {
-                            models.add(new OpenAiModel(this, id, id));
+                            models.add(createModel(modelNode));
                         }
-                    }
+}
                     log.info("Successfully discovered {} models from {}", models.size(), baseUrl);
                     return models;
                 }
@@ -220,6 +220,10 @@ public class OpenAiCompatibleProvider extends AbstractAiProvider {
             log.error("Error fetching models for provider '{}' baseURL {}", getDisplayName(), getBaseUrl(), e);
         }
         return Collections.emptyList();
+    }
+
+    protected OpenAiCompatibleModel createModel(JsonNode node) {
+        return new OpenAiCompatibleModel(this, node);
     }
 
     /**

@@ -4,14 +4,14 @@ package uno.anahata.asi.huggingface;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Getter;
 import lombok.Setter;
-import uno.anahata.asi.openai.OpenAiModel;
+import uno.anahata.asi.openai.OpenAiCompatibleModel;
 
 /**
  * A model instance that carries additional metadata discovered from the Hugging Face Hub.
  */
 @Getter
 @Setter
-public class HuggingFaceModel extends OpenAiModel {
+public class HuggingFaceModel extends OpenAiCompatibleModel {
 
     private JsonNode hubConfig;
     private JsonNode tokenizerConfig;

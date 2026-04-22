@@ -49,7 +49,7 @@ import uno.anahata.asi.agi.tool.spi.AbstractToolResponse;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class OpenAiContentAdapter {
+public class OpenAiChatCompletionsResponseAdapter {
 
     /** The Anahata message to be translated. */
     private final AbstractMessage anahataMessage;
@@ -59,6 +59,11 @@ public class OpenAiContentAdapter {
     
     /** The tokenizer used to count parts accurately for the CwGC. */
     private final TokenizerType tokenizerType;
+
+    /** Reasoning style of the target model. */
+    private final uno.anahata.asi.openai.ReasoningStyle reasoningStyle;
+    /** Tags used for reasoning (e.g., ["<think>", "</think>"]). */
+    private final List<String> reasoningTags;
 
     /**
      * Translates the Anahata message into a list of OpenAI-style JSON message nodes.
@@ -212,6 +217,14 @@ public class OpenAiContentAdapter {
         if (shouldIncludeContent) {
             if (part instanceof ModelTextPart mtp) {
                 String text = mtp.getText();
+                
+                // Thought Tagging: If this is a thought part and the model uses TAGS style,
+                // we wrap the text in the appropriate tags to preserve the model's "flow".
+                if (mtp.isThought() && reasoningStyle == uno.anahata.asi.openai.ReasoningStyle.TAGS 
+                        && reasoningTags != null && reasoningTags.size() >= 2) {
+                    text = reasoningTags.get(0) + text + reasoningTags.get(1);
+                }
+                
                 part.setTokenCount(TokenizerUtils.countTokens(text, tokenizerType));
                 textContent.append(text);
             } else if (part instanceof AbstractToolCall<?, ?> tc) {

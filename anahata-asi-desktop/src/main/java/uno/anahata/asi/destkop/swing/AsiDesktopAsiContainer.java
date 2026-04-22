@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.agi.provider.AbstractAiProvider;
 import uno.anahata.asi.huggingface.HuggingFaceProvider;
 import uno.anahata.asi.openai.OpenAiCompatibleProvider;
+import uno.anahata.asi.openai.OpenAiProvider;
 import uno.anahata.asi.swing.AbstractSwingAsiContainer;
 import uno.anahata.asi.swing.agi.AgiPanel;
 import uno.anahata.asi.swing.agi.resources.DefaultResourceUI;
@@ -72,6 +73,10 @@ public class AsiDesktopAsiContainer extends AbstractSwingAsiContainer {
             registerProvider(new uno.anahata.asi.modal.ModalProvider());
         }
         
+        if (getProvider("OpenAI") == null) {
+            log.info("Registering OpenAI");
+            registerProvider(new OpenAiProvider());
+        }
         
         if (getProvider("HuggingFace") == null) {
             log.info("Registering HF");

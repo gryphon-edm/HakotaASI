@@ -2,106 +2,63 @@
 package uno.anahata.asi.openai;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.agi.message.AbstractModelMessage;
 import uno.anahata.asi.agi.message.AbstractPart;
 import uno.anahata.asi.agi.message.ModelTextPart;
 import uno.anahata.asi.agi.provider.FinishReason;
-import uno.anahata.asi.internal.JacksonUtils;
 
 /**
- * An OpenAI-specific implementation of {@link AbstractModelMessage}.
- * It parses the choices and tool calls from the OpenAI API response JSON 
- * into the Anahata domain model.
+ * Base implementation for OpenAI-specific model messages.
+ * Provides common logic for content accumulation, finish reason mapping,
+ * and tool call handling across different OpenAI API versions.
  * 
  * @author anahata
  */
 @Slf4j
-public class OpenAiModelMessage extends AbstractModelMessage<OpenAiResponse> {
+public abstract class OpenAiModelMessage extends AbstractModelMessage<OpenAiResponse> {
 
-    /**
-     * Buffers for accumulating streaming tool call arguments, keyed by their index in the 'choices' array.
-     */
-    private final transient Map<Integer, StringBuilder> callArgsBuffers;
-    private final transient Map<Integer, String> callIds;
-    private final transient Map<Integer, String> callNames;
-    
     private boolean insideReasoningTags = false;
 
-    /**
-     * Constructs a new OpenAI model message.
-     * @param agi The parent session.
-     * @param modelId The ID of the model that generated the message.
-     * @param choiceNode The JSON node containing the choice data.
-     * @param response The parent response object.
-     * @param reasoningStyle Strategy used by the model.
-     * @param reasoningFieldName Field name for reasoning.
-     * @param reasoningTags Tags for reasoning.
-     */
-    public OpenAiModelMessage(Agi agi, String modelId, JsonNode choiceNode, OpenAiResponse response,
-            ReasoningStyle reasoningStyle, String reasoningFieldName, List<String> reasoningTags) {
+    public OpenAiModelMessage(Agi agi, String modelId) {
         super(agi, modelId);
-        this.callArgsBuffers = new HashMap<>();
-        this.callIds = new HashMap<>();
-        this.callNames = new HashMap<>();
-        setResponse(response);
-        // We still need to handle non-streaming initial parse if model calls it
-        if (choiceNode != null) {
-            parseChoice(choiceNode, reasoningStyle, reasoningFieldName, reasoningTags);
-        }
     }
 
     /**
-     * Package-private constructor used for incremental streaming.
+     * Updates the message content and state from a JSON node (choice, item, or event).
      * 
-     * @param agi The parent session.
-     * @param modelId The ID of the model.
+     * @param node The JSON node to parse.
+     * @param reasoningStyle The strategy for extracting thoughts.
+     * @param reasoningFieldName The field name for reasoning content (if using FIELD style).
+     * @param reasoningTags The tags for reasoning content (if using TAGS style).
      */
-    OpenAiModelMessage(Agi agi, String modelId) {
-        super(agi, modelId);
-        this.callArgsBuffers = new HashMap<>();
-        this.callIds = new HashMap<>();
-        this.callNames = new HashMap<>();
-    }
+    public abstract void updateFromNode(JsonNode node, ReasoningStyle reasoningStyle, String reasoningFieldName, List<String> reasoningTags);
+    
+    /**
+     * Updates a single tool call from a JSON node.
+     * 
+     * @param callNode The JSON node containing the tool call (or delta).
+     */
+    public abstract void updateToolCall(JsonNode callNode);
 
-    private void parseChoice(JsonNode choice, ReasoningStyle reasoningStyle, String reasoningFieldName, List<String> reasoningTags) {
-        JsonNode messageNode = choice.get("message");
-        if (messageNode == null) messageNode = choice.get("delta");
-        if (messageNode == null) return;
-        
-        // 1. Text Content
-        if (messageNode.has("content") && !messageNode.get("content").isNull()) {
-            String text = messageNode.get("content").asText();
-            if (reasoningStyle == ReasoningStyle.TAGS && reasoningTags != null && reasoningTags.size() >= 2) {
-                appendTaggedContent(text, reasoningTags.get(0), reasoningTags.get(1));
-            } else {
-                appendContent(text);
-            }
-        }
-        
-        // 1.1 Reasoning Content (FIELD style)
-        if (reasoningStyle == ReasoningStyle.FIELD && reasoningFieldName != null 
-                && messageNode.has(reasoningFieldName) && !messageNode.get(reasoningFieldName).isNull()) {
-            appendThoughts(messageNode.get(reasoningFieldName).asText());
-        }
-        
-        // 2. Tool Calls
-        if (messageNode.has("tool_calls")) {
-            for (JsonNode callNode : messageNode.get("tool_calls")) {
-                updateToolCall(callNode);
-            }
-        }
-        
-        // 3. Finish Reason
-        if (choice.has("finish_reason") && !choice.get("finish_reason").isNull()) {
-            setFinishReasonFromOpenAi(choice.get("finish_reason").asText());
-        }
-    }
+    /**
+     * Flushes any buffered tool calls (used during streaming).
+     * This ensures that partial tool call arguments are fully assembled and
+     * registered in the tool manager.
+     */
+    public abstract void flushToolCalls();
 
+    /**
+     * Sets the finish reason from a raw OpenAI string.
+     * 
+     * @param fr The raw finish reason string (e.g., "stop", "length").
+     */
     public void setFinishReasonFromOpenAi(String fr) {
         setFinishReason(mapFinishReason(fr));
         if ("stop".equals(fr) || "tool_calls".equals(fr)) {
@@ -109,12 +66,8 @@ public class OpenAiModelMessage extends AbstractModelMessage<OpenAiResponse> {
         }
     }
 
-    /**
-     * Maps OpenAI's finish reason strings to our internal enum.
-     * @param reason The raw reason string from the API.
-     * @return The corresponding {@link FinishReason}.
-     */
     private FinishReason mapFinishReason(String reason) {
+        if (reason == null) return FinishReason.OTHER;
         return switch (reason) {
             case "stop" -> FinishReason.STOP;
             case "length" -> FinishReason.MAX_TOKENS;
@@ -124,6 +77,11 @@ public class OpenAiModelMessage extends AbstractModelMessage<OpenAiResponse> {
         };
     }
 
+    /**
+     * Appends text to the main content part or creates a new one.
+     * 
+     * @param text The text to append.
+     */
     public void appendContent(String text) {
         List<AbstractPart> parts = getParts();
         if (!parts.isEmpty() && parts.get(parts.size() - 1) instanceof ModelTextPart mtp && !mtp.isThought()) {
@@ -133,6 +91,11 @@ public class OpenAiModelMessage extends AbstractModelMessage<OpenAiResponse> {
         }
     }
 
+    /**
+     * Appends text to the reasoning/thought part or creates a new one.
+     * 
+     * @param text The thought text to append.
+     */
     public void appendThoughts(String text) {
         List<AbstractPart> parts = getParts();
         if (!parts.isEmpty() && parts.get(parts.size() - 1) instanceof ModelTextPart mtp && mtp.isThought()) {
@@ -142,65 +105,36 @@ public class OpenAiModelMessage extends AbstractModelMessage<OpenAiResponse> {
         }
     }
 
+    /**
+     * Appends text while detecting and extracting reasoning content wrapped in tags.
+     * 
+     * @param text The text containing potential tags.
+     * @param startTag The opening tag (e.g., "<think>").
+     * @param endTag The closing tag (e.g., "</think>").
+     */
     public void appendTaggedContent(String text, String startTag, String endTag) {
-        // Simplified tag handling: if start tag in text, start thoughts. 
-        // If end tag, end thoughts.
         if (!insideReasoningTags && text.contains(startTag)) {
             int idx = text.indexOf(startTag);
             String before = text.substring(0, idx);
-            if (!before.isEmpty()) appendContent(before);
+            if (!before.isEmpty()) {
+                appendContent(before);
+            }
             insideReasoningTags = true;
             appendTaggedContent(text.substring(idx + startTag.length()), startTag, endTag);
         } else if (insideReasoningTags && text.contains(endTag)) {
             int idx = text.indexOf(endTag);
             String thoughts = text.substring(0, idx);
-            if (!thoughts.isEmpty()) appendThoughts(thoughts);
+            if (!thoughts.isEmpty()) {
+                appendThoughts(thoughts);
+            }
             insideReasoningTags = false;
             appendTaggedContent(text.substring(idx + endTag.length()), startTag, endTag);
         } else {
-            if (insideReasoningTags) appendThoughts(text);
-            else appendContent(text);
-        }
-    }
-
-    void updateToolCall(JsonNode callNode) {
-        String callId = callNode.path("id").asText(null);
-        int index = callNode.path("index").asInt(-1);
-        JsonNode funcNode = callNode.get("function");
-        
-        if (callId != null) {
-            callIds.put(index, callId);
-            if (funcNode != null && funcNode.has("name")) {
-                callNames.put(index, funcNode.get("name").asText());
+            if (insideReasoningTags) {
+                appendThoughts(text);
+            } else {
+                appendContent(text);
             }
         }
-        
-        if (index != -1 && funcNode != null && funcNode.has("arguments")) {
-            String argsFragment = funcNode.get("arguments").asText("");
-            if (!argsFragment.isEmpty()) {
-                callArgsBuffers.computeIfAbsent(index, k -> new StringBuilder()).append(argsFragment);
-            }
-        }
-    }
-
-    void flushToolCalls() {
-        for (Integer index : callArgsBuffers.keySet()) {
-            String id = callIds.get(index);
-            String name = callNames.get(index);
-            String fullJson = callArgsBuffers.get(index).toString();
-            
-            if (id != null && name != null && !fullJson.isEmpty()) {
-                try {
-                    Map<String, Object> args = JacksonUtils.parse(fullJson, Map.class);
-                    getAgi().getToolManager().createToolCall(this, id, name, args);
-                } catch (Exception e) {
-                    log.error("Failed to parse buffered tool call arguments for index {}: {}", index, fullJson, e);
-                }
-            }
-        }
-        // Clear buffers after flushing
-        callArgsBuffers.clear();
-        callIds.clear();
-        callNames.clear();
     }
 }
