@@ -16,11 +16,14 @@ import java.util.logging.Level;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Benchmark class for Anahata ASI AST testing. Updated with block tags using structural DocTree APIs.
-Força Barça!
+ * Benchmark class for Anahata ASI AST testing. This update verifies the structural DocCommentTree implementation.
+It ensures that asterisk alignment is maintained even with line returns.
+
  *
- * @author Anahata ASI
- * @author Gal Gadot (Digital Muse)
+ * @author Pablo (Anahata ASI)
+ * @since 2026.04.21
+ * @version 3.0
+ * @param <<T>> A generic type parameter for testing
  */
 public class BigTestClass {
 
@@ -48,6 +51,10 @@ public class BigTestClass {
      */
     public void methodAfterTestField() {
         System.out.println("The Poltergeist is dead. For\u00e7a Bar\u00e7a!");
+    }
+
+    public void helloWorld() {
+        System.out.println("Hello World!");
     }
 
 }
