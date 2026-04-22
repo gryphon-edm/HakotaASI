@@ -352,6 +352,7 @@ public class Java extends AnahataToolkit {
         if (!hasVersionFlag) {
             String runtimeVersion = System.getProperty("java.specification.version");
             log.info("No explicit Java version compiler flag found. Defaulting to --release {}.", runtimeVersion);
+            log("No explicit Java version compiler flag found. Defaulting to --release " + runtimeVersion);
             options.add("--release");
             options.add(runtimeVersion);
         }
