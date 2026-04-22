@@ -13,16 +13,20 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ThinkingLevel {
-    /** Unspecified thinking level. */
+    /** Unspecified thinking level (let the model decide). */
     THINKING_LEVEL_UNSPECIFIED("Unspecified"),
-    /** Low thinking level. */
+    /** No thinking effort (lowest latency). */
+    NONE("None"),
+    /** Minimal thinking effort. */
+    MINIMAL("Minimal"),
+    /** Low thinking effort. */
     LOW("Low"),
-    /** Medium thinking level. */
+    /** Medium thinking effort. */
     MEDIUM("Medium"),
-    /** High thinking level. */
+    /** High thinking effort. */
     HIGH("High"),
-    /** MINIMAL thinking level. */
-    MINIMAL("Minimal");
+    /** Extra high thinking effort (highest intelligence, highest latency). */
+    XHIGH("X-High");
 
     /** The human-readable display value. */
     private final String displayValue;
