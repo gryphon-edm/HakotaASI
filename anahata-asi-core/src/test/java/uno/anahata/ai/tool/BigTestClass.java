@@ -50,8 +50,14 @@ public class BigTestClass {
      * duplicating the source file. Força Barça! *
      */
     public void methodAfterTestField() {
-        System.out.println("The Poltergeist is dead. For\u00e7a Bar\u00e7a!");
-    }
+        // 1. Baseline comment
+        System.out.println("Baseline test: Method update");
+        /* 2. Block comment */
+        if (true) {
+            // 3. Nested comment
+            System.out.println("Method update successful");
+        }
+}
 
     public void helloWorldRenamed(String message) {
         // 1. This is an internal comment from the NEW body
@@ -61,15 +67,10 @@ public class BigTestClass {
     }
     // This body was generated manually via a script!
 
+    /**
+     * existing javadoc
+     */
     public static class InnerTestClass {
-
-        public void testMethod() {
-            System.out.println("Inner class method execution - Version 2.0");
-        }
-
-        public void newUtilityMethod() {
-            System.out.println("This method was added during a body update.");
-        }
     }
     
 }
