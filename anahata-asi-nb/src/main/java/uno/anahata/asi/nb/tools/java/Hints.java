@@ -10,11 +10,14 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Generated;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.netbeans.api.java.project.JavaProjectConstants;
+import org.netbeans.api.java.source.CompilationController;
 import org.netbeans.api.java.source.JavaSource;
 import org.netbeans.api.java.source.ModificationResult;
+import org.netbeans.api.java.source.WorkingCopy;
 import org.netbeans.api.project.Project;
 import org.netbeans.api.project.ProjectUtils;
 import org.netbeans.api.project.SourceGroup;
@@ -26,6 +29,8 @@ import org.netbeans.spi.editor.hints.ErrorDescription;
 import org.netbeans.spi.editor.hints.Fix;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uno.anahata.asi.agi.tool.Page;
 import uno.anahata.asi.nb.tools.project.Projects;
 import uno.anahata.asi.agi.tool.AnahataToolkit;
@@ -128,31 +133,29 @@ public class Hints extends AnahataToolkit {
         }
         FileObject fo = FileUtil.toFileObject(FileUtil.normalizeFile(file));
         if (fo == null) {
-            throw new IOException("Could not get FileObject for: " + filePath);
+            throw new IOException("Could not resolve FileObject for: " + filePath);
         }
-
         JavaSource js = JavaSource.forFileObject(fo);
         if (js == null) {
             throw new IOException("Could not get JavaSource for: " + filePath);
         }
-
-        final StringBuilder sb = new StringBuilder();
-        ModificationResult result = js.runModificationTask(copy -> {
+        StringBuilder sb = new StringBuilder();
+        js.runModificationTask(copy -> {
             copy.toPhase(JavaSource.Phase.RESOLVED);
             try {
                 HintsSettings settings = HintsSettings.getSettingsFor(copy.getFileObject());
                 HintsInvoker invoker = new HintsInvoker(settings, new AtomicBoolean());
                 List<ErrorDescription> hints = invoker.computeHints(copy);
-
                 boolean found = false;
-                for (ErrorDescription ed : hints) {
-                    if (hintId.equals(ed.getId())) {
-                        List<Fix> fixes = ed.getFixes().getFixes();
-                        if (fixes != null && !fixes.isEmpty()) {
-                            fixes.get(0).implement();
-                            sb.append("Successfully applied fix ").append(hintId).append(" in ").append(file.getName());
-                            found = true;
-                            break;
+                if (hints != null) {
+                    for (ErrorDescription ed : hints) {
+                        if (hintId.equals(ed.getId())) {
+                            List<Fix> fixes = ed.getFixes().getFixes();
+                            if (fixes != null && !fixes.isEmpty()) {
+                                fixes.get(0).implement();
+                                sb.append("Applied fix ").append(hintId).append(" at line ").append(ed.getRange().getBegin().getLine()).append("\n");
+                                found = true;
+                            }
                         }
                     }
                 }
@@ -163,9 +166,7 @@ public class Hints extends AnahataToolkit {
                 log.error("Error during applyHintFix", e);
                 sb.append("Error: ").append(e.toString());
             }
-        });
-
-        result.commit();
+        }).commit();
         return sb.toString();
     }
 
