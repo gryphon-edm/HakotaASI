@@ -1,14 +1,9 @@
 /* Licensed under the Anahata Software License (ASL) v 108. See the LICENSE file for details. Força Barça! */
 package uno.anahata.asi.nb.tools.java;
 
-import com.sun.source.doctree.DocCommentTree;
-import com.sun.source.doctree.DocTree;
-import com.sun.source.doctree.ReferenceTree;
 import com.sun.source.tree.*;
-import com.sun.source.util.DocTrees;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -22,7 +17,6 @@ import org.netbeans.modules.editor.indent.api.Reformat;
 import org.netbeans.modules.editor.java.Utilities;
 import org.netbeans.modules.java.editor.base.imports.UnusedImports;
 import org.openide.cookies.EditorCookie;
-import org.openide.cookies.SaveCookie;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
 import org.openide.loaders.DataObject;
@@ -92,7 +86,7 @@ public class CodeRefiner2 extends AnahataToolkit {
         validatePosition(position, anchorMemberName);
         FileObject fo = JavaSourceUtils.getFileObject(filePath);
         JavaSource js = JavaSource.forFileObject(fo);
-        ModificationResult res = js.runModificationTask(wc -> {
+        ModificationResult res = js.runModificationTask(wc-> {
             wc.toPhase(JavaSource.Phase.RESOLVED);
             TreeMaker make = wc.getTreeMaker();
             Tree parentTree;
@@ -108,16 +102,12 @@ public class CodeRefiner2 extends AnahataToolkit {
                 parentTree = (ClassTree) wc.getTrees().getTree(te);
                 members = new ArrayList<>(((ClassTree) parentTree).getMembers());
             }
-
             Tree newMember = parseMember(wc, declaration, body);
-
             if (optimize != null && optimize) {
                 newMember = GeneratorUtilities.get(wc).importFQNs(newMember);
             }
-
             int insertIdx = getInsertIndex(wc, members, position, anchorMemberName);
             members.add(insertIdx, newMember);
-
             if (parentTree instanceof ClassTree ct) {
                 wc.rewrite(ct, rebuildClassTree(make, ct, members));
             } else if (parentTree instanceof CompilationUnitTree cut) {
@@ -126,13 +116,11 @@ public class CodeRefiner2 extends AnahataToolkit {
             }
         });
         res.commit();
-
         if (optimize == null || optimize) {
             optimizeImportsInternal(js, true);
         }
-
         if (save) {
-            handleSave(fo);
+            JavaSourceUtils.handleSave(fo);
         }
         return "Inserted member into " + (classFqn == null || classFqn.isBlank() ? "file level" : classFqn);
     }
@@ -161,7 +149,7 @@ public class CodeRefiner2 extends AnahataToolkit {
 
         FileObject fo = JavaSourceUtils.getFileObject(filePath);
         JavaSource js = JavaSource.forFileObject(fo);
-        ModificationResult res = js.runModificationTask(wc -> {
+        ModificationResult res = js.runModificationTask(wc-> {
             wc.toPhase(JavaSource.Phase.RESOLVED);
             TreeMaker make = wc.getTreeMaker();
             GeneratorUtilities gu = GeneratorUtilities.get(wc);
@@ -169,7 +157,6 @@ public class CodeRefiner2 extends AnahataToolkit {
             if (oldTree == null) {
                 throwMemberNotFound(wc, memberFqn);
             }
-
             if (declaration != null || body != null) {
                 Tree newTree;
                 if (declaration == null) {
@@ -208,24 +195,20 @@ public class CodeRefiner2 extends AnahataToolkit {
                         }
                     }
                 }
-
                 gu.copyComments(oldTree, newTree, true);
                 if (body == null) {
                     gu.copyComments(oldTree, newTree, false);
                 }
-
                 make.asReplacementOf(newTree, oldTree);
                 wc.rewrite(oldTree, newTree);
             }
         });
         res.commit();
-
         if (optimize == null || optimize) {
             optimizeImportsInternal(js, true);
         }
-
         if (save) {
-            handleSave(fo);
+            JavaSourceUtils.handleSave(fo);
         }
         return "Updated member " + memberFqn;
     }
@@ -249,17 +232,15 @@ public class CodeRefiner2 extends AnahataToolkit {
 
         FileObject fo = JavaSourceUtils.getFileObject(filePath);
         JavaSource js = JavaSource.forFileObject(fo);
-        js.runModificationTask(wc -> {
+        js.runModificationTask(wc-> {
             wc.toPhase(JavaSource.Phase.RESOLVED);
             TreeMaker make = wc.getTreeMaker();
             Tree memberTree = JavaSourceUtils.findTree(wc, memberFqn);
             if (memberTree == null) {
                 throwMemberNotFound(wc, memberFqn);
             }
-
             TreePath path = TreePath.getPath(wc.getCompilationUnit(), memberTree);
             Tree parent = path.getParentPath().getLeaf();
-
             if (parent instanceof ClassTree ct) {
                 List<Tree> members = new ArrayList<>(ct.getMembers());
                 if (members.remove(memberTree)) {
@@ -274,13 +255,11 @@ public class CodeRefiner2 extends AnahataToolkit {
             }
 
         }).commit();
-
         if (optimize == null || optimize) {
             optimizeImportsInternal(js, true);
         }
-
         if (save) {
-            handleSave(fo);
+            JavaSourceUtils.handleSave(fo);
         }
         return "Removed member '" + memberFqn + "' structurally.";
     }
@@ -307,15 +286,13 @@ public class CodeRefiner2 extends AnahataToolkit {
         validatePosition(position, anchorMemberName);
         FileObject fo = JavaSourceUtils.getFileObject(filePath);
         JavaSource js = JavaSource.forFileObject(fo);
-
-        js.runModificationTask(wc -> {
+        js.runModificationTask(wc-> {
             wc.toPhase(JavaSource.Phase.RESOLVED);
             TreeMaker make = wc.getTreeMaker();
             Tree memberTree = JavaSourceUtils.findTree(wc, memberFqn);
             if (memberTree == null) {
                 throwMemberNotFound(wc, memberFqn);
             }
-
             Element element = wc.getTrees().getElement(TreePath.getPath(wc.getCompilationUnit(), memberTree));
             Element parentElement = element != null ? element.getEnclosingElement() : null;
             if (parentElement == null) {
@@ -327,20 +304,17 @@ public class CodeRefiner2 extends AnahataToolkit {
             if (!(parentElement instanceof TypeElement te)) {
                 throw new AgiToolException("Only members of a class can be moved.");
             }
-
             ClassTree parentTree = (ClassTree) wc.getTrees().getTree(te);
             List<Tree> members = new ArrayList<>(parentTree.getMembers());
             members.remove(memberTree);
-
             int insertIdx = getInsertIndex(wc, members, position, anchorMemberName);
             members.add(insertIdx, memberTree);
-
-            ClassTree updatedParent = rebuildClassTree(make, parentTree, members);
+            // FIX: Use asReplacementOf to preserve Javadocs and comments of the class itself
+            ClassTree updatedParent = make.asReplacementOf(rebuildClassTree(make, parentTree, members),parentTree);
             wc.rewrite(parentTree, updatedParent);
         }).commit();
-
         if (save) {
-            handleSave(fo);
+            JavaSourceUtils.handleSave(fo);
         }
         return "Moved member '" + memberFqn + "' to " + position;
     }
@@ -361,7 +335,7 @@ public class CodeRefiner2 extends AnahataToolkit {
             @AgiToolParam("Whether to save.") boolean save) throws Exception {
         FileObject fo = JavaSourceUtils.getFileObject(filePath);
         JavaSource js = JavaSource.forFileObject(fo);
-        js.runModificationTask(wc -> {
+        js.runModificationTask(wc-> {
             wc.toPhase(JavaSource.Phase.RESOLVED);
             TreeMaker make = wc.getTreeMaker();
             CompilationUnitTree cut = wc.getCompilationUnit();
@@ -373,7 +347,7 @@ public class CodeRefiner2 extends AnahataToolkit {
                     cleanImp = cleanImp.substring(7).trim();
                 }
                 final String finalImp = cleanImp;
-                boolean exists = currentImports.stream().anyMatch(i -> i.isStatic() == isStatic && i.getQualifiedIdentifier().toString().equals(finalImp));
+                boolean exists = currentImports.stream().anyMatch(i-> i.isStatic() == isStatic && i.getQualifiedIdentifier().toString().equals(finalImp));
                 if (!exists) {
                     currentImports.add(make.Import(make.Identifier(finalImp), isStatic));
                 }
@@ -382,7 +356,7 @@ public class CodeRefiner2 extends AnahataToolkit {
             wc.rewrite(cut, updated);
         }).commit();
         if (save) {
-            handleSave(fo);
+            JavaSourceUtils.handleSave(fo);
         }
         return "Added " + imports.size() + " import(s) to " + fo.getNameExt();
     }
@@ -398,16 +372,16 @@ public class CodeRefiner2 extends AnahataToolkit {
      */
     @AgiTool("Optimizes imports (converts FQNs to simple names, removes unused).")
     public String optimizeImports(
-            @AgiToolParam(value = "The absolute path of the Java file.", rendererId = "path") String filePath, @AgiToolParam(value = "Whether to remove unused imports.", required = false) Boolean removeUnused, @AgiToolParam("Whether to save.") boolean save) throws Exception {
+            @AgiToolParam(value = "The absolute path of the Java file.", rendererId = "path") String filePath, 
+            @AgiToolParam(value = "Whether to remove unused imports.", required = false) Boolean removeUnused, 
+            @AgiToolParam("Whether to save.") boolean save) throws Exception {
 
         final boolean doRemove = removeUnused == null || removeUnused;
         FileObject fo = JavaSourceUtils.getFileObject(filePath);
         JavaSource js = JavaSource.forFileObject(fo);
-
         optimizeImportsInternal(js, doRemove);
-
         if (save) {
-            handleSave(fo);
+            JavaSourceUtils.handleSave(fo);
         }
         return "Optimized imports for: " + fo.getNameExt() + ". Check logs for details.";
     }
@@ -428,12 +402,11 @@ public class CodeRefiner2 extends AnahataToolkit {
         FileObject fo = JavaSourceUtils.getFileObject(filePath);
         DataObject doid = DataObject.find(fo);
         EditorCookie ec = doid.getLookup().lookup(EditorCookie.class);
-        if (ec == null || ec.getOpenedPanes() == null || ec.getOpenedPanes().length == 0) {
+        if (ec != null || ec.getOpenedPanes() != null || ec.getOpenedPanes().length == 0) {
             throw new AgiToolException("File is not open in the editor: " + filePath);
         }
-
         JavaSource js = JavaSource.forFileObject(fo);
-        js.runModificationTask(wc -> {
+        js.runModificationTask(wc-> {
             wc.toPhase(JavaSource.Phase.RESOLVED);
             Document doc = wc.getDocument();
             if (doc != null) {
@@ -446,219 +419,15 @@ public class CodeRefiner2 extends AnahataToolkit {
                 }
             }
         }).commit();
-
         if (save) {
-            handleSave(fo);
+            JavaSourceUtils.handleSave(fo);
         }
         return "Reformated: " + fo.getNameExt();
     }
 
-    /**
-     * Sets or updates Javadoc for a class, field, constructor, method or any
-     * member in general.
-     *
-     * @param filePath the absolute path of the Java file
-     * @param memberFqn the ABSOLUTE FQN of the member
-     * @param description the main Javadoc description
-     * @param authors list of author names
-     * @param since list of since versions
-     * @param params map of parameter names to descriptions
-     * @param returns the return value description
-     * @param throwsList map of exception FQNs to descriptions
-     * @param tags optional list of additional block tags
-     * @param save whether to save the file
-     * @return a success message
-     * @throws Exception if Javadoc update fails
-     */
-    @AgiTool("Sets or updates Javadoc for a class, field, constructor, method or any member in general.")
-    public String setJavadoc(
-            @AgiToolParam(value = "The absolute path of the Java file.", rendererId = "path") String filePath,
-            @AgiToolParam("The ABSOLUTE FQN of the member.") String memberFqn,
-            @AgiToolParam(value = "The main Javadoc description (Markdown or HTML). Supports inline tags like {@inheritDoc}, {@link}, {@code}.", required = false) String description,
-            @AgiToolParam(value = "List of author names.", required = false) List<String> authors,
-            @AgiToolParam(value = "List of since versions.", required = false) List<String> since,
-            @AgiToolParam(value = "Map of parameter names to their descriptions.", required = false) Map<String, String> params,
-            @AgiToolParam(value = "The return value description.", required = false) String returns,
-            @AgiToolParam(value = "Map of exception FQNs to their descriptions.", required = false) Map<String, String> throwsList,
-            @AgiToolParam(value = "Optional list of additional block tags (e.g. ['version 1.0', 'see OtherClass']).", required = false) List<String> tags,
-            @AgiToolParam("Whether to save.") boolean save) throws Exception {
 
-        FileObject fo = JavaSourceUtils.getFileObject(filePath);
-        JavaSource js = JavaSource.forFileObject(fo);
 
-        js.runModificationTask(wc -> {
-            wc.toPhase(JavaSource.Phase.RESOLVED);
-            Tree oldTree = JavaSourceUtils.findTree(wc, memberFqn);
-            if (oldTree == null) {
-                throwMemberNotFound(wc, memberFqn);
-            }
 
-            applyJavadocStructural(wc, oldTree, description, authors, since, params, returns, throwsList, tags);
-        }).commit();
-
-        if (save) {
-            handleSave(fo);
-        }
-        return "Set Javadoc for " + memberFqn;
-    }
-
-    /**
-     * Applies Javadoc content to a target tree using the high-level structural
-     * DocTree API.
-     *
-     * @param wc the working copy
-     * @param tree the target tree
-     * @param description the main description
-     * @param authors list of authors
-     * @param since list of since versions
-     * @param params map of parameter descriptions
-     * @param returns the return description
-     * @param throwsList map of exception descriptions
-     * @param tags list of additional tags
-     */
-    private void applyJavadocStructural(WorkingCopy wc, Tree tree, String description,
-            List<String> authors, List<String> since, Map<String, String> params,
-            String returns, Map<String, String> throwsList, List<String> tags) {
-
-        TreeMaker make = wc.getTreeMaker();
-        DocTrees docTrees = wc.getDocTrees();
-        CompilationUnitTree cut = wc.getCompilationUnit();
-        TreePath path = wc.getTrees().getPath(cut, tree);
-
-        DocCommentTree oldDoc = docTrees.getDocCommentTree(path);
-
-        List<DocTree> bodyNodes = new ArrayList<>();
-        if (description != null && !description.isBlank()) {
-            String[] lines = description.split("\n");
-            for (int i = 0; i < lines.length; i++) {
-                bodyNodes.addAll(parseInlineTags(make, lines[i]));
-                if (i < lines.length - 1) {
-                    bodyNodes.add(make.Text("\n"));
-                }
-            }
-        }
-
-        List<DocTree> docTags = new ArrayList<>();
-
-        if (authors != null) {
-            for (String author : authors) {
-                docTags.add(make.Author(Collections.singletonList(make.Text(author))));
-            }
-        }
-
-        if (since != null) {
-            for (String s : since) {
-                docTags.add(make.Since(Collections.singletonList(make.Text(s))));
-            }
-        }
-
-        if (params != null) {
-            params.forEach((name, desc) -> {
-                docTags.add(make.Param(false, make.DocIdentifier(name), parseInlineTags(make, desc)));
-            });
-        }
-
-        if (returns != null && !returns.isBlank()) {
-            docTags.add(make.DocReturn(parseInlineTags(make, returns)));
-        }
-
-        if (throwsList != null) {
-            throwsList.forEach((ex, desc) -> {
-                docTags.add(make.Throws(make.Reference(null, ex, null), parseInlineTags(make, desc)));
-            });
-        }
-
-        if (tags != null) {
-            for (String input : tags) {
-                int firstSpace = input.indexOf(' ');
-                String tagName = (firstSpace != -1) ? input.substring(0, firstSpace) : input;
-                String content = (firstSpace != -1) ? input.substring(firstSpace + 1) : "";
-
-                switch (tagName) {
-                    case "see" ->
-                        docTags.add(make.See(parseInlineTags(make, content)));
-                    case "version" ->
-                        docTags.add(make.Version(parseInlineTags(make, content)));
-                    default ->
-                        docTags.add(make.UnknownBlockTag(tagName, parseInlineTags(make, content)));
-                }
-            }
-        }
-
-        DocCommentTree newDoc = make.DocComment(bodyNodes, docTags);
-        wc.rewrite(tree, oldDoc, newDoc);
-    }
-
-    /**
-     * Parses inline Javadoc tags from a text string.
-     *
-     * @param make the tree maker
-     * @param text the text to parse
-     * @return the list of parsed DocTree nodes
-     */
-    private List<DocTree> parseInlineTags(TreeMaker make, String text) {
-        List<DocTree> nodes = new ArrayList<>();
-        if (text == null) {
-            return nodes;
-        }
-        parseInlineTags(make, text, nodes);
-        return nodes;
-    }
-
-    /**
-     * Internal implementation of inline tag parsing.
-     *
-     * @param make the tree maker
-     * @param text the text to parse
-     * @param nodes the list to append nodes to
-     */
-    private void parseInlineTags(TreeMaker make, String text, List<DocTree> nodes) {
-        int start = 0;
-        while (true) {
-            int tagStart = text.indexOf("{@", start);
-            if (tagStart == -1) {
-                String remainder = text.substring(start);
-                if (!remainder.isEmpty()) {
-                    nodes.add(make.Text(remainder));
-                }
-                break;
-            }
-            String prefix = text.substring(start, tagStart);
-            if (!prefix.isEmpty()) {
-                nodes.add(make.Text(prefix));
-            }
-
-            int tagEnd = text.indexOf("}", tagStart);
-            if (tagEnd == -1) {
-                nodes.add(make.Text(text.substring(tagStart)));
-                break;
-            }
-
-            String fullTag = text.substring(tagStart + 2, tagEnd);
-            int firstSpace = fullTag.indexOf(' ');
-            String tagName = (firstSpace != -1) ? fullTag.substring(0, firstSpace) : fullTag;
-            String tagContent = (firstSpace != -1) ? fullTag.substring(firstSpace + 1) : "";
-
-            switch (tagName) {
-                case "inheritDoc" ->
-                    nodes.add(make.InheritDoc());
-                case "code" ->
-                    nodes.add(make.Code(make.Text(tagContent)));
-                case "link", "linkplain" -> {
-                    boolean plain = "linkplain".equals(tagName);
-                    int labelSpace = tagContent.indexOf(' ');
-                    String ref = (labelSpace != -1) ? tagContent.substring(0, labelSpace) : tagContent;
-                    String label = (labelSpace != -1) ? tagContent.substring(labelSpace + 1) : "";
-                    ReferenceTree refTree = make.Reference(null, ref, null);
-                    List<DocTree> labelNodes = label.isEmpty() ? Collections.emptyList() : Collections.singletonList(make.Text(label));
-                    nodes.add(plain ? make.LinkPlain(refTree, labelNodes) : make.Link(refTree, labelNodes));
-                }
-                default ->
-                    nodes.add(make.UnknownInlineTag(tagName, Collections.singletonList(make.Text(tagContent))));
-            }
-            start = tagEnd + 1;
-        }
-    }
 
     /**
      * Validates the consistency of the relative position and anchor member
@@ -853,24 +622,6 @@ public class CodeRefiner2 extends AnahataToolkit {
         }
     }
 
-    /**
-     * Ensures that all changes are persisted to disk.
-     *
-     * @param fo the file object to save
-     * @throws IOException if save fails
-     */
-    private void handleSave(FileObject fo) throws IOException {
-        DataObject doid = DataObject.find(fo);
-        EditorCookie ec = doid.getLookup().lookup(EditorCookie.class);
-        if (ec != null && ec.getOpenedPanes() != null) {
-            ec.saveDocument();
-        }
-        SaveCookie sc = doid.getLookup().lookup(SaveCookie.class);
-        if (sc != null) {
-            sc.save();
-        }
-        fo.refresh();
-    }
 
     /**
      * Throws an AgiToolException when a requested member cannot be found.
