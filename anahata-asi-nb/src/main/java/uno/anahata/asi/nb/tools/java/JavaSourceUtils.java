@@ -26,6 +26,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
+import lombok.Generated;
 import lombok.extern.slf4j.Slf4j;
 import org.netbeans.api.java.source.CompilationController;
 import org.netbeans.api.java.source.ElementHandle;
@@ -39,6 +40,11 @@ import org.netbeans.modules.refactoring.java.api.MemberInfo;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
 import uno.anahata.asi.agi.tool.AgiToolException;
+import org.openide.loaders.DataObject;
+import org.openide.cookies.EditorCookie;
+import org.openide.cookies.SaveCookie;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Shared utilities for NetBeans Java Source (AST) operations.
@@ -528,6 +534,19 @@ public class JavaSourceUtils {
                 }
             }
         }, true);
+    }
+
+    public static void handleSave(FileObject fo) throws IOException {
+        DataObject doid = DataObject.find(fo);
+        EditorCookie ec = doid.getLookup().lookup(EditorCookie.class);
+        if (ec != null && ec.getOpenedPanes() != null) {
+            ec.saveDocument();
+        }
+        SaveCookie sc = doid.getLookup().lookup(SaveCookie.class);
+        if (sc != null) {
+            sc.save();
+        }
+        fo.refresh();
     }
 
 }

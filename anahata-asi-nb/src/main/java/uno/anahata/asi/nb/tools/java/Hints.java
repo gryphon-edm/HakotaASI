@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Generated;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.netbeans.api.project.Project;
@@ -27,12 +28,16 @@ import uno.anahata.asi.agi.tool.AgiToolkit;
 import uno.anahata.asi.agi.tool.AgiTool;
 import uno.anahata.asi.agi.tool.AgiToolParam;
 import org.netbeans.api.java.project.JavaProjectConstants;
+import org.netbeans.api.java.source.CompilationController;
 import org.netbeans.api.java.source.JavaSource;
+import org.netbeans.api.java.source.WorkingCopy;
 import org.openide.cookies.EditorCookie;
 import org.openide.cookies.SaveCookie;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
 import org.openide.loaders.DataObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uno.anahata.asi.agi.tool.Page;
 
 /**
@@ -154,7 +159,7 @@ public class Hints extends AnahataToolkit {
         do {
             applied = false;
             final boolean[] appliedRef = new boolean[1];
-            js.runModificationTask(copy -> {
+            js.runModificationTask(copy-> {
                 copy.toPhase(JavaSource.Phase.RESOLVED);
                 HintsSettings settings = HintsSettings.getSettingsFor(copy.getFileObject());
                 HintsInvoker invoker = new HintsInvoker(settings, new AtomicBoolean());
@@ -178,8 +183,7 @@ public class Hints extends AnahataToolkit {
         if (sb.length() == 0) {
             return "No hints found or no fix available for: " + hintId;
         }
-        
-        handleSave(fo);
+        JavaSourceUtils.handleSave(fo);
         return sb.toString();
     }
 
@@ -298,17 +302,5 @@ public class Hints extends AnahataToolkit {
         return results;
     }
 
-    private void handleSave(FileObject fo) throws IOException {
-        DataObject doid = DataObject.find(fo);
-        EditorCookie ec = doid.getLookup().lookup(EditorCookie.class);
-        if (ec != null && ec.getOpenedPanes() != null) {
-            ec.saveDocument();
-        }
-        SaveCookie sc = doid.getLookup().lookup(SaveCookie.class);
-        if (sc != null) {
-            sc.save();
-        }
-        fo.refresh();
-    }
 
 }
