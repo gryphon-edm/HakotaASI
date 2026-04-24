@@ -70,7 +70,7 @@ public class IDE extends AnahataToolkit {
      * @param tailLines Number of recent lines to include (defaults to 100).
      * @throws Exception if the log file cannot be found or loaded.
      */
-    @AgiTool(value = "Monitors the IDE log file (messages.log) by loading it into the context with 'tail' enabled and optional grepping.", maxDepth = 12)
+    @AgiTool(value = "Monitors the IDE log file (messages.log) by loading it into the context with 'tail' enabled and optional grepping.")
     public void monitorLogs(
             @AgiToolParam("Optional regex pattern to filter log lines (e.g. 'ERROR' or a specific logger name).") String grepPattern,
             @AgiToolParam("Number of lines to tail from the end of the file or matching results.") Integer tailLines) throws Exception {
