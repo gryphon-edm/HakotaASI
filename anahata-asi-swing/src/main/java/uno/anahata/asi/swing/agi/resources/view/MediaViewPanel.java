@@ -7,6 +7,7 @@ import javax.swing.SpinnerNumberModel;
 import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.internal.TextUtils;
 import uno.anahata.asi.agi.resource.view.MediaView;
+import uno.anahata.asi.swing.agi.AgiPanel;
 
 /**
  * A specialized metadata panel for the {@link MediaView}.
@@ -27,8 +28,10 @@ public class MediaViewPanel extends AbstractViewPanel<MediaView> {
 
     /**
      * Constructs a new MediaViewPanel.
+     * @param agiPanel the AgiPanel to which it belongs
      */
-    public MediaViewPanel() {
+    public MediaViewPanel(AgiPanel agiPanel) {
+        super(agiPanel);
         scaleSpinner = new JSpinner(new SpinnerNumberModel(1.0, 0.1, 10.0, 0.1));
         scaleSpinner.setEnabled(false); // Feature planned: image resizing
         

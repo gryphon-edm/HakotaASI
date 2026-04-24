@@ -13,6 +13,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.agi.resource.view.ResourceView;
 
+import uno.anahata.asi.swing.agi.AgiPanel;
+
 /**
  * Common base for view-specific metadata panels.
  * <p>
@@ -27,6 +29,10 @@ import uno.anahata.asi.agi.resource.view.ResourceView;
 @Slf4j
 public abstract class AbstractViewPanel<V extends ResourceView> extends JPanel {
 
+    /** The parent AgiPanel providing session context. */
+    @Getter
+    protected final AgiPanel agiPanel;
+    
     /** The current view being displayed. */
     @Getter
     protected V view;
@@ -36,8 +42,10 @@ public abstract class AbstractViewPanel<V extends ResourceView> extends JPanel {
 
     /**
      * Constructs a new view panel with a standard GridBag layout.
+     * @param agiPanel The parent session panel.
      */
-    protected AbstractViewPanel() {
+    protected AbstractViewPanel(AgiPanel agiPanel) {
+        this.agiPanel = agiPanel;
         setLayout(new GridBagLayout());
         setBorder(BorderFactory.createTitledBorder(null, "View (Interpreter)", TitledBorder.LEFT, TitledBorder.TOP, getFont().deriveFont(Font.BOLD)));
         

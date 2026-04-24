@@ -2,7 +2,6 @@
 package uno.anahata.asi.swing.agi.resources.view;
 
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -13,6 +12,7 @@ import javax.swing.SpinnerNumberModel;
 import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.agi.resource.view.TextView;
 import uno.anahata.asi.agi.resource.view.TextViewportSettings;
+import uno.anahata.asi.swing.agi.AgiPanel;
 import uno.anahata.asi.swing.internal.AnyChangeDocumentListener;
 import uno.anahata.asi.swing.internal.SwingTask;
 
@@ -49,8 +49,10 @@ public class TextViewPanel extends AbstractViewPanel<TextView> {
 
     /**
      * Constructs a new TextViewPanel with integrated viewport controls.
+     * @param agiPanel The parent session panel.
      */
-    public TextViewPanel() {
+    public TextViewPanel(AgiPanel agiPanel) {
+        super(agiPanel);
         tailLinesSpinner = new JSpinner(new SpinnerNumberModel(100, 1, 10000, 50));
         tailLinesSpinner.setPreferredSize(new Dimension(70, 22));
         tailLinesSpinner.addChangeListener(e -> updateViewportSettings());
@@ -165,9 +167,9 @@ public class TextViewPanel extends AbstractViewPanel<TextView> {
         view.markDirty();
         
         // Trigger background reload for immediate feedback in tabs
-        new SwingTask<>(this, "Refresh Viewport", () -> {
+        new SwingTask<Void>(agiPanel, "Refresh Viewport", () -> {
             view.getOwner().reloadIfNeeded();
             return null;
-        }).execute();
+        }).start();
     }
 }
