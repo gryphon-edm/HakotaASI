@@ -132,38 +132,22 @@ public class HeaderPanel extends JPanel {
         // Populate providers and models first
         populateProviders();
 
-        // Select the agi's currently selected model if available
+        // --- Pre-selection Logic ---
         AbstractModel selectedAgiModel = agi.getSelectedModel();
-        System.out.println("Preselecting " + selectedAgiModel);
         if (selectedAgiModel != null) {
-            // First, find and set the provider
             for (int i = 0; i < providerComboBox.getItemCount(); i++) {
-                AbstractAiProvider provider = providerComboBox.getItemAt(i);
-                if (provider.getProviderId().equals(selectedAgiModel.getProviderId())) {
-                    log.info("Preselecting provider " + provider);
-                    providerComboBox.setSelectedItem(provider);
-                    // Explicitly update models for the selected provider after setting the provider
-                    updateModelsForSelectedProvider();
+                AbstractAiProvider p = providerComboBox.getItemAt(i);
+                if (p.getProviderId().equals(selectedAgiModel.getProviderId())) {
+                    providerComboBox.setSelectedItem(p);
                     break;
                 }
             }
-
-            // Then, find and set the model
-            for (int i = 0; i < modelComboBox.getItemCount(); i++) {
-                if (modelComboBox.getItemAt(i).getModelId().equals(selectedAgiModel.getModelId())) {
-                    log.info("Preselecting model " + modelComboBox.getItemAt(i));
-                    modelComboBox.setSelectedItem(modelComboBox.getItemAt(i));
-                    break;
-                }
-            }
-        } else if (providerComboBox.getItemCount() > 0) { // Original logic if no model is pre-selected
+        } else if (providerComboBox.getItemCount() > 0) {
             providerComboBox.setSelectedIndex(0);
-            updateModelsForSelectedProvider();
-            if (modelComboBox.getItemCount() > 0) {
-                modelComboBox.setSelectedIndex(0);
-                agi.setSelectedModel((AbstractModel) modelComboBox.getSelectedItem());
-            }
         }
+
+        // Initial model load and synchronization
+        updateModelsForSelectedProvider();
 
         // Add listeners AFTER initial population and selection
         addListeners();
@@ -210,26 +194,41 @@ public class HeaderPanel extends JPanel {
     /**
      * Opens the provider registry viewer dialog to search and select models
      * from all providers.
+     * <p>This operation performs model discovery across all enabled providers 
+     * in a background task to keep the UI responsive.</p>
      */
     private void showProviderRegistry() {
-        // Collect all models from all providers
-        List<AbstractModel> allModels = agi.getProviders().stream()
-                .flatMap(provider -> provider.getModels().stream())
-                .collect(Collectors.toList());
+        new SwingTask<List<AbstractModel>>(agiPanel, "Collecting Models from Providers", () -> {
+            return agi.getProviders().stream()
+                    .filter(AbstractAiProvider::isEnabled)
+                    .flatMap(provider -> provider.getModels().stream())
+                    .collect(Collectors.toList());
+        }, allModels -> {
+            JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "AI Provider & Model Registry", JDialog.ModalityType.MODELESS);
 
-        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "AI Provider & Model Registry", JDialog.ModalityType.MODELESS);
+            AiProviderRegistryViewer viewer = new AiProviderRegistryViewer(allModels, selectedModel -> {
+                dialog.dispose();
+                // 1. Update domain model first so updateModelsForSelectedProvider picks it up
+                agi.setSelectedModel(selectedModel);
 
-        AiProviderRegistryViewer viewer = new AiProviderRegistryViewer(allModels, selectedModel -> {
-            // Handle model selection: set the model in the combo box and close the dialog
-            modelComboBox.setSelectedItem(selectedModel);
-            dialog.dispose();
-        });
+                // 2. Find and select the corresponding provider in the UI
+                for (int i = 0; i < providerComboBox.getItemCount(); i++) {
+                    AbstractAiProvider p = providerComboBox.getItemAt(i);
+                    if (p.getProviderId().equals(selectedModel.getProviderId())) {
+                        providerComboBox.setSelectedItem(p);
+                        // 3. Force a refresh of the models list and selection
+                        updateModelsForSelectedProvider();
+                        break;
+                    }
+                }
+            });
 
-        dialog.getContentPane().add(viewer);
-        dialog.setPreferredSize(new Dimension(1200, 800));
-        dialog.pack();
-        dialog.setLocationRelativeTo(this);
-        dialog.setVisible(true);
+            dialog.getContentPane().add(viewer);
+            dialog.setPreferredSize(new Dimension(1200, 800));
+            dialog.pack();
+            dialog.setLocationRelativeTo(this);
+            dialog.setVisible(true);
+        }).start();
     }
 
     /**
@@ -240,21 +239,33 @@ public class HeaderPanel extends JPanel {
      */
     private void updateModelsForSelectedProvider() {
         AbstractAiProvider selectedProvider = (AbstractAiProvider) providerComboBox.getSelectedItem();
-        modelComboBox.removeAllItems();
         
         if (selectedProvider != null) {
             // Visual feedback: disable selection while discovery is in progress
             modelComboBox.setEnabled(false);
-            modelComboBox.setPrototypeDisplayValue(null);
             
             new SwingTask<List<? extends AbstractModel>>(agiPanel, "Discovering Models", () -> {
                 return selectedProvider.getModels();
             }, models -> {
+                DefaultComboBoxModel<AbstractModel> comboModel = new DefaultComboBoxModel<>();
                 for (AbstractModel model : models) {
-                    modelComboBox.addItem(model);
+                    comboModel.addElement(model);
                 }
+                modelComboBox.setModel(comboModel);
                 modelComboBox.setEnabled(true);
-                // Trigger auto-selection if needed
+                
+                // Restore selection from domain if it belongs to this provider
+                AbstractModel currentAgiModel = agi.getSelectedModel();
+                if (currentAgiModel != null && currentAgiModel.getProviderId().equals(selectedProvider.getProviderId())) {
+                    for (int i = 0; i < modelComboBox.getItemCount(); i++) {
+                        if (modelComboBox.getItemAt(i).getModelId().equals(currentAgiModel.getModelId())) {
+                            modelComboBox.setSelectedIndex(i);
+                            return;
+                        }
+                    }
+                }
+                
+                // Fallback to first model if nothing selected
                 if (modelComboBox.getItemCount() > 0 && modelComboBox.getSelectedIndex() == -1) {
                     modelComboBox.setSelectedIndex(0);
                 }
@@ -262,6 +273,8 @@ public class HeaderPanel extends JPanel {
                 log.error("Failed to discover models for provider: {}", selectedProvider.getDisplayName(), error);
                 modelComboBox.setEnabled(true);
             }, false).start();
+        } else {
+            modelComboBox.setModel(new DefaultComboBoxModel<>());
         }
     }
 
