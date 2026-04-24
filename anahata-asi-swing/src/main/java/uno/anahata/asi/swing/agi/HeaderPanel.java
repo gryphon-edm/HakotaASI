@@ -9,6 +9,7 @@ import java.awt.event.FocusEvent;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import uno.anahata.asi.AbstractAsiContainer;
 import uno.anahata.asi.agi.AgiConfig;
@@ -31,49 +32,67 @@ import uno.anahata.asi.swing.provider.AiProviderRenderer;
 import uno.anahata.asi.swing.provider.ModelRenderer;
 
 /**
- * The header panel for the agi UI, containing the agi nickname, session controls,
- * and provider/model selection components.
+ * The header panel for the agi UI, containing the agi nickname, session
+ * controls, and provider/model selection components.
  *
  * @author anahata
  */
 @Slf4j
 public class HeaderPanel extends JPanel {
+
     private static final int ICON_SIZE = 24;
 
-    /** The parent aggregator panel providing access to session and config. */
+    /**
+     * The parent aggregator panel providing access to session and config.
+     */
     private final AgiPanel agiPanel;
-    /** The active agi session orchestrator. */
+    /**
+     * The active agi session orchestrator.
+     */
     private Agi agi;
 
-    /** The text field for the session's nickname, synchronized with the domain on focus loss. */
+    /**
+     * The text field for the session's nickname, synchronized with the domain
+     * on focus loss.
+     */
     private JXTextField nicknameField;
-    /** The button to trigger a manual session save and export to a file. */
+    /**
+     * The button to trigger a manual session save and export to a file.
+     */
     private JButton saveSessionButton;
-    /** The selector for the AI provider, populates the model selector on change. */
+    /**
+     * The selector for the AI provider, populates the model selector on change.
+     */
     private JComboBox<AbstractAiProvider> providerComboBox;
-    /** The selector for the specific AI model, supports autocompletion via {@link AutoCompleteDecorator}. */
+    /**
+     * The selector for the specific AI model, supports autocompletion via
+     * {@link AutoCompleteDecorator}.
+     */
     private JComboBox<AbstractModel> modelComboBox;
-    /** The button to open the global model registry viewer for deep exploration. */
+    /**
+     * The button to open the global model registry viewer for deep exploration.
+     */
     private JButton searchModelsButton;
 
-    /** 
+    /**
      * Constructs the header panel and initializes references.
-     * 
+     *
      * @param agiPanel The parent aggregator panel.
      */
     public HeaderPanel(AgiPanel agiPanel) {
         this.agiPanel = agiPanel;
         this.agi = agiPanel.getAgi();
-        log.info("Header Panel constructor, selected agi model: " + agi.getSelectedModel());        
+        log.info("Header Panel constructor, selected agi model: " + agi.getSelectedModel());
     }
 
-    /** 
-     * Initializes the UI components using MigLayout and populates the model selectors.
+    /**
+     * Initializes the UI components using MigLayout and populates the model
+     * selectors.
      */
     public void initComponents() {
         setLayout(new MigLayout("insets 5, fillx, gap 10",
-                                "[][]push[][][]", // Nickname, Save, PUSH, Provider, Model, Search
-                                "[]")); // Row constraints
+                "[][]push[][][]", // Nickname, Save, PUSH, Provider, Model, Search
+                "[]")); // Row constraints
 
         // Nickname Field
         nicknameField = new JXTextField("Nickname");
@@ -109,7 +128,7 @@ public class HeaderPanel extends JPanel {
         searchModelsButton = new JButton(new SearchIcon(ICON_SIZE));
         searchModelsButton.setToolTipText("Search and view all available models");
         add(searchModelsButton);
-        
+
         // Populate providers and models first
         populateProviders();
 
@@ -124,11 +143,11 @@ public class HeaderPanel extends JPanel {
                     log.info("Preselecting provider " + provider);
                     providerComboBox.setSelectedItem(provider);
                     // Explicitly update models for the selected provider after setting the provider
-                    updateModelsForSelectedProvider(); 
+                    updateModelsForSelectedProvider();
                     break;
                 }
             }
-            
+
             // Then, find and set the model
             for (int i = 0; i < modelComboBox.getItemCount(); i++) {
                 if (modelComboBox.getItemAt(i).getModelId().equals(selectedAgiModel.getModelId())) {
@@ -145,7 +164,7 @@ public class HeaderPanel extends JPanel {
                 agi.setSelectedModel((AbstractModel) modelComboBox.getSelectedItem());
             }
         }
-        
+
         // Add listeners AFTER initial population and selection
         addListeners();
     }
@@ -161,8 +180,9 @@ public class HeaderPanel extends JPanel {
         repaint();
     }
 
-    /** 
-     * Fetches all registered providers from the agi session and adds them to the combo box.
+    /**
+     * Fetches all registered providers from the agi session and adds them to
+     * the combo box.
      */
     private void populateProviders() {
         List<AbstractAiProvider> providers = agi.getProviders();
@@ -171,39 +191,40 @@ public class HeaderPanel extends JPanel {
         }
     }
 
-    /** 
+    /**
      * Installs action listeners for provider and model selection.
      */
     private void addListeners() {
         providerComboBox.addActionListener(e -> updateModelsForSelectedProvider());
-        
+
         modelComboBox.addActionListener(e -> {
             AbstractModel selectedModel = (AbstractModel) modelComboBox.getSelectedItem();
             if (selectedModel != null) {
                 agi.setSelectedModel(selectedModel);
             }
         });
-        
+
         searchModelsButton.addActionListener(e -> showProviderRegistry());
     }
-    
-    /** 
-     * Opens the provider registry viewer dialog to search and select models from all providers.
+
+    /**
+     * Opens the provider registry viewer dialog to search and select models
+     * from all providers.
      */
     private void showProviderRegistry() {
         // Collect all models from all providers
         List<AbstractModel> allModels = agi.getProviders().stream()
-            .flatMap(provider -> provider.getModels().stream())
-            .collect(Collectors.toList());
+                .flatMap(provider -> provider.getModels().stream())
+                .collect(Collectors.toList());
 
         JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "AI Provider & Model Registry", JDialog.ModalityType.MODELESS);
-        
+
         AiProviderRegistryViewer viewer = new AiProviderRegistryViewer(allModels, selectedModel -> {
             // Handle model selection: set the model in the combo box and close the dialog
             modelComboBox.setSelectedItem(selectedModel);
             dialog.dispose();
         });
-        
+
         dialog.getContentPane().add(viewer);
         dialog.setPreferredSize(new Dimension(1200, 800));
         dialog.pack();
@@ -211,25 +232,45 @@ public class HeaderPanel extends JPanel {
         dialog.setVisible(true);
     }
 
-    /** 
-     * Updates the model combo box items based on the currently selected provider.
+    /**
+     * Updates the model combo box items based on the currently selected
+     * provider.
+     * <p>This operation is performed asynchronously to avoid freezing the EDT 
+     * while the provider fetches fresh models from its API.</p>
      */
     private void updateModelsForSelectedProvider() {
         AbstractAiProvider selectedProvider = (AbstractAiProvider) providerComboBox.getSelectedItem();
         modelComboBox.removeAllItems();
+        
         if (selectedProvider != null) {
-            List<? extends AbstractModel> models = selectedProvider.getModels();
-            for (AbstractModel model : models) {
-                modelComboBox.addItem(model);
-            }
+            // Visual feedback: disable selection while discovery is in progress
+            modelComboBox.setEnabled(false);
+            modelComboBox.setPrototypeDisplayValue(null);
+            
+            new SwingTask<List<? extends AbstractModel>>(agiPanel, "Discovering Models", () -> {
+                return selectedProvider.getModels();
+            }, models -> {
+                for (AbstractModel model : models) {
+                    modelComboBox.addItem(model);
+                }
+                modelComboBox.setEnabled(true);
+                // Trigger auto-selection if needed
+                if (modelComboBox.getItemCount() > 0 && modelComboBox.getSelectedIndex() == -1) {
+                    modelComboBox.setSelectedIndex(0);
+                }
+            }, error -> {
+                log.error("Failed to discover models for provider: {}", selectedProvider.getDisplayName(), error);
+                modelComboBox.setEnabled(true);
+            }, false).start();
         }
     }
 
-    /** 
-     * Triggers a manual save and exports the session to a .kryo file chosen by the user.
+    /**
+     * Triggers a manual save and exports the session to a .kryo file chosen by
+     * the user.
      */
     private void saveSession() {
-        new SwingTask<>(this, "Save Session", () -> {
+        new SwingTask<>(agiPanel, "Save Session", () -> {
             // 1. Perform standard auto-save
             agi.save();
 
@@ -238,7 +279,7 @@ public class HeaderPanel extends JPanel {
                 AgiConfig config = agi.getConfig();
                 AbstractAsiContainer container = config.getAsiContainer();
                 Path savedDir = container.getSavedSessionsDir();
-                
+
                 String nickname = agi.getNickname();
                 String defaultName = (nickname != null && !nickname.isBlank()) ? nickname : config.getSessionId();
                 if (!defaultName.endsWith(".kryo")) {
@@ -255,9 +296,9 @@ public class HeaderPanel extends JPanel {
                     if (!targetFile.getName().endsWith(".kryo")) {
                         targetFile = new File(targetFile.getParentFile(), targetFile.getName() + ".kryo");
                     }
-                    
+
                     final File finalFile = targetFile;
-                    new SwingTask<>(this, "Exporting Session", () -> {
+                    new SwingTask<>(agiPanel, "Exporting Session", () -> {
                         try {
                             byte[] data = KryoUtils.serialize(agi);
                             Files.write(finalFile.toPath(), data);
@@ -267,11 +308,11 @@ public class HeaderPanel extends JPanel {
                             throw ex;
                         }
                         return null;
-                    }).execute();
+                    }).start();
                 }
             });
             return null;
-        }).execute();
+        }).start();
     }
 
 }
