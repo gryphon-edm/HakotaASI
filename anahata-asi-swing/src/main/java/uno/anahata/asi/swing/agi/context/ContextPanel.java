@@ -83,6 +83,9 @@ public class ContextPanel extends JPanel {
     /** Container for dynamically created message or part panels. */
     private final JPanel messagePartDetailPanel;
     
+    /** Flag indicating a refresh is in progress, used to mute selection events and flicker. */
+    private boolean refreshing = false;
+
     /** Registry for mapping domain types to custom UI configurers. */
     private final Map<Class<?>, BiConsumer<Object, JPanel>> customConfigRegistry = new HashMap<>();
 
@@ -252,6 +255,7 @@ public class ContextPanel extends JPanel {
 
         // Add a TreeSelectionListener to update the detailPanel
         treeTable.getTreeSelectionModel().addTreeSelectionListener((TreeSelectionEvent e) -> {
+            if (refreshing) return;
             TreePath path = e.getNewLeadSelectionPath();
             Object node = (path != null) ? path.getLastPathComponent() : null;
             
@@ -486,8 +490,10 @@ public class ContextPanel extends JPanel {
         SwingUtilities.invokeLater(() -> {
             log.info("Refreshing ContextPanel tree (structural={}) for agi: {}", structural, agi.getShortId());
             
-            // 1. Capture current expansion state
+            // 1. Capture current expansion and selection state
             Set<TreePath> expandedPaths = getExpandedPaths();
+            TreePath selectedPath = treeTable.getTreeSelectionModel().getSelectionPath();
+            this.refreshing = true;
             
             // 2. Update Model
             if (structural) {
@@ -505,6 +511,10 @@ public class ContextPanel extends JPanel {
             // 3. Restore state (Nested invokeLater to ensure table has processed model event)
             SwingUtilities.invokeLater(() -> {
                 restoreExpandedPaths(expandedPaths);
+                if (selectedPath != null) {
+                    treeTable.getTreeSelectionModel().setSelectionPath(selectedPath);
+                }
+                this.refreshing = false;
                 
                 // Select the first node if nothing is selected
                 if (treeTable.getSelectedRow() == -1 && treeTable.getRowCount() > 0) {
@@ -513,6 +523,9 @@ public class ContextPanel extends JPanel {
                 
                 treeTable.revalidate();
                 treeTable.repaint();
+                
+                // Automatically refresh tokens in the background after structural change
+                refreshTokens(null);
             });
         });
     }
@@ -543,15 +556,37 @@ public class ContextPanel extends JPanel {
     
     /**
      * Triggers a background recalculation of token counts.
+     * 
+     * @param onDone Optional callback to run after tokens are refreshed.
+     */
+    public void refreshTokens(Runnable onDone) {
+        // Capture expansion and selection state to restore it after the background task fires its event
+        Set<TreePath> expandedPaths = getExpandedPaths();
+        TreePath selectedPath = treeTable.getTreeSelectionModel().getSelectionPath();
+        this.refreshing = true;
+
+        try {
+            treeTableModel.refreshTokens(() -> {
+                restoreExpandedPaths(expandedPaths);
+                if (selectedPath != null) {
+                    treeTable.getTreeSelectionModel().setSelectionPath(selectedPath);
+                }
+                this.refreshing = false;
+
+                if (onDone != null) {
+                    onDone.run();
+                }
+            });
+        } catch (Exception e) {
+            log.error("Error refreshing context tokens", e);
+        }
+    }
+
+    /**
+     * Triggers a background recalculation of token counts (Convenience no-arg version).
      */
     public void refreshTokens() {
-        agi.getExecutor().execute(() -> {
-            try {
-                treeTableModel.refreshTokens();
-            } catch (Exception e) {
-                log.error("Error refreshing context tokens", e);
-            }
-        });
+        refreshTokens(null);
     }
 
     /**
