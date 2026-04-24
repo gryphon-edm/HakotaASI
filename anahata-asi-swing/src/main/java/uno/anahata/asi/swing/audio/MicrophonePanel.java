@@ -168,7 +168,7 @@ public final class MicrophonePanel extends JPanel {
         microphoneLineComboBox.setVisible(false);
         levelBar.setVisible(true);
 
-        parentPanel.getAgi().getExecutor().submit(() -> {
+        new SwingTask<Void>(parentPanel.getAgiPanel(), "Recording", () -> {
             try (TargetDataLine line = device.getInputLine(AudioDevice.DEFAULT_FORMAT)) {
                 line.open(AudioDevice.DEFAULT_FORMAT);
                 line.start();
@@ -196,7 +196,8 @@ public final class MicrophonePanel extends JPanel {
                     stopRecordingWorkflow();
                 });
             }
-        });
+            return null;
+        }).start();
     }
 
     /**
@@ -210,7 +211,7 @@ public final class MicrophonePanel extends JPanel {
         levelBar.setValue(0);
 
         new SwingTask<File>(
-            this,
+            parentPanel.getAgiPanel(),
             "Finalize Recording",
             () -> {
                 if (recordingBuffer == null) {
@@ -233,7 +234,7 @@ public final class MicrophonePanel extends JPanel {
                     }
                 }
             }
-        ).execute();
+        ).start();
     }
     
     /**
@@ -241,7 +242,7 @@ public final class MicrophonePanel extends JPanel {
      */
     private void initMicrophoneLineComboBox() {
         new SwingTask<List<AudioDevice>>(
-            this,
+            parentPanel.getAgiPanel(),
             "Load Microphone Devices",
             () -> AudioDevice.listAvailableDevices(AudioDevice.Type.INPUT),
             (devices) -> {
@@ -263,6 +264,6 @@ public final class MicrophonePanel extends JPanel {
                 microphoneLineComboBox.setEnabled(false);
                 microphoneLineComboBox.setToolTipText("Hardware Error: " + ((Exception) error).getMessage());
             }
-        ).execute();
+        ).start();
     }
 }
