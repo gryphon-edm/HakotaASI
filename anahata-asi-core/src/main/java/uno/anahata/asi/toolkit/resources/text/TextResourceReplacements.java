@@ -50,6 +50,8 @@ public class TextResourceReplacements extends AbstractTextResourceWrite {
             throw new AgiToolException("Logic Error: calculateResultingContent called before captureOriginalContent");
         }
         String newContent = originalContent;
+        // Process replacements in reverse order if we were doing index-based, but since we work on the whole string 
+        // per replacement, we'll just iterate. Note: overlapping replacements are not supported.
         for (TextReplacement replacement : replacements) {
             String target = replacement.getTarget();
             if (target == null || target.isEmpty()) {
@@ -61,7 +63,24 @@ public class TextResourceReplacements extends AbstractTextResourceWrite {
                     .map(line -> "[ \\t]*" + Pattern.quote(line.trim()) + "[ \\t]*")
                     .collect(Collectors.joining("\\R"));
 
-            newContent = newContent.replaceAll(regex, Matcher.quoteReplacement(replacement.getReplacement()));
+            Pattern pattern = Pattern.compile(regex);
+            Matcher matcher = pattern.matcher(newContent);
+            
+            List<Integer> indexes = replacement.getOccurrenceIndexes();
+            if (indexes != null && !indexes.isEmpty()) {
+                StringBuilder sb = new StringBuilder();
+                int count = 0;
+                while (matcher.find()) {
+                    count++;
+                    if (indexes.contains(count)) {
+                        matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement.getReplacement()));
+                    }
+                }
+                matcher.appendTail(sb);
+                newContent = sb.toString();
+            } else {
+                newContent = matcher.replaceAll(Matcher.quoteReplacement(replacement.getReplacement()));
+            }
         }
         return newContent;
     }
@@ -87,17 +106,22 @@ public class TextResourceReplacements extends AbstractTextResourceWrite {
             String normalizedTarget = normalizeForComparison(target);
             int count = StringUtils.countMatches(normalizedOriginal, normalizedTarget);
             
-            int expected = replacement.getExpectedCount();
+            int expected = replacement.getTotalOccurrences();
+            List<Integer> indexes = replacement.getOccurrenceIndexes();
             
-            if (expected >= 0 && count != expected) {
-                throw new AgiToolException("Strict count mismatch for target [" + target.substring(0, Math.min(20, target.length())) + "...]. Expected " + expected + ", but found " + count);
+            if (count != expected) {
+                throw new AgiToolException("Surgical Checksum Failed for target [" + target.substring(0, Math.min(20, target.length())) + "...]. "
+                        + "Your 'totalOccurrences' was " + expected + " but I found " + count + " matches in the file. "
+                        + "Please re-read the file and verify the match count before retrying.");
             }
-            
-            if (expected == -1 && count == 0) {
-                 throw new AgiToolException("Mandatory target string not found (even after normalization): " + target);
+
+            if (indexes != null) {
+                for (Integer idx : indexes) {
+                    if (idx > count || idx <= 0) {
+                        throw new AgiToolException("Surgical Range Error: Requested occurrence index " + idx + " but only " + count + " occurrences found.");
+                    }
+                }
             }
-            
-            // If expected == -2, we proceed even if count is 0.
         }
         
         // Finally call super.validate to check lastModified and perform identical check

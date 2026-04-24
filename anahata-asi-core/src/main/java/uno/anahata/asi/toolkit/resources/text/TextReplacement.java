@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * Represents a single text replacement operation within a file.
  * 
@@ -38,15 +40,16 @@ public class TextReplacement {
     private String reason;
 
     /**
-     * The expected number of occurrences of the target string in the file.
-     * <ul>
-     *   <li><b>n > 0</b>: Must match exactly n occurrences.</li>
-     *   <li><b>0</b>: Must match exactly 0 occurrences (ensures absence).</li>
-     *   <li><b>-1</b>: Default. Match at least 1 occurrence (Strict).</li>
-     *   <li><b>-2</b>: Match 0 or more occurrences (Lenient/Optional).</li>
-     * </ul>
+     * The total number of times the target string must appear in the file.
+     * This acts as a checksum to ensure context integrity.
      */
-    @Builder.Default
-    @Schema(description = "The expected number of occurrences to replace. Use -1 for strictly 1+, -2 for 0+.", defaultValue = "-1")
-    private int expectedCount = -1;
+    @Schema(description = "The total count of matches for the target string in the file. Must match exactly.", required = true)
+    private int totalOccurrences;
+
+    /**
+     * The 1-based indices of the specific occurrences to replace.
+     * If null or empty, ALL matching occurrences will be replaced.
+     */
+    @Schema(description = "The 1-based indices of the specific occurrences to replace (e.g. [1, 3]). If null or empty, all occurrences are replaced.")
+    private List<Integer> occurrenceIndexes;
 }

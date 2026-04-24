@@ -65,12 +65,9 @@ public class Resources extends AnahataToolkit {
                 + "3. **Updating resources**: All update resource tools flush the changes to disk inmediatly when `EXECUTED`.\n "
                 + "4. **Rag Message**: The Rag Message is the source of truth for resource modifications, it gets freshly generated when the user completes his turn (i.e. after all tools in the batch have been executed or declined). "
                 + "All resources registered with `LIVE` refresh policy are garanteed to be up to date (in sync) with the underlying storage.\n"
-                + "5. **expectedCount Semantics of the findAndReplaceInTextResource tool**: \n"
-                + "\t- **n > 0**: Strict. Must match exactly n occurrences.\n"
-                + "\t- **0**: Strict. Ensure absence.\n"
-                + "\t- **-1**: Default. Strict. Match at least 1 occurrence.\n"
-                + "\t- **-2**: Lenient. Match 0 or more occurrences (Optional Cleanups).\n"
-                + "6. **Your risponsability**: You are risponsible for managing what resources are in context, if the user wants to switch task, it is your risponsability to unload resources from context as you load the ones for the next task. Don't leave dangling resources in context. A true ASI can hold infinite sessions without burning input tokens with resources that are not longer relevant."
+                + "5. **totalOccurrences Mandatory Checksum**: You MUST provide the exact total number of matches for your `target` string in the current file. This ensures your context is in sync.\n"
+                + "6. **occurrenceIndexes Surgical targeting**: To replace specific instances of identical strings, provide a list of 1-based indices (e.g. `[1, 3]`). If null or empty, all occurrences are replaced.\n"
+                + "7. **Your risponsability**: You are risponsible for managing what resources are in context, if the user wants to switch task, it is your risponsability to unload resources from context as you load the ones for the next task. Don't leave dangling resources in context. A true ASI can hold infinite sessions without burning input tokens with resources that are not longer relevant."
         /*+ "5. **Resources.editTextResource tool**: This is not a git style tool that requires surrounding anchor lines. It is a strict, surgical 1-based line number tool with optimistic locking validation for text resources loaded with includeLineNumbers=true."
                         + " The UI for this tool shows the user a rich graphical diff visualizer with the edits you intend to make to the text resource and overlays comic-style annotations with the reasons for your edits on the right hand side of the diff viewer. "
                         + "\n\tUse this tool **paying careful attention to the line numbers in the RAG message** and use it in a **user-oriented way** choosing the appropiate type of edit (insert / replace / delete) for each logical change you intend to make."
@@ -234,11 +231,11 @@ public class Resources extends AnahataToolkit {
      * @return A standard unified diff of the changes applied.
      * @throws Exception if replacements fail.
      */
-    @AgiTool("Performs multiple text replacements in a text resource in the RAG message. "
-            + "All occurrences of all replacements are replaced. "
-            + "Returns a standard unified diff of the changes applied.\n"
-            + "**On any given turn, you can only use this tool once per resource **: If you need to do two replacements in one file, use two TextReplacement in the same call (Because If you do it in two tool calls, the second one will fail optimsitc locking validation). "
-            + "This tool will fail if the refered resource is not in context, the find fails or the lastModified version does not match the lastModified on the resource header (Rag Message or System Instructions). Do not rely on your internal memory of the previous successful edit, always use the latest from the resource header.")
+    @AgiTool("Performs surgical text replacements in a text resource. "
+            + "\n**1. Mandatory Checksum**: You MUST provide the exact `totalOccurrences` of the `target` string found in the file. If the count doesn't match, the tool fails (prevents working on stale context). "
+            + "\n**2. Surgical Targeting**: Use `occurrenceIndexes` (a list of 1-based indices) to replace specific matches (e.g., [1, 3]). If the list is null or empty, ALL occurrences are replaced. "
+            + "\n**3. Turn Sequencing**: On any given turn, you can only use this tool ONCE per resource. Batch multiple replacements into a single call. "
+            + "\n**4. Validation**: Requires `resourceUuid` and the latest `lastModified` timestamp from the RAG message.")
     public String findAndReplaceInTextResource(@AgiToolParam("The set of replacements.") TextResourceReplacements replacements) throws Exception {
         replacements.validate(getAgi());
         Resource res = getAgi().getResourceManager().getResources().get(replacements.getResourceUuid());
