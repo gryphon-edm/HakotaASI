@@ -30,6 +30,7 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
 import javax.tools.ToolProvider;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.internal.ClasspathPrinter;
@@ -68,6 +69,7 @@ public class Java extends AnahataToolkit {
      * context. This prevents "Identity Crisis" issues where a child-loaded
      * script cannot access the engine's context.
      */
+    @Getter
     protected final Set<String> parentFirstClassess = new HashSet<>();
             
     /**
