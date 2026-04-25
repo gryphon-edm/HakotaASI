@@ -36,6 +36,9 @@ import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.internal.ClasspathPrinter;
 import uno.anahata.asi.internal.TextUtils;
 import uno.anahata.asi.agi.message.RagMessage;
+import uno.anahata.asi.agi.resource.view.AbstractResourceView;
+import uno.anahata.asi.agi.resource.view.ResourceView;
+import uno.anahata.asi.agi.resource.view.TextView;
 import uno.anahata.asi.agi.tool.spi.java.JavaMethodTool;
 import uno.anahata.asi.agi.tool.spi.java.JavaMethodToolResponse;
 import uno.anahata.asi.agi.tool.AgiToolException;
@@ -100,6 +103,9 @@ public class Java extends AnahataToolkit {
         registerParentFirstClass(uno.anahata.asi.agi.resource.Resource.class);
         registerParentFirstClass(uno.anahata.asi.agi.resource.RefreshPolicy.class);
         registerParentFirstClass(uno.anahata.asi.agi.context.ContextPosition.class);
+        registerParentFirstClass(ResourceView.class);
+        registerParentFirstClass(AbstractResourceView.class);
+        registerParentFirstClass(TextView.class);
         log.info("Java toolkit instantiated:");
     }
     
@@ -120,7 +126,7 @@ public class Java extends AnahataToolkit {
 
         sb.append(" Available Methods that you can use within the code you write:\n");
 
-        sb.append("- **Inherited from " + getConcreteClassModelShouldExtend().getName() + "**:\n");
+        sb.append("**Inherited from " + getConcreteClassModelShouldExtend().getName() + "**:\n");
         appendMethods(sb, getConcreteClassModelShouldExtend());
 
         sb.append("\n Multi-threading and Thread Safety:\n");
@@ -128,18 +134,18 @@ public class Java extends AnahataToolkit {
         sb.append("- To access the context from another thread, capture it in a final variable: `final ToolContext ctx = getToolContext();` and use `ctx.log(...)`, `ctx.error(...)`, etc.\n");
 
         sb.append("\nAbout the attribute maps:"
-                + "\n- The Turn attribute map is for sharing data across tool calls within the same turn. (what in Servlet terms you could call 'request scoped')"
-                + "\n The Session Map is for the agi session. Anything stored in this map during one turn will be available subsequent turns. Gets serialized "
-                + "\n The ASI Container map is shared across sessions (agis) in the current AsiContainer (a given JVM could be running multiple ASI Containers). Does not get serialized."
-                + "\n The Application Map is a static field shared across all sessions of all containers running in this jvm\n");
+                + "\n- The Turn attribute map is for sharing data across tool calls within the same turn. (what in Servlet terms you could call 'request scoped'). Gets serialized."
+                + "\n The Session Map is for this agi session. Anything stored in this map during one turn will be available in subsequent turns (or subsquente tool calls withing the same turn). Gets serialized "
+                + "\n The ASI Container map is shared across sessions (agis) in the current AsiContainer (a given JVM could be running multiple ASI Containers). Currently it does not get serialized."
+                + "\n The Application Map is a static field shared across all sessions (agis) of all ASI Containers running in this jvm\n");
 
         sb.append("\nAbout attachments: at the time of this release only pdf, text and image attachments are supported, there seems to be an issue attaching audio files to a tools response, however you can always load audio files as managed resources.\n");
 
         sb.append("\n Example:\n");
         sb.append("```java\n");
-        sb.append("import " + getConcreteClassModelShouldExtend().getName() + ";\n");
+        sb.append("import ").append(getConcreteClassModelShouldExtend().getName()).append(";\n");
         sb.append("\n");
-        sb.append("public class Anahata extends " + getConcreteClassModelShouldExtend().getSimpleName() + "{\n");
+        sb.append("public class Anahata extends ").append(getConcreteClassModelShouldExtend().getSimpleName()).append("{\n");
         sb.append("    @Override\n");
         sb.append("    public Object call() throws Exception {\n");
         sb.append("        log(\"Starting script execution...\");\n");
@@ -246,7 +252,18 @@ public class Java extends AnahataToolkit {
         for (Method m : clazz.getMethods()) {
             if (!m.getDeclaringClass().equals(Object.class)) {
                 String methodString = JavaMethodTool.buildMethodSignature(m);
-                if (!methodString.contains("anahata") && !methodString.contains("lambda$")) {
+                if (!methodString.contains("anahata") && !methodString.contains("lambda$") && !methodString.contains("abstract")) {
+                    sb.append("- `").append(methodString).append("`\n");
+                }
+            }
+        }
+        
+        sb.append("\nInternal Agi container apis:\n");
+        
+        for (Method m : clazz.getMethods()) {
+            if (!m.getDeclaringClass().equals(Object.class)) {
+                String methodString = JavaMethodTool.buildMethodSignature(m);
+                if (methodString.contains("anahata") && !methodString.contains("etToolkit(") ) {
                     sb.append("- `").append(methodString).append("`\n");
                 }
             }
