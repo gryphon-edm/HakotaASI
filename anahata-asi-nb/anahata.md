@@ -31,14 +31,17 @@ We use a non-intrusive annotation system to provide visual feedback and context 
 > When using `NbJava.compileAndExecuteInProject`, the tool automatically detects the NBM packaging and filters out NetBeans Platform/Stub JARs to prevent `LinkageError`s.
 
 ## 5. Reloading and Lifecycle
-    If you change the code of a toolkit, you can't expect the changes to the toolkit to be reflected inmediatly. You can update let's say CodeRefiner in one turn and just call it via standard tool calling on the next turn because the plugin's runtime hasn't changed since the last nbmreload. 
-- **NbJava.compileAndExecuteIn**: 
-    - To test netbeans apis or the plugins runtime code (the code that makes the plugins runtime, i.e. since the last time the plugin was nbmreloaded)
-- **NbJava.compileAndExecuteInProject**: 
-    - To test changes to toolkits or project classess without reloading, just do NbJava.compileAndExecuteInProject with the plugin projects path or the project path of the module you need to test and both test and compile dependencies set to false, instantiate the toolkit (e.g. CodeRefiner cr = new CodeRefiner(); cr.updateMember(pim,pam,pum,blah,blah,blah); 
-    - To test changes to code in any an other anahata-asi modules, same thing NbJava.compileAndExecuteInProject with whatever project you want to test and also do not include compile or transitive either or otherwise you will end with dependent modules twice on the classpath (the plugins runtime + target classess of the dependant modules).
-- **nbmreload**: Needed to test changes to toolkits via tool calling.
-- **CRITICAL**: Changing files in this project or its dependencies requires a manual `nbmreload` (or `build-with-dependencies` followed by `nbmreload`) for changes to take effect.
-- **Turn Sequencing**: Never batch `nbmreload` with write operations. Wait for a successful compilation before reloading.
+The NetBeans plugin runtime is static and **always** loads classes from the installed JAR:
+`/anahata-asi-nb/target/nbm/clusters/extra/modules/uno-anahata-asi-nb.jar`.
+Standard tool calls (the ones that show run buttons in the ui) will not reflect changes until an `nbmreload` is performed.
+
+
+
+- **Hot Reload Workflow (NbJava.compileAndExecuteInProject)**: 
+    - **Strategy**: Implements a **Child-First** classloading strategy for project classes.
+    - **Mechanism**: It prepends the project's `target/classes` folder to the search path. This allows you to test modified toolkit logic or DTOs immediately without reloading the whole IDE.
+    - **Infrastructure Whitelist**: Critical classes (Agi, Resource, ResourceManager, ToolContext, SwingAgiTool, NbHandle, etc.) are forced to the **Parent ClassLoader**. This preserves "Instance Identity" for singletons and ThreadLocals, allowing your hot-reloaded script to safely interact with the live IDE environment.
+- **nbmreload**: Required to update the "Static" tool calls used by the UI and the standard framework execution path.
+- **Turn Sequencing**: Never batch `nbmreload` with source write operations. Wait for a successful compilation before triggering a reload.
 
 Força Barça!
