@@ -6,6 +6,7 @@ import java.util.List;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import lombok.extern.slf4j.Slf4j;
 import net.miginfocom.swing.MigLayout;
 import uno.anahata.asi.nb.tools.java.coderefiner.CodeRefinementBatch;
 import uno.anahata.asi.nb.tools.java.coderefiner.CodeRefinementIntent;
@@ -25,6 +26,7 @@ import uno.anahata.asi.toolkit.resources.text.LineComment;
  * 
  * @author anahata
  */
+@Slf4j
 public class CodeRefinementBatchRenderer extends AbstractTextResourceWriteRenderer<CodeRefinementBatch> {
 
     @Override
@@ -42,28 +44,31 @@ public class CodeRefinementBatchRenderer extends AbstractTextResourceWriteRender
         JLabel title = new JLabel("<html><b>Surgical AST Intents:</b></html>");
         panel.add(title, "wrap");
         
-        for (CodeRefinementIntent intent : update.getIntents()) {
-            String desc = "Structural Modification";
-            String icon = "🛠️";
-            
-            if (intent instanceof InsertMemberIntent ins) {
-                String decl = ins.getDeclaration();
-                String memberType = (decl != null && decl.contains("(")) ? "Method" : "Field";
-                desc = "<b>Insert " + memberType + "</b> " + ins.getPosition() + " " + ins.getAnchorMemberName();
-                icon = "<font color='#4CAF50'>[+]</font>";
-            } else if (intent instanceof UpdateMemberIntent upd) {
-                desc = "<b>Update</b> " + getSimpleName(upd.getMemberFqn());
-                icon = "<font color='#2196F3'>[*]</font>";
-            } else if (intent instanceof DeleteMemberIntent del) {
-                desc = "<b>Delete</b> " + getSimpleName(del.getMemberFqn());
-                icon = "<font color='#F44336'>[-]</font>";
-            } else if (intent instanceof MoveMemberIntent mov) {
-                desc = "<b>Move</b> " + getSimpleName(mov.getMemberFqn()) + " " + mov.getPosition() + " " + mov.getAnchorMemberName();
-                icon = "<font color='#FF9800'>[M]</font>";
+        if (update.getIntents() != null) {
+            for (CodeRefinementIntent intent : update.getIntents()) {
+                log.info("Creating intent panel for " + intent);
+                String desc = "Structural Modification";
+                String icon = "🛠️";                
+                if (intent instanceof InsertMemberIntent ins) {
+                    String decl = ins.getDeclaration();
+                    String memberType = (decl != null && decl.contains("(")) ? "Method" : "Field";
+                    desc = "<b>Insert " + memberType + "</b> " + ins.getPosition() + " " + ins.getAnchorMemberName();
+                    icon = "<font color='#4CAF50'>[+]</font>";
+                } else if (intent instanceof UpdateMemberIntent upd) {
+                    desc = "<b>Update</b> " + getSimpleName(upd.getMemberFqn());
+                    icon = "<font color='#2196F3'>[*]</font>";
+                } else if (intent instanceof DeleteMemberIntent del) {
+                    desc = "<b>Delete</b> " + getSimpleName(del.getMemberFqn());
+                    icon = "<font color='#F44336'>[-]</font>";
+                } else if (intent instanceof MoveMemberIntent mov) {
+                    desc = "<b>Move</b> " + getSimpleName(mov.getMemberFqn()) + " " + mov.getPosition() + " " + mov.getAnchorMemberName();
+                    icon = "<font color='#FF9800'>[M]</font>";
+                }
+                
+                JLabel label = new JLabel("<html>" + icon + " " + desc + " " + "</html>");
+                label.setToolTipText(intent.toString());
+                panel.add(label, "gapleft 15, wrap");
             }
-            
-            JLabel label = new JLabel("<html>" + icon + " " + desc + "</html>");
-            panel.add(label, "inset 0 15 0 0, wrap");
         }
         
         return panel;
@@ -82,8 +87,13 @@ public class CodeRefinementBatchRenderer extends AbstractTextResourceWriteRender
         return batch;
     }
     
-    private String getSimpleName(String fqn) {
-        int lastDot = fqn.lastIndexOf('.');
-        return lastDot == -1 ? fqn : fqn.substring(lastDot + 1);
+    private static String getSimpleName(String fqn) {
+        if (fqn == null || fqn.isBlank()) {
+            return "Unknown Member";
+        }
+        int paren = fqn.indexOf('(');
+        String namePart = paren == -1 ? fqn : fqn.substring(0, paren);
+        int lastDot = namePart.lastIndexOf('.');
+        return lastDot == -1 ? namePart : namePart.substring(lastDot + 1);
     }
 }
