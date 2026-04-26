@@ -6,7 +6,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.agi.tool.ToolContext;
 import uno.anahata.asi.swing.agi.tool.SwingAgiTool;
-import uno.anahata.asi.toolkit.Java;
+import uno.anahata.asi.toolkit.java.Java;
 import uno.anahata.asi.agi.tool.AgiToolkit;
 
 /**

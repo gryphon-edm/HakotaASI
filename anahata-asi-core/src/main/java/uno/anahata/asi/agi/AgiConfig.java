@@ -22,7 +22,7 @@ import uno.anahata.asi.toolkit.AsiContainer;
 import uno.anahata.asi.toolkit.Audio;
 import uno.anahata.asi.toolkit.History;
 import uno.anahata.asi.toolkit.Session;
-import uno.anahata.asi.toolkit.Java;
+import uno.anahata.asi.toolkit.java.Java;
 import uno.anahata.asi.toolkit.shell.Shell;
 
 /**

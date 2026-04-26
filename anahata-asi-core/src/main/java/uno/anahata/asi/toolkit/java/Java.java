@@ -1,5 +1,6 @@
-package uno.anahata.asi.toolkit;
+package uno.anahata.asi.toolkit.java;
 
+import uno.anahata.asi.toolkit.java.classpath.VeryPrettyClassPathPrinter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -17,6 +18,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
@@ -33,7 +35,6 @@ import javax.tools.ToolProvider;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.agi.Agi;
-import uno.anahata.asi.internal.ClasspathPrinter;
 import uno.anahata.asi.internal.TextUtils;
 import uno.anahata.asi.agi.message.RagMessage;
 import uno.anahata.asi.agi.resource.view.AbstractResourceView;
@@ -81,7 +82,13 @@ public class Java extends AnahataToolkit {
      */
     public String defaultCompilerClasspath;
     
-        /**
+    /**
+     * The transient printer used to generate token-optimized classpath manifests.
+     * It is recreated lazily to ensure it is always available after deserialization.
+     */
+    protected transient VeryPrettyClassPathPrinter classpathPrinter;
+    
+    /**
      * Default constructor. Initializes the default classpath from the system's
      * "java.class.path" property.
      */
@@ -106,12 +113,28 @@ public class Java extends AnahataToolkit {
         registerParentFirstClass(ResourceView.class);
         registerParentFirstClass(AbstractResourceView.class);
         registerParentFirstClass(TextView.class);
+        
         log.info("Java toolkit instantiated:");
     }
     
+    /** 
+     * {@inheritDoc} 
+     * <p>Empty implementation as per architectural refinement. 
+     * Initialization logic is moved to {@link #postActivate()} and {@link #setDefaultClasspath(String)}.</p> 
+     */
     @Override
     public void initialize() {
         log.info("initialize(): parentFirstClasses: " + parentFirstClassess);
+    }
+
+    /** 
+     * {@inheritDoc} 
+     * <p>Synchronizes the classpath printer with the current default classpath 
+     * after the toolkit has been activated or deserialized.</p> 
+     */
+    @Override
+    public void postActivate() {
+        getClasspathPrinter().setRaw(defaultCompilerClasspath);
     }
     
     /**
@@ -215,7 +238,10 @@ public class Java extends AnahataToolkit {
      */
     @AgiTool("Sets the default classpath for the compiler and classloader")
     public void setDefaultClasspath(@AgiToolParam("The default classpath for all code compiled by the Java toolkit") String defaultCompilerClasspath) {
-        this.defaultCompilerClasspath = defaultCompilerClasspath;
+        if (!Objects.equals(this.defaultCompilerClasspath, defaultCompilerClasspath)) {
+            this.defaultCompilerClasspath = defaultCompilerClasspath;
+            getClasspathPrinter().setRaw(defaultCompilerClasspath);
+        }
     }
 
     /**
@@ -225,7 +251,29 @@ public class Java extends AnahataToolkit {
      * @return The pretty-printed classpath string.
      */
     public String getPrettyPrintedDefaultClasspath() {
-        return ClasspathPrinter.prettyPrint(defaultCompilerClasspath);
+        return getClasspathPrinter().getPretty();
+    }
+
+    /**
+     * Gets the lazily-initialized classpath printer.
+     * 
+     * @return The {@link VeryPrettyClassPathPrinter} instance.
+     */
+    protected final VeryPrettyClassPathPrinter getClasspathPrinter() {
+        if (classpathPrinter == null) {
+            classpathPrinter = createClassPathPrinter();
+            classpathPrinter.setRaw(defaultCompilerClasspath);
+        }
+        return classpathPrinter;
+    }
+
+    /**
+     * Factory method to create the specialized classpath printer.
+     * 
+     * @return A new {@link VeryPrettyClassPathPrinter} instance.
+     */
+    protected VeryPrettyClassPathPrinter createClassPathPrinter() {
+        return new VeryPrettyClassPathPrinter();
     }
 
     /**
@@ -614,7 +662,7 @@ public class Java extends AnahataToolkit {
         if (current.isLeaf()) {
             // It's a single property or a fully collapsed path
             sb.append(tabs).append("- `").append(displayLabel).append("`: ")
-                    .append(TextUtils.formatValue(current.value)).append("\n");
+                     .append(TextUtils.formatValue(current.value)).append("\n");
         } else {
             // It's a group
             // User requested full prefix in the header

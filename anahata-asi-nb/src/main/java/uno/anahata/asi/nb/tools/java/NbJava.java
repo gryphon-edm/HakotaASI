@@ -26,11 +26,12 @@ import org.openide.filesystems.FileUtil;
 import org.netbeans.api.java.source.SourceUtils;
 import uno.anahata.asi.nb.module.NetBeansModuleUtils;
 import uno.anahata.asi.nb.tools.project.Projects;
-import uno.anahata.asi.toolkit.Java;
+import uno.anahata.asi.toolkit.java.Java;
 import uno.anahata.asi.swing.toolkit.SwingJava;
 import uno.anahata.asi.agi.tool.AgiToolkit;
 import uno.anahata.asi.agi.tool.AgiToolParam;
 import uno.anahata.asi.agi.tool.AgiTool;
+import uno.anahata.asi.toolkit.java.classpath.VeryPrettyClassPathPrinter;
 
 /**
  * A NetBeans-aware extension of the core {@link Java} toolkit.
@@ -45,8 +46,7 @@ public class NbJava extends SwingJava {
 
     /** 
      * {@inheritDoc} 
-     * <p>Sets the default classpath to include the NetBeans modules environment, 
-     * ensuring that compiled scripts can access IDE-specific APIs.</p> 
+     * <p>Sets the default classpath to include the NetBeans modules environment.</p> 
      */
     @Override
     public void initialize() {
@@ -54,7 +54,7 @@ public class NbJava extends SwingJava {
         setDefaultClasspath(NetBeansModuleUtils.getNetBeansClasspath());
         log.info("initialize() default classPath:" + getDefaultClasspath());
     }
-    
+
     /** 
      * {@inheritDoc} 
      * <p>Re-establishes the default classpath after deserialization, 
@@ -62,8 +62,20 @@ public class NbJava extends SwingJava {
      */
     @Override
     public void rebind() {
+        super.rebind();
         setDefaultClasspath(NetBeansModuleUtils.getNetBeansClasspath());
         log.info("NbJava rebind() completed. default classPath:" + getDefaultClasspath());
+    }
+
+    /** 
+     * {@inheritDoc} 
+     * <p>Overrides the factory to inject the specialized {@link NetBeansJarHandler}.</p> 
+     */
+    @Override
+    protected VeryPrettyClassPathPrinter createClassPathPrinter() {
+        VeryPrettyClassPathPrinter printer = super.createClassPathPrinter();
+        printer.addHandler(new NetBeansJarHandler());
+        return printer;
     }
     
 
