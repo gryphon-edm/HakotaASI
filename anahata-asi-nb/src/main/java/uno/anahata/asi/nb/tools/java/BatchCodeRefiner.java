@@ -55,6 +55,9 @@ public class BatchCodeRefiner extends AnahataToolkit {
         // 1. Authoritative Validation (Locks, Existence, etc.)
         batch.validate(getAgi());
         
+        // 2. Authoritative pre-execution snapshot capture
+        batch.captureOriginalContent(getAgi());
+        
         Resource resource = getAgi().getResourceManager().get(batch.getResourceUuid());
         NbHandle handle = (NbHandle) resource.getHandle();
         FileObject fo = handle.getFileObject();
@@ -83,6 +86,9 @@ public class BatchCodeRefiner extends AnahataToolkit {
         });
         
         result.commit();
+        
+        // 3. Capture resulting content snapshot after successful commit
+        batch.setResultingContent(resource.asText());
         
         if (batch.isSave()) {
             JavaSourceUtils.handleSave(fo);

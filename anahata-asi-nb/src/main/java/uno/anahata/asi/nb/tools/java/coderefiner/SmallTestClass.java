@@ -16,6 +16,7 @@ public class SmallTestClass {
      */
     private AtomicLong testField;
     private AtomicInteger v3Counter;
+    private String dummyTest;
     
 
 }

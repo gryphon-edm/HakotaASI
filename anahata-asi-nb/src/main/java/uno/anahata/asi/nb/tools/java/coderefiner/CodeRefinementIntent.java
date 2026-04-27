@@ -58,4 +58,24 @@ public abstract class CodeRefinementIntent implements Serializable {
      * @throws Exception if resolution or AST creation fails.
      */
     public abstract void apply(WorkingCopy wc, Map<Tree, List<Tree>> modifiedMembers, boolean optimize) throws Exception;
+
+    /**
+     * Returns a human-readable HTML description of the intent for display in the UI.
+     * 
+     * @return A pretty HTML string (e.g., "[+] <b>Insert Field</b> END").
+     */
+    public abstract String getHtmlDisplay();
+
+    /**
+     * Helper to extract the simple name from a potentially complex FQN.
+     */
+    protected String getSimpleName(String fqn) {
+        if (fqn == null || fqn.isBlank()) {
+            return "Unknown";
+        }
+        int paren = fqn.indexOf('(');
+        String namePart = paren == -1 ? fqn : fqn.substring(0, paren);
+        int lastDot = Math.max(namePart.lastIndexOf('.'), namePart.lastIndexOf('$'));
+        return lastDot == -1 ? namePart : namePart.substring(lastDot + 1);
+    }
 }

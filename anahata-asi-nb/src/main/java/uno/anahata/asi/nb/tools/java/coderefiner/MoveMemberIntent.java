@@ -62,4 +62,13 @@ public class MoveMemberIntent extends CodeRefinementIntent {
         int insertIdx = CodeRefinementBatch.getInsertIndex(wc, members, position, anchorMemberName);
         members.add(insertIdx, memberTree);
     }
+
+    @Override
+    public String getHtmlDisplay() {
+        StringBuilder sb = new StringBuilder("<font color='#FF9800'>[M]</font> <b>Move</b> ").append(getSimpleName(memberFqn)).append(" ").append(position);
+        if (position == uno.anahata.asi.nb.tools.java.JavaSourceUtils.RelativePosition.BEFORE || position == uno.anahata.asi.nb.tools.java.JavaSourceUtils.RelativePosition.AFTER) {
+            sb.append(" ").append(anchorMemberName != null ? anchorMemberName : "null");
+        }
+        return sb.toString();
+    }
 }

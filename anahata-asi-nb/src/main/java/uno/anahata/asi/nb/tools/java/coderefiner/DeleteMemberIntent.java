@@ -56,4 +56,9 @@ public class DeleteMemberIntent extends CodeRefinementIntent {
             members.remove(idx);
         }
     }
+
+    @Override
+    public String getHtmlDisplay() {
+        return "<font color='#F44336'>[-]</font> <b>Delete</b> " + getSimpleName(memberFqn);
+    }
 }

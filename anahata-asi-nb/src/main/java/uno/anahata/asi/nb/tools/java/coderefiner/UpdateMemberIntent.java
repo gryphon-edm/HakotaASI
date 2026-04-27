@@ -118,4 +118,9 @@ public class UpdateMemberIntent extends CodeRefinementIntent {
             }
         }
     }
+
+    @Override
+    public String getHtmlDisplay() {
+        return "<font color='#2196F3'>[*]</font> <b>Update</b> " + getSimpleName(memberFqn);
+    }
 }

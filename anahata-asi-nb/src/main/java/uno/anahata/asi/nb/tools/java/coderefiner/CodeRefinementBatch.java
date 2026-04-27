@@ -66,7 +66,18 @@ public class CodeRefinementBatch extends AbstractTextResourceWrite {
             throw new AgiToolException("agi is required");
         }
 
-        // 1. Authoritative state capture (if not already done by validate)
+        // 1. Check for previously captured resulting content (Historical View / Post-Execution)
+        // This prevents the 'Double Diff' effect because we return the snapshot of what was actually saved.
+        if (resultingContent != null && !resultingContent.isBlank()) {
+            return resultingContent;
+        }
+
+        // 2. Check for manual UI overrides
+        if (manualOverride != null && !manualOverride.isBlank()) {
+            return manualOverride;
+        }
+
+        // 3. Authoritative state capture (if not already done by validate)
         if (originalContent == null) {
              captureOriginalContent(agi);
         }
@@ -83,14 +94,14 @@ public class CodeRefinementBatch extends AbstractTextResourceWrite {
         FileObject realFo = nbh.getFileObject();
         log.info("Calculating resulting content for: {}", realFo);
 
-        // 2. Perform sequential AST replay directly on the real FileObject
+        // 4. Perform sequential AST replay directly on the real FileObject to preserve Classpath/Project context.
         JavaSource js = JavaSource.forFileObject(realFo);
         ModificationResult mRes = js.runModificationTask(wc -> {
             wc.toPhase(JavaSource.Phase.RESOLVED);
             applyTo(wc);
         });
 
-        // 3. Extract the resulting source string
+        // 5. Extract the resulting source string
         String ret = mRes.getResultingSource(realFo);
         return ret;
     }

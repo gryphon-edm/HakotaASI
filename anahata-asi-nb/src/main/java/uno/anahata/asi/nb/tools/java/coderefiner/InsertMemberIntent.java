@@ -84,4 +84,14 @@ public class InsertMemberIntent extends CodeRefinementIntent {
         int insertIdx = CodeRefinementBatch.getInsertIndex(wc, members, position, anchorMemberName);
         members.add(insertIdx, newMember);
     }
+
+    @Override
+    public String getHtmlDisplay() {
+        String memberType = (declaration != null && declaration.contains("(")) ? "Method" : "Field";
+        StringBuilder sb = new StringBuilder("<font color='#4CAF50'>[+]</font> <b>Insert ").append(memberType).append("</b> ").append(position);
+        if (position == uno.anahata.asi.nb.tools.java.JavaSourceUtils.RelativePosition.BEFORE || position == uno.anahata.asi.nb.tools.java.JavaSourceUtils.RelativePosition.AFTER) {
+            sb.append(" ").append(anchorMemberName != null ? anchorMemberName : "null");
+        }
+        return sb.toString();
+    }
 }
