@@ -88,12 +88,20 @@ public class PartNode extends AbstractContextNode<AbstractPart> {
      * string to visualize the Context Window Garbage Collection (CwGC) state.
      * </p>
      */
+    @Override
     protected void updateStatus() {
         int remainingDepth = userObject.getRemainingDepth();
-        if (userObject.isEffectivelyPruned()) {
-            this.status = "Pruned" + (remainingDepth != Integer.MAX_VALUE ? " (" + remainingDepth + " remaining)" : "");
+        String suffix = "turns left";
+        if (remainingDepth < 0) {
+            remainingDepth = remainingDepth * -1;
+            suffix = "turns ago";
+        }
+        if (userObject.isPinned()) {
+            this.status = "Pinned";
+        } else if (userObject.isEffectivelyPruned()) {
+            this.status = "Pruned (" + remainingDepth + " " + suffix + ")";
         } else {
-            this.status = "Active" + (remainingDepth != Integer.MAX_VALUE ? " (" + remainingDepth + " remaining)" : "");
+            this.status = "Auto (" + remainingDepth + " " + suffix + ")";
         }
     }
 }
