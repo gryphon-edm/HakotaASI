@@ -367,7 +367,7 @@ public class ToolManager extends BasicPropertyChangeSource implements ContextPro
                 toolkit.setEnabled(enabled);
                 log.info("{} toolkit: {}", enabled ? "Enabled" : "Disabled", name);
             } else {
-                log.warn("Toolkit not found: {}", name);
+                log.error("Toolkit not found: {}", name);
             }
         }
     }
