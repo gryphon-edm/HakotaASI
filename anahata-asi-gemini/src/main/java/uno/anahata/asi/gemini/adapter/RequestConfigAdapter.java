@@ -139,11 +139,13 @@ public final class RequestConfigAdapter {
                 FunctionCallingConfig.Builder fccb = FunctionCallingConfig.builder();
                 
                 if (/*requestConfig.isInjectInbandMetadata()*/false) {
-                    log.info("In-band Metadata injection enabled, only History tools are allowed: " + historyToolNames);
+                    //not allowing gemini for now to use in band 
+                    log.warn("In-band Metadata is not allowed yet for Gemini");
+                    //log.info("In-band Metadata injection enabled, only History tools are allowed: " + historyToolNames);
                     fccb.allowedFunctionNames(historyToolNames);
-                    fccb.mode(FunctionCallingConfigMode.Known.ANY);
-                } else {
                     fccb.mode(FunctionCallingConfigMode.Known.VALIDATED);
+                } else {
+                    fccb.mode(FunctionCallingConfigMode.Known.AUTO);
                 }
                 
                 ToolConfig tc = ToolConfig.builder()
