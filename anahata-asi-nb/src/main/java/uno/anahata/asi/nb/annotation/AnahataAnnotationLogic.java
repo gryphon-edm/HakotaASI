@@ -11,7 +11,6 @@ import org.netbeans.api.project.Project;
 import org.openide.filesystems.FileObject;
 import org.openide.loaders.DataObject;
 import org.openide.loaders.DataShadow;
-import uno.anahata.asi.nb.AnahataInstaller;
 import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.agi.context.ContextProvider;
 import uno.anahata.asi.nb.tools.project.Projects;
@@ -141,7 +140,7 @@ public class AnahataAnnotationLogic {
             Project p = FileOwnerQuery.getOwner(res);
             FileObject projectDir = (p != null) ? p.getProjectDirectory() : res;
             
-            LOG.info("DIAGNOSTIC: Annotating PROJECT node: " + fo.getName() + " (Resolved Dir: " + projectDir.getPath() + ")");
+            LOG.log(Level.FINE, "DIAGNOSTIC: Annotating PROJECT node: {0} (Resolved Dir: {1})", new Object[]{fo.getName(), projectDir.getPath()});
             
             //While this looks logical, it doesnt seem to work, projects get incorrectly annotatted 
             //Map<Agi, Integer> fileCounts = FilesContextActionLogic.getSessionFileCounts(res, res.isFolder());
@@ -163,7 +162,7 @@ public class AnahataAnnotationLogic {
         
         long durationNs = System.nanoTime() - start;
         if (durationNs > 2_000_000) { // 2ms threshold
-            LOG.log(Level.INFO, "Slow annotation calculation: {0}ms for {1} (Type: {2})", 
+            LOG.log(Level.WARNING, "Slow annotation calculation: {0}ms for {1} (Type: {2})", 
                     new Object[]{durationNs / 1_000_000.0, fo.getPath(), nodeType});
         }
         
