@@ -46,6 +46,7 @@ import org.openide.execution.ExecutionEngine;
 import org.openide.execution.ExecutorTask;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
+import org.openide.modules.InstalledFileLocator;
 import org.openide.util.NbPreferences;
 import org.openide.util.Task;
 import org.openide.util.TaskListener;
@@ -107,7 +108,18 @@ public class Maven extends AnahataToolkit {
     public static String getNbCommandLineMavenPath() {
         try {
             Preferences prefs = NbPreferences.root().node("org/netbeans/modules/maven");
-            return prefs.get("commandLineMavenPath", "PREFERENCE_NOT_FOUND");
+            String path = prefs.get("commandLineMavenPath", null);
+            if (path != null && !path.isBlank()) {
+                return path +" (User Configured)";
+            }
+
+            // Fallback to bundled maven detection
+            File mavenHome = InstalledFileLocator.getDefault().locate("maven", "org.netbeans.modules.maven", false);
+            if (mavenHome != null && mavenHome.exists()) {
+                return mavenHome.getAbsolutePath() + " (Bundled)";
+            }
+
+            return "PREFERENCE_NOT_FOUND";
         } catch (Throwable t) {
             return "EXECUTION_FAILED: " + t.toString();
         }
