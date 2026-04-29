@@ -567,6 +567,8 @@
                     <homePageUrl>https://asi.anahata.uno</homePageUrl>
                     <codeNameBase>uno.anahata.asi.nb</codeNameBase>
                     <brandingToken>anahata</brandingToken>
+                    <additionalArguments>${netbeans.runparams}</additionalArguments>
+                    
                     <!--
 <moduleIcon>src/main/resources/icons/anahata_32.png</moduleIcon>
                     -->
