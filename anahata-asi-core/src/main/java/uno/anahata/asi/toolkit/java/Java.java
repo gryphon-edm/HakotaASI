@@ -307,7 +307,8 @@ public class Java extends AnahataToolkit {
             }
         }
         
-        sb.append("\nInternal Agi container apis:\n");
+        sb.append("\nInternal anahata Agi container apis. Mostly for debugging / troubleshooting. Don't guess members on anahata types. If you think you need to use them or you think they could help you complete "
+                + "a task, discover their members first.\n");
         
         for (Method m : clazz.getMethods()) {
             if (!m.getDeclaringClass().equals(Object.class)) {
@@ -492,10 +493,17 @@ public class Java extends AnahataToolkit {
                                 c = findClass(name);
                                 log.info("Loaded class from extraClassPath (Child-First): {}" + name);
                             } catch (ClassNotFoundException e) {
-                                // 5. PARENT-LAST: If not found, delegate to the parent classloader.
-                                c = super.loadClass(name, resolve);
+                                // 5. FALLBACK: Ask the toolkit if it can find the bytes elsewhere (e.g. MR-JARs)
+                                byte[] fallbackBytes = findClassFallbackBytes(name);
+                                if (fallbackBytes != null) {
+                                    ctx.log("Loaded class from Fallback Bridge: " + name);
+                                    c = defineClass(name, fallbackBytes, 0, fallbackBytes.length);
+                                } else {
+                                    // 6. PARENT-LAST: If not found, delegate to the parent classloader.
+                                    c = super.loadClass(name, resolve);
+                                }
                             }
-                        }
+}
                     }
                     if (resolve) {
                         resolveClass(c);
@@ -509,8 +517,19 @@ public class Java extends AnahataToolkit {
     }
 
     /**
+     * A hook for subclasses to provide class bytes if the standard loading flow fails.
+     * Used by NbJava to bridge Multi-Release JAR classes into the loader.
+     * 
+     * @param name The FQN of the class.
+     * @return The class bytes, or null if not found.
+     */
+    protected byte[] findClassFallbackBytes(String name) {
+        return null;
+    }
+
+    /**
      * Compiles and executes a Java class named 'Anahata' on the application's
-     * JVM. The class must extend {@link OnTheFlyAgiTool} and implement
+* JVM. The class must extend {@link OnTheFlyAgiTool} and implement
      * {@link Callable}.
      *
      * @param sourceCode The Java source code to compile and execute.
