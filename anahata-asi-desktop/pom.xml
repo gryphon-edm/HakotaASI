@@ -25,6 +25,13 @@
             <artifactId>anahata-asi-gemini</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!--
+        <dependency>
+            <groupId>uno.anahata</groupId>
+            <artifactId>anahata-asi-openai-java</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        -->
         
         <dependency>
             <groupId>uno.anahata</groupId>
