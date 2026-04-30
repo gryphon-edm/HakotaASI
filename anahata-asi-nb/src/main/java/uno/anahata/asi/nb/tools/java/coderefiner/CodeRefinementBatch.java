@@ -21,7 +21,6 @@ import org.openide.filesystems.FileUtil;
 import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.agi.tool.AgiToolException;
 import uno.anahata.asi.nb.tools.java.JavaSourceUtils;
-import uno.anahata.asi.nb.tools.java.JavaSourceUtils.RelativePosition;
 import uno.anahata.asi.toolkit.resources.text.AbstractTextResourceWrite;
 
 /**
@@ -157,6 +156,63 @@ public class CodeRefinementBatch extends AbstractTextResourceWrite {
         }
         return -1;
     }
+    
+    /**
+     * Finds the index of a member by its name or canonical signature.
+     *
+     * @param wc The working copy for resolution.
+     * @param members The list of class members.
+     * @param memberName The name or signature to look for.
+     * @return The index, or -1 if not found.
+     */
+    private static int findMemberIndex(WorkingCopy wc, List<? extends Tree> members, String memberName) {
+        for (int i = 0; i < members.size(); i++) {
+            Tree m = members.get(i);
+            String name = null;
+            String signature = null;
+            if (m instanceof MethodTree mt) {
+                name = mt.getName().toString();
+                if (wc != null) {
+                    TreePath path = TreePath.getPath(wc.getCompilationUnit(), m);
+                    Element e = wc.getTrees().getElement(path);
+                    if (e instanceof ExecutableElement ee) {
+                        String params = ee.getParameters().stream().map(p -> {
+                            String t = p.asType().toString();
+                            int bracket = t.indexOf('<');
+                            return bracket != -1 ? t.substring(0, bracket) : t;
+                        }).collect(Collectors.joining(","));
+                        signature = (name.equals("<init>") ? "<init>" : name) + "(" + params + ")";
+                    }
+                }
+            } else if (m instanceof VariableTree vt) {
+                name = vt.getName().toString();
+            } else if (m instanceof ClassTree ct) {
+                name = ct.getSimpleName().toString();
+            } else if (m.getKind() == Tree.Kind.BLOCK) {
+                name = ((BlockTree) m).isStatic() ? "<clinit>" : "<init-block>";
+            }
+            if (memberName.equals(name) || memberName.equals(signature)) {
+                return i;
+            }
+            if (memberName.contains("#")) {
+                String typePart = memberName.substring(0, memberName.indexOf('#'));
+                int targetIndex = Integer.parseInt(memberName.substring(memberName.indexOf('#') + 1, memberName.indexOf('(')));
+                int currentCount = 0;
+                for (Tree prev : members) {
+                    String prevName = null;
+                    if (prev.getKind() == Tree.Kind.BLOCK) {
+                        prevName = ((BlockTree) prev).isStatic() ? "<clinit>" : "<init-block>";
+                    }
+                    if (typePart.equals(prevName)) {
+                        if (++currentCount == targetIndex && prev == m) {
+                            return i;
+                        }
+                    }
+                }
+            }
+        }
+        return -1;
+    }
 
     /**
      * Internal utility to parse a member declaration and optional body.
@@ -215,7 +271,7 @@ public class CodeRefinementBatch extends AbstractTextResourceWrite {
      * Resolves the insertion index relative to anchors.
      */
     public static int getInsertIndex(WorkingCopy wc, List<? extends Tree> members, RelativePosition position, String anchor) throws AgiToolException {
-        int anchorIdx = anchor != null ? JavaSourceUtils.findMemberIndex(wc, members, JavaSourceUtils.getMemberSignature(anchor)) : -1;
+        int anchorIdx = anchor != null ? findMemberIndex(wc, members, getMemberSignature(anchor)) : -1;
         if (anchor != null && anchorIdx == -1) {
             throw new AgiToolException("Anchor member not found: " + anchor);
         }
@@ -225,6 +281,23 @@ public class CodeRefinementBatch extends AbstractTextResourceWrite {
             case BEFORE -> anchorIdx;
             case AFTER -> anchorIdx + 1;
         };
+    }
+    
+    /**
+     * Extracts the member signature (name + parameters) from an FQN.
+     * Unlike getMemberSimpleName, this preserves the parameter list for methods.
+     *
+     * @param memberFqn The FQN to parse (e.g. 'com.foo.Bar.method(int)').
+     * @return The signature part (e.g. 'method(int)').
+     */
+    public static String getMemberSignature(String memberFqn) {
+        if (memberFqn == null || memberFqn.isBlank()) {
+            return memberFqn;
+        }
+        int paren = memberFqn.indexOf('(');
+        String namePart = paren != -1 ? memberFqn.substring(0, paren) : memberFqn;
+        int lastSeparator = Math.max(namePart.lastIndexOf('.'), namePart.lastIndexOf('$'));
+        return memberFqn.substring(lastSeparator + 1);
     }
 
     /**
@@ -273,7 +346,7 @@ public class CodeRefinementBatch extends AbstractTextResourceWrite {
 
         String parentFqn = namePart.substring(0, lastSeparator);
         String name = namePart.substring(lastSeparator + 1);
-        TypeElement parent = wc.getElements().getTypeElement(parentFqn);
+        TypeElement parent = wc.getElements().getTypeElement(JavaSourceUtils.normalizeFqn(parentFqn));
         if (parent == null) {
             throw new AgiToolException("Member not found: " + memberFqn + " (Parent class not found: " + parentFqn + ")");
         }
