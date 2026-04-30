@@ -11,12 +11,21 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SmallTestClass {
     
-    /**
-     * test
-     */
-    private AtomicLong testField;
+    private String testStatus;
+
+    public void logStatus() {
+        log.info("Current status: {}", testStatus);
+    }
     private AtomicInteger v3Counter;
-    private String dummyTest;
+
+    public static class StatusMetadata {
+
+        private final long timestamp = System.currentTimeMillis();
+
+        public long getTimestamp() {
+            return timestamp;
+        }
+    }
     
 
 }
