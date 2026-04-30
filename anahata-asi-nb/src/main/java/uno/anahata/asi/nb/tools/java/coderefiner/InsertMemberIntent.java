@@ -8,16 +8,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.TypeElement;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.netbeans.api.java.source.GeneratorUtilities;
 import org.netbeans.api.java.source.WorkingCopy;
 import uno.anahata.asi.agi.tool.AgiToolException;
-import uno.anahata.asi.nb.tools.java.JavaSourceUtils;
-import uno.anahata.asi.nb.tools.java.JavaSourceUtils.RelativePosition;
 
 /**
  * Intent to insert a new member (method, field, inner type) into a class or file.
@@ -103,7 +99,7 @@ public class InsertMemberIntent extends CodeRefinementIntent {
         }
 
         StringBuilder sb = new StringBuilder("<font color='#4CAF50'>[+]</font> <b>Insert ").append(memberType).append("</b> <code>").append(memberName).append("</code> ").append(position);
-        if (position == uno.anahata.asi.nb.tools.java.JavaSourceUtils.RelativePosition.BEFORE || position == uno.anahata.asi.nb.tools.java.JavaSourceUtils.RelativePosition.AFTER) {
+        if (position == uno.anahata.asi.nb.tools.java.coderefiner.RelativePosition.BEFORE || position == uno.anahata.asi.nb.tools.java.coderefiner.RelativePosition.AFTER) {
             sb.append(" ").append(anchorMemberName != null ? getSimpleName(anchorMemberName) : "null");
         }
         return sb.toString();
