@@ -51,6 +51,9 @@ This project uses a set of key documents to guide development. For detailed info
 - **Standard Toolkit Method creation**: 
     1. extend `AnahataToolkit` and annotate the class with @AgiToolkit("what this toolkit does")
     2. do not implement ContextProvider methods like getId() or getParentContextProvider() or setProviding() as this is already handled by the base AnahataToolkit class.
+    3. @AgiTool annotated methods should not quietly catch exceptions nor simply log caugh exceptions to the slf4j logger, they should log errors to the tools error stream using error() so the model can see the error.
+    4. @AgiTool methods can throw an AgiToolException or any other Exception. AgiToolExceptions only dump the exception message to the tools error field, other exceptions will dimp the full stack trace into the tools errors
+    5. @AgiTool methods should use log("") for logs the model should see in the tools response logs (the model doesn't see slf4j logging like log.info or log.warn or log.error).
 
 - **Standard Toolkit Method Order**: 
     1. `rebind()` (if needed during early stages of deserilization)
