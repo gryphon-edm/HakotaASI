@@ -266,8 +266,14 @@ public class HeaderPanel extends JPanel {
                 }
                 
                 // Fallback to first model if nothing selected
-                if (modelComboBox.getItemCount() > 0 && modelComboBox.getSelectedIndex() == -1) {
+                if (modelComboBox.getItemCount() > 0 && (modelComboBox.getSelectedIndex() == -1 || agi.getSelectedModel() == null)) {
                     modelComboBox.setSelectedIndex(0);
+                }
+                
+                // Explicitly sync back to domain to ensure the Agi session is aware of the final choice
+                AbstractModel selected = (AbstractModel) modelComboBox.getSelectedItem();
+                if (selected != null) {
+                    agi.setSelectedModel(selected);
                 }
             }, error -> {
                 log.error("Failed to discover models for provider: {}", selectedProvider.getDisplayName(), error);
