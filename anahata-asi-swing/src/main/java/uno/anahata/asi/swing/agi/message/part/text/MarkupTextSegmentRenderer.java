@@ -3,7 +3,6 @@
  */
 package uno.anahata.asi.swing.agi.message.part.text;
 
-import com.vladsch.flexmark.ext.admonition.AdmonitionExtension;
 import com.vladsch.flexmark.ext.autolink.AutolinkExtension;
 import com.vladsch.flexmark.ext.emoji.EmojiExtension;
 import com.vladsch.flexmark.ext.gfm.strikethrough.StrikethroughExtension;
@@ -11,15 +10,13 @@ import com.vladsch.flexmark.ext.gfm.tasklist.TaskListExtension;
 import com.vladsch.flexmark.ext.gitlab.GitLabExtension;
 import com.vladsch.flexmark.ext.media.tags.MediaTagsExtension;
 import com.vladsch.flexmark.ext.tables.TablesExtension;
-import com.vladsch.flexmark.ext.youtube.embedded.YouTubeLinkExtension;
+import com.vladsch.flexmark.ext.typographic.TypographicExtension;
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
 import com.vladsch.flexmark.util.ast.Node;
 import com.vladsch.flexmark.util.data.MutableDataSet;
-import java.awt.Component;
 import java.util.Arrays;
 import javax.swing.BorderFactory;
-import javax.swing.JComponent;
 import javax.swing.JScrollPane;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.StyleSheet;
@@ -64,7 +61,8 @@ public class MarkupTextSegmentRenderer extends AbstractTextSegmentRenderer {
                 AutolinkExtension.create(),
                 StrikethroughExtension.create(),
                 TaskListExtension.create(),
-                EmojiExtension.create()
+                EmojiExtension.create(),
+                TypographicExtension.create()
                 //AdmonitionExtension.create()
         ));
         options.set(HtmlRenderer.SOFT_BREAK, "<br />");
