@@ -150,6 +150,10 @@ public abstract class AbstractModel {
 
     /**
      * Gets the default temperature for this model.
+     * <p>
+     * Temperature controls the randomness of the response. Higher values (e.g., 1.0) 
+     * make the output more random, while lower values (e.g., 0.2) make it more deterministic.
+     * </p>
      * 
      * @return The default temperature, or null if not specified.
      */
@@ -157,6 +161,9 @@ public abstract class AbstractModel {
 
     /**
      * Gets the default topK for this model.
+     * <p>
+     * Top-K sampling limits the model's choices to the K most likely next tokens.
+     * </p>
      * 
      * @return The default topK, or null if not specified.
      */
@@ -164,6 +171,10 @@ public abstract class AbstractModel {
 
     /**
      * Gets the default topP for this model.
+     * <p>
+     * Top-P (nucleus) sampling selects tokens whose cumulative probability 
+     * adds up to the threshold P.
+     * </p>
      * 
      * @return The default topP, or null if not specified.
      */
