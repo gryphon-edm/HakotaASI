@@ -4,6 +4,7 @@ package uno.anahata.asi.nb.tools.ide;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.File;
 import java.util.Collections;
+import java.util.List;
 import javax.swing.Action;
 import lombok.extern.slf4j.Slf4j;
 import org.openide.awt.Actions;
@@ -63,6 +64,16 @@ public class IDE extends AnahataToolkit {
         childrenProviders.add(ot);
     }
 
+    @Override
+    public List<String> getSystemInstructions() throws Exception {
+        return Collections.singletonList("Your host application is NetBeans. "
+                + "The content of the resources in the RAG message does not include unsaved changes. "
+                + "The LIVE resources in the RAG message get refreshed from disk on every turn and reflect the state of the files on disk, not on the editr. "
+                + "The resources toolkit does not write your suggestions to the swing Document, it writes them straight to disk. "
+                + "The 'Open Editor Files' context provider from the Editor's toolkit or the TopComponents context provider will tell you what files are open in the id and/ whether they have unsaved changes or not. "
+                + "If you need to get the unsaved contents, use the java tool");
+    }
+    
     /**
      * Monitors the IDE log file (messages.log) by loading it into the context.
      * 
