@@ -111,18 +111,16 @@ public class TextResourceLineEditsRenderer extends AbstractTextResourceWriteRend
     /** {@inheritDoc} */
     @Override
     protected TextResourceLineEdits createUpdatedDto(String newContent) {
-        // When the user manually edits the diff, we treat it as a full file replacement
-        LineReplacement fullOverride = new LineReplacement();
-        fullOverride.setStartLine(1);
-        fullOverride.setEndLine(DiffCommentUtils.getLineCount(update.getOriginalContent())); 
-        fullOverride.setContent(newContent);
-        fullOverride.setReason("User manual edit");
-        
         TextResourceLineEdits dto = new TextResourceLineEdits(
                 update.getResourceUuid(),
                 update.getLastModified()
         );
-        dto.getReplacements().add(fullOverride);
+        dto.setManualOverride(newContent);
+        // Preserve original intents
+        dto.setInsertions(update.getInsertions());
+        dto.setReplacements(update.getReplacements());
+        dto.setDeletions(update.getDeletions());
+        
         dto.setOriginalContent(update.getOriginalContent());
         dto.setOriginalResourceName(update.getOriginalResourceName());
         return dto;

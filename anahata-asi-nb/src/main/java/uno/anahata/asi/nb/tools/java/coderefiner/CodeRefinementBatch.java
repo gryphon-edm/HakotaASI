@@ -41,10 +41,7 @@ import uno.anahata.asi.toolkit.resources.text.AbstractTextResourceWrite;
 @Schema(description = "A batch of structural AST modifications for a single Java file.")
 public class CodeRefinementBatch extends AbstractTextResourceWrite {
 
-    @Schema(description = "A manual override of the resulting content. If provided, AST intents are ignored.")
-    private String manualOverride;
-
-    @Schema(description = "The list of structural changes to apply, in order.", required = true)
+    @Schema(description = "The list of structural changes to apply, in order. Note the intents will be mapped to one of the listed java types", required = true)
     private List<CodeRefinementIntent> intents = new ArrayList<>();
 
     @Schema(description = "Whether to optimize imports after applying all changes. Defaults to true.")
@@ -61,23 +58,8 @@ public class CodeRefinementBatch extends AbstractTextResourceWrite {
      * side-by-side diff before execution.</p>
      */
     @Override
-    public String calculateResultingContent(Agi agi) throws Exception {
-        if (agi == null) {
-            throw new AgiToolException("agi is required");
-        }
-
-        // 1. Check for previously captured resulting content (Historical View / Post-Execution)
-        // This prevents the 'Double Diff' effect because we return the snapshot of what was actually saved.
-        if (resultingContent != null && !resultingContent.isBlank()) {
-            return resultingContent;
-        }
-
-        // 2. Check for manual UI overrides
-        if (manualOverride != null && !manualOverride.isBlank()) {
-            return manualOverride;
-        }
-
-        // 3. Authoritative state capture (if not already done by validate)
+    protected String doCalculateResultingContent(Agi agi) throws Exception {
+        // 1. Authoritative state capture (if not already done by validate)
         if (originalContent == null) {
              captureOriginalContent(agi);
         }
@@ -94,14 +76,14 @@ public class CodeRefinementBatch extends AbstractTextResourceWrite {
         FileObject realFo = nbh.getFileObject();
         log.info("Calculating resulting content for: {}", realFo);
 
-        // 4. Perform sequential AST replay directly on the real FileObject to preserve Classpath/Project context.
+        // 2. Perform sequential AST replay directly on the real FileObject to preserve Classpath/Project context.
         JavaSource js = JavaSource.forFileObject(realFo);
         ModificationResult mRes = js.runModificationTask(wc -> {
             wc.toPhase(JavaSource.Phase.RESOLVED);
             applyTo(wc);
         });
 
-        // 5. Extract the resulting source string
+        // 3. Extract the resulting source string
         String ret = mRes.getResultingSource(realFo);
         return ret;
     }
@@ -233,7 +215,7 @@ public class CodeRefinementBatch extends AbstractTextResourceWrite {
      * Resolves the insertion index relative to anchors.
      */
     public static int getInsertIndex(WorkingCopy wc, List<? extends Tree> members, RelativePosition position, String anchor) throws AgiToolException {
-        int anchorIdx = anchor != null ? JavaSourceUtils.findMemberIndex(wc, members, anchor) : -1;
+        int anchorIdx = anchor != null ? JavaSourceUtils.findMemberIndex(wc, members, JavaSourceUtils.getMemberSignature(anchor)) : -1;
         if (anchor != null && anchorIdx == -1) {
             throw new AgiToolException("Anchor member not found: " + anchor);
         }

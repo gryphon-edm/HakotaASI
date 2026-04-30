@@ -28,17 +28,19 @@ import uno.anahata.asi.nb.tools.java.coderefiner.CodeRefinementBatch;
  * @author anahata
  */
 @Slf4j
-@AgiToolkit("Advanced structural Java refinement (Batch Mode).")
+@AgiToolkit("Advanced structural Java refinement (Batch Mode). Currently in Beta.")
 public class BatchCodeRefiner extends AnahataToolkit {
 
     @Override
     public List<String> getSystemInstructions() throws Exception {
-        return Collections.singletonList("BatchCodeRefiner Instructions:\n"
+        return Collections.singletonList("BatchCodeRefiner Toolkit Instructions:\n"
+                + "0. **New Toolkit**: This toolkit is in beta mode. Encorage the user to report any issues on github. \n"
                 + "1. **Context Locked**: You MUST have the resource in your RAG message (context) to propose a refinement.\n"
-                + "2. **Batch Intents**: You can combine multiple structural changes (Insert, Update, Delete, Move) for a single file in one turn.\n"
+                + "2. **Batch Intents**: You can combine multiple structural changes (Insert, Update, Delete, Move) for a single file in the same tool call.\n"
                 + "3. **Optimistic Locking**: Always use the `lastModified` timestamp from the RAG message to prevent concurrent edit conflicts.\n"
-                + "4. **FQN-Authoritative**: Use absolute FQNs for all member identifications.\n"
-                + "5. **Manual Overrides**: The user can manually edit your proposal in the diff viewer; your `applyTo` logic handles both AST re-runs and raw text overrides.");
+                + "4. **Hybrid Identification**: Use **Absolute FQNs** for targets (`classFqn`, `memberFqn`) to ensure unambiguous resolution. Use **Relative Signatures** (e.g. `myField` or `myMethod(int)`) for `anchorMemberName` to maximize token efficiency.\n"
+                + "5. **Field initializers are the body**: When inserting or updating a field with a initializer, you must use the 'body' attribute for the field initializer (What goes after the '=').\n"
+                + "6. **Manual Overrides**: The user can manually edit your proposal in the diff viewer; your `applyTo` logic handles both AST re-runs and raw text overrides.");
     }
 
     /**
@@ -48,15 +50,12 @@ public class BatchCodeRefiner extends AnahataToolkit {
      * @return A confirmation message.
      * @throws Exception if validation or execution fails.
      */
-    @AgiTool("Refines a Java source file using a batch of structural AST modifications.")
+    @AgiTool("Refines a Java source file using a batch of structural AST modifications and returns the effectively applied changes (after user review)")
     public String refine(
             @AgiToolParam("The refinement batch.") CodeRefinementBatch batch
     ) throws Exception {
-        // 1. Authoritative Validation (Locks, Existence, etc.)
+        // 1. Authoritative Validation (Recaptures originalContent and checks locks)
         batch.validate(getAgi());
-        
-        // 2. Authoritative pre-execution snapshot capture
-        batch.captureOriginalContent(getAgi());
         
         Resource resource = getAgi().getResourceManager().get(batch.getResourceUuid());
         NbHandle handle = (NbHandle) resource.getHandle();
@@ -94,6 +93,6 @@ public class BatchCodeRefiner extends AnahataToolkit {
             JavaSourceUtils.handleSave(fo);
         }
         
-        return "Successfully applied refinement batch to " + fo.getNameExt();
+        return batch.getUnifiedDiff(getAgi());
     }
 }

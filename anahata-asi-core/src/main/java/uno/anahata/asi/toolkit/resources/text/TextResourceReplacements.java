@@ -45,7 +45,7 @@ public class TextResourceReplacements extends AbstractTextResourceWrite {
 
     /** {@inheritDoc} */
     @Override
-    public String calculateResultingContent(Agi agi) throws Exception {
+    protected String doCalculateResultingContent(Agi agi) throws Exception {
         if (originalContent == null) {
             throw new AgiToolException("Logic Error: calculateResultingContent called before captureOriginalContent");
         }
@@ -88,8 +88,8 @@ public class TextResourceReplacements extends AbstractTextResourceWrite {
     /** {@inheritDoc} */
     @Override
     public void validate(Agi agi) throws Exception {
-        // Capture original content before subclass validation
-        captureOriginalContent(agi);
+        // 1. Authoritative state capture and locking check
+        super.validate(agi);
 
         if (replacements == null || replacements.isEmpty()) {
              throw new AgiToolException("No replacements provided.");
@@ -112,7 +112,7 @@ public class TextResourceReplacements extends AbstractTextResourceWrite {
             if (count != expected) {
                 throw new AgiToolException("Surgical Checksum Failed for target [" + target.substring(0, Math.min(20, target.length())) + "...]. "
                         + "Your 'totalOccurrences' was " + expected + " but I found " + count + " matches in the file. "
-                        + "Please re-read the file and verify the match count before retrying.");
+                        + "You have to provide the exact number of 'totalOccurences' in the file.");
             }
 
             if (indexes != null) {
@@ -123,9 +123,6 @@ public class TextResourceReplacements extends AbstractTextResourceWrite {
                 }
             }
         }
-        
-        // Finally call super.validate to check lastModified and perform identical check
-        super.validate(agi);
     }
 
     /**

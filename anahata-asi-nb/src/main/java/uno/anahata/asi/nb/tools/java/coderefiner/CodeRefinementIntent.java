@@ -34,7 +34,8 @@ import org.netbeans.api.java.source.WorkingCopy;
     @JsonSubTypes.Type(value = DeleteMemberIntent.class, name = "delete"),
     @JsonSubTypes.Type(value = MoveMemberIntent.class, name = "move")
 })
-@Schema(description = "Represents a single structural AST modification instruction.")
+@Schema(description = "Represents a single structural AST modification instruction."
+        + " The CodeRefinementIntent abstract class has 4 concrete subtypes: InsertMemberIntent, UpdateMemberIntent, DeleteMemberIntent and MoveMemberIntent,  Check out the schema carefully and use the polymorphic discriminator attribute 'type' accordingly so the framework can map your json intents to the correct concrete java subtypes.")
 public abstract class CodeRefinementIntent implements Serializable {
 
     /**

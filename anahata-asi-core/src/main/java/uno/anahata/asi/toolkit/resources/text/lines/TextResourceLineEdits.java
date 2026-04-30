@@ -70,7 +70,7 @@ public class TextResourceLineEdits extends AbstractTextResourceWrite {
      * </p>
      */
     @Override
-    public String calculateResultingContent(Agi agi) throws Exception {
+    protected String doCalculateResultingContent(Agi agi) throws Exception {
         if (originalContent == null) {
             throw new AgiToolException("Logic Error: calculateResultingContent called before captureOriginalContent");
         }

@@ -88,17 +88,12 @@ public class TextResourceReplacementsRenderer extends AbstractTextResourceWriteR
      */
     @Override
     protected TextResourceReplacements createUpdatedDto(String newContent) {
-        TextResourceReplacements dto = new TextResourceReplacements(
-                update.getResourceUuid(),
-                update.getLastModified(),
-                List.of(TextReplacement.builder()
-                        .target(update.getOriginalContent()) 
-                        .replacement(newContent)
-                        .reason("User manual edit")
-                        .totalOccurrences(1)
-                        .occurrenceIndexes(List.of(1))
-                        .build())
-        );
+        TextResourceReplacements dto = new TextResourceReplacements();
+        dto.setResourceUuid(update.getResourceUuid());
+        dto.setLastModified(update.getLastModified());
+        dto.setManualOverride(newContent);
+        // Preserve intents so the UI still shows what we *tried* to do even if we overrode it
+        dto.setReplacements(update.getReplacements());
         dto.setOriginalContent(update.getOriginalContent());
         dto.setOriginalResourceName(update.getOriginalResourceName());
         return dto;

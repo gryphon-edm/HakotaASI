@@ -303,6 +303,16 @@ public abstract class AbstractTextResourceWriteRenderer<T extends AbstractTextRe
             boolean isPending = status == ToolExecutionStatus.PENDING;
             boolean isExecuted = status == ToolExecutionStatus.EXECUTED;
 
+            // Ensure original content is captured if missing
+            // Crucial: Only capture from disk if the tool is PENDING to avoid grabbing the "After" state as "Original".
+            if (update.getOriginalContent() == null && isPending) {
+                try {
+                    update.captureOriginalContent(agiPanel.getAgi());
+                } catch (Exception e) {
+                    log.warn("Failed to capture historical baseline: {}", e.getMessage());
+                }
+            }
+
             String baseContent = update.getOriginalContent();
             String proposedContent;
             

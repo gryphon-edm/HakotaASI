@@ -66,6 +66,8 @@ public class CodeRefinementBatchRenderer extends AbstractTextResourceWriteRender
         batch.setIntents(update.getIntents());
         batch.setOptimize(update.isOptimize());
         batch.setSave(update.isSave());
+        batch.setOriginalContent(update.getOriginalContent());
+        batch.setOriginalResourceName(update.getOriginalResourceName());
         return batch;
     }
 }

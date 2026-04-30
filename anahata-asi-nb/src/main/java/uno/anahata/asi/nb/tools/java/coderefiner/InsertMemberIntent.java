@@ -87,10 +87,24 @@ public class InsertMemberIntent extends CodeRefinementIntent {
 
     @Override
     public String getHtmlDisplay() {
-        String memberType = (declaration != null && declaration.contains("(")) ? "Method" : "Field";
-        StringBuilder sb = new StringBuilder("<font color='#4CAF50'>[+]</font> <b>Insert ").append(memberType).append("</b> ").append(position);
+        boolean isMethod = (declaration != null && declaration.contains("("));
+        boolean isClass = (declaration != null && (declaration.contains("class ") || declaration.contains("interface ")));
+        String memberType = isClass ? "Type" : isMethod ? "Method" : "Field";
+        String memberName = "Unknown";
+        if (declaration != null) {
+            String clean = declaration.trim();
+            int paren = clean.indexOf('(');
+            int end = paren != -1 ? paren : clean.endsWith(";") ? clean.length() - 1 : clean.length();
+            int start = clean.lastIndexOf(' ', end - 1);
+            memberName = clean.substring(start + 1, end).trim();
+            if (isMethod) {
+                memberName += "()";
+            }
+        }
+
+        StringBuilder sb = new StringBuilder("<font color='#4CAF50'>[+]</font> <b>Insert ").append(memberType).append("</b> <code>").append(memberName).append("</code> ").append(position);
         if (position == uno.anahata.asi.nb.tools.java.JavaSourceUtils.RelativePosition.BEFORE || position == uno.anahata.asi.nb.tools.java.JavaSourceUtils.RelativePosition.AFTER) {
-            sb.append(" ").append(anchorMemberName != null ? anchorMemberName : "null");
+            sb.append(" ").append(anchorMemberName != null ? getSimpleName(anchorMemberName) : "null");
         }
         return sb.toString();
     }
