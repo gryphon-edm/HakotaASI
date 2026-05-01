@@ -23,7 +23,6 @@ import org.openide.loaders.DataObject;
 import uno.anahata.asi.internal.TikaUtils;
 import uno.anahata.asi.persistence.Rebindable;
 import uno.anahata.asi.agi.resource.handle.AbstractResourceHandle;
-import uno.anahata.asi.agi.resource.Resource;
 
 /**
  * A NetBeans-native resource handle that wraps a {@link FileObject}.
@@ -197,6 +196,39 @@ public class NbHandle extends AbstractResourceHandle implements FileChangeListen
             }
         }
         return mime != null ? mime : "application/octet-stream";
+    }
+
+    /**
+     * Currently unsued. Prioritizes the active NetBeans Document 
+     * content if the file is open in the editor, use this to show unsaved changes to the model.</p>
+     */
+    public String asTextFromEditorIfOpenInEditor() throws IOException {
+        FileObject fo = getFileObject();
+        if (fo != null) {
+            try {
+                DataObject dobj = DataObject.find(fo);
+                org.openide.cookies.EditorCookie ec = dobj.getLookup().lookup(org.openide.cookies.EditorCookie.class);
+                if (ec != null) {
+                    javax.swing.text.Document doc = ec.getDocument();
+                    if (doc != null) {
+                        final String[] text = new String[1];
+                        doc.render(() -> {
+                            try {
+                                text[0] = doc.getText(0, doc.getLength());
+                            } catch (javax.swing.text.BadLocationException ex) {
+                                // Fallback to stream
+                            }
+                        });
+                        if (text[0] != null) {
+                            return text[0];
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to pull live content from editor for {}: {}", getName(), e.getMessage());
+            }
+        }
+        return super.asText();
     }
 
     /**

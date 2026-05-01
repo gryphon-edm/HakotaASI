@@ -30,6 +30,7 @@ import uno.anahata.asi.swing.internal.EdtPropertyChangeListener;
 /**
  * A panel for editing the model-specific execution configuration (RequestConfig).
  * Manages parameters like temperature, thinking levels, modalities, and server tools.
+ * Supports "Model Default" checkboxes to allow sending nulls to the API.
  * 
  * @author anahata
  */
@@ -41,9 +42,17 @@ public class RequestConfigPanel extends ScrollablePanel implements PropertyChang
 
     //== Parameter Components ==//
     private SliderSpinner temperatureControl;
+    private JCheckBox temperatureDefaultCheckbox;
+    
     private SliderSpinner maxOutputTokensControl;
+    private JCheckBox maxOutputTokensDefaultCheckbox;
+    
     private SliderSpinner topKControl;
+    private JCheckBox topKDefaultCheckbox;
+    
     private SliderSpinner topPControl;
+    private JCheckBox topPDefaultCheckbox;
+    
     private SliderSpinner candidateCountControl;
     private JComboBox<ThinkingLevel> thinkingLevelDropdown;
     private JCheckBox useNativeSchemasCheckbox;
@@ -78,7 +87,7 @@ public class RequestConfigPanel extends ScrollablePanel implements PropertyChang
 
         // --- 1. MODEL PARAMETERS ---
         JPanel paramsPanel = createSectionPanel("Model Parameters");
-        paramsPanel.setLayout(new MigLayout("fillx, insets 10", "[right]pref[10][grow,fill]"));
+        paramsPanel.setLayout(new MigLayout("fillx, insets 10", "[right]pref[10][grow,fill]10[]"));
 
         paramsPanel.add(new JLabel("Thinking Level:"));
         thinkingLevelDropdown = new JComboBox<>(ThinkingLevel.values());
@@ -90,27 +99,35 @@ public class RequestConfigPanel extends ScrollablePanel implements PropertyChang
                 return this;
             }
         });
-        paramsPanel.add(thinkingLevelDropdown, "wrap");
+        paramsPanel.add(thinkingLevelDropdown, "span 2, wrap");
 
         paramsPanel.add(new JLabel("Temperature:"));
+        temperatureDefaultCheckbox = new JCheckBox("Use Model's Default");
+        paramsPanel.add(temperatureDefaultCheckbox);
         temperatureControl = new SliderSpinner(new SpinnerNumberModel(1.0, 0.0, 2.0, 0.1), 0, 200, 100.0);
-        paramsPanel.add(temperatureControl, "wrap");
+        paramsPanel.add(temperatureControl, "skip 1, growx, wrap");
 
         paramsPanel.add(new JLabel("Max Output Tokens:"));
-        maxOutputTokensControl = new SliderSpinner(new SpinnerNumberModel(2048, 1, 1000000, 1), 1, 1000000, 1.0);
-        paramsPanel.add(maxOutputTokensControl, "wrap");
+        maxOutputTokensDefaultCheckbox = new JCheckBox("Use Model's Default");
+        paramsPanel.add(maxOutputTokensDefaultCheckbox);
+        maxOutputTokensControl = new SliderSpinner(new SpinnerNumberModel(65000, 1, 1000000, 1), 1, 1000000, 1.0);
+        paramsPanel.add(maxOutputTokensControl, "skip 1, growx, wrap");
 
         paramsPanel.add(new JLabel("Top K:"));
-        topKControl = new SliderSpinner(new SpinnerNumberModel(40, 1, 100, 1), 1, 100, 1.0);
-        paramsPanel.add(topKControl, "wrap");
+        topKDefaultCheckbox = new JCheckBox("Use Model's Default");
+        paramsPanel.add(topKDefaultCheckbox);
+        topKControl = new SliderSpinner(new SpinnerNumberModel(64, 1, 100, 1), 1, 100, 1.0);
+        paramsPanel.add(topKControl, "skip 1, growx, wrap");
 
         paramsPanel.add(new JLabel("Top P:"));
+        topPDefaultCheckbox = new JCheckBox("Use Model's Default");
+        paramsPanel.add(topPDefaultCheckbox);
         topPControl = new SliderSpinner(new SpinnerNumberModel(0.95, 0.0, 1.0, 0.05), 0, 100, 100.0);
-        paramsPanel.add(topPControl, "wrap");
+        paramsPanel.add(topPControl, "skip 1, growx, wrap");
 
         paramsPanel.add(new JLabel("Max Candidates:"));
         candidateCountControl = new SliderSpinner(new SpinnerNumberModel(1, 1, 8, 1), 1, 8, 1.0);
-        paramsPanel.add(candidateCountControl, "wrap");
+        paramsPanel.add(candidateCountControl, "span 2, wrap");
 
         add(paramsPanel, "wrap");
 
@@ -155,10 +172,71 @@ public class RequestConfigPanel extends ScrollablePanel implements PropertyChang
 
     private void setupListeners() {
         thinkingLevelDropdown.addActionListener(e -> config.setThinkingLevel((ThinkingLevel) thinkingLevelDropdown.getSelectedItem()));
-        temperatureControl.addChangeListener(e -> config.setTemperature(((Number) temperatureControl.getValue()).floatValue()));
-        maxOutputTokensControl.addChangeListener(e -> config.setMaxOutputTokens((Integer) maxOutputTokensControl.getValue()));
-        topKControl.addChangeListener(e -> config.setTopK((Integer) topKControl.getValue()));
-        topPControl.addChangeListener(e -> config.setTopP(((Number) topPControl.getValue()).floatValue()));
+        
+        temperatureDefaultCheckbox.addActionListener(e -> {
+            boolean isDefault = temperatureDefaultCheckbox.isSelected();
+            temperatureControl.setEnabled(!isDefault);
+            if (isDefault) {
+                config.setTemperature(null);
+                refreshEffectiveDefaults();
+            } else {
+                config.setTemperature(((Number) temperatureControl.getValue()).floatValue());
+            }
+        });
+        temperatureControl.addChangeListener(e -> {
+            if (!temperatureDefaultCheckbox.isSelected()) {
+                config.setTemperature(((Number) temperatureControl.getValue()).floatValue());
+            }
+        });
+
+        maxOutputTokensDefaultCheckbox.addActionListener(e -> {
+            boolean isDefault = maxOutputTokensDefaultCheckbox.isSelected();
+            maxOutputTokensControl.setEnabled(!isDefault);
+            if (isDefault) {
+                config.setMaxOutputTokens(null);
+                refreshEffectiveDefaults();
+            } else {
+                config.setMaxOutputTokens((Integer) maxOutputTokensControl.getValue());
+            }
+        });
+        maxOutputTokensControl.addChangeListener(e -> {
+            if (!maxOutputTokensDefaultCheckbox.isSelected()) {
+                config.setMaxOutputTokens((Integer) maxOutputTokensControl.getValue());
+            }
+        });
+
+        topKDefaultCheckbox.addActionListener(e -> {
+            boolean isDefault = topKDefaultCheckbox.isSelected();
+            topKControl.setEnabled(!isDefault);
+            if (isDefault) {
+                config.setTopK(null);
+                refreshEffectiveDefaults();
+            } else {
+                config.setTopK((Integer) topKControl.getValue());
+            }
+        });
+        topKControl.addChangeListener(e -> {
+            if (!topKDefaultCheckbox.isSelected()) {
+                config.setTopK((Integer) topKControl.getValue());
+            }
+        });
+
+        topPDefaultCheckbox.addActionListener(e -> {
+            boolean isDefault = topPDefaultCheckbox.isSelected();
+            topPControl.setEnabled(!isDefault);
+            if (isDefault) {
+                config.setTopP(null);
+                refreshEffectiveDefaults();
+            } else {
+                config.setTopP(((Number) topPControl.getValue()).floatValue());
+            }
+        });
+        topPControl.addChangeListener(e -> {
+            if (!topPDefaultCheckbox.isSelected()) {
+                config.setTopP(((Number) topPControl.getValue()).floatValue());
+            }
+        });
+
         candidateCountControl.addChangeListener(e -> config.setCandidateCount((Integer) candidateCountControl.getValue()));
         useNativeSchemasCheckbox.addActionListener(e -> config.setUseNativeSchemas(useNativeSchemasCheckbox.isSelected()));
         
@@ -167,28 +245,56 @@ public class RequestConfigPanel extends ScrollablePanel implements PropertyChang
     }
 
     private void loadConfig() {
-        AbstractModel model = agi != null ? agi.getSelectedModel() : null;
-
         thinkingLevelDropdown.setSelectedItem(config.getThinkingLevel());
         useNativeSchemasCheckbox.setSelected(config.isUseNativeSchemas());
         includePrunedCheckbox.setSelected(config.isIncludePruned());
         injectInbandMetadataCheckbox.setSelected(config.isInjectInbandMetadata());
 
-        // Dynamic limits and defaults from model
-        float temp = config.getTemperature() != null ? config.getTemperature() : (model != null && model.getDefaultTemperature() != null ? model.getDefaultTemperature() : 1.0f);
-        temperatureControl.setValue((double) temp);
-
-        int maxTokens = config.getMaxOutputTokens() != null ? config.getMaxOutputTokens() : (model != null ? model.getMaxOutputTokens() : 2048);
-        if (model != null) maxOutputTokensControl.getSlider().setMaximum(model.getMaxOutputTokens());
-        maxOutputTokensControl.setValue(maxTokens);
-
-        int topK = config.getTopK() != null ? config.getTopK() : (model != null && model.getDefaultTopK() != null ? model.getDefaultTopK() : 40);
-        topKControl.setValue(topK);
-
-        float topP = config.getTopP() != null ? config.getTopP() : (model != null && model.getDefaultTopP() != null ? model.getDefaultTopP() : 0.95f);
-        topPControl.setValue((double) topP);
+        temperatureDefaultCheckbox.setSelected(config.getTemperature() == null);
+        temperatureControl.setEnabled(config.getTemperature() != null);
+        
+        maxOutputTokensDefaultCheckbox.setSelected(config.getMaxOutputTokens() == null);
+        maxOutputTokensControl.setEnabled(config.getMaxOutputTokens() != null);
+        
+        topKDefaultCheckbox.setSelected(config.getTopK() == null);
+        topKControl.setEnabled(config.getTopK() != null);
+        
+        topPDefaultCheckbox.setSelected(config.getTopP() == null);
+        topPControl.setEnabled(config.getTopP() != null);
 
         candidateCountControl.setValue(config.getCandidateCount() != null ? config.getCandidateCount() : 1);
+
+        refreshEffectiveDefaults();
+    }
+
+    /**
+     * Updates the UI components with either the explicitly set config value
+     * or the model's default value if the config value is null.
+     */
+    private void refreshEffectiveDefaults() {
+        AbstractModel model = agi != null ? agi.getSelectedModel() : null;
+
+        // Temperature
+        float temp = config.getTemperature() != null ? config.getTemperature() : 
+                     (model != null && model.getDefaultTemperature() != null ? model.getDefaultTemperature() : 1.0f);
+        temperatureControl.setValue((double) temp);
+
+        // Max Tokens
+        int modelMax = (model != null && model.getMaxOutputTokens() > 0) ? model.getMaxOutputTokens() : 8192;
+        int maxTokens = config.getMaxOutputTokens() != null ? config.getMaxOutputTokens() : modelMax;
+        
+        maxOutputTokensControl.getSlider().setMaximum(Math.max(modelMax, 4096));
+        maxOutputTokensControl.setValue(maxTokens);
+
+        // Top K
+        int topK = config.getTopK() != null ? config.getTopK() : 
+                   (model != null && model.getDefaultTopK() != null ? model.getDefaultTopK() : 40);
+        topKControl.setValue(topK);
+
+        // Top P
+        float topP = config.getTopP() != null ? config.getTopP() : 
+                     (model != null && model.getDefaultTopP() != null ? model.getDefaultTopP() : 0.95f);
+        topPControl.setValue((double) topP);
 
         if (model != null) {
             updateModalities(model);
@@ -237,6 +343,11 @@ public class RequestConfigPanel extends ScrollablePanel implements PropertyChang
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        if ("selectedModel".equals(evt.getPropertyName())) loadConfig();
+        if ("selectedModel".equals(evt.getPropertyName())) {
+            // When model changes, we only need to refresh the effective defaults shown in the UI
+            // and the enabled tools/modalities. We don't call loadConfig() because that 
+            // would reset the "Default" checkboxes if the user had already tweaked them.
+            refreshEffectiveDefaults();
+        }
     }
 }

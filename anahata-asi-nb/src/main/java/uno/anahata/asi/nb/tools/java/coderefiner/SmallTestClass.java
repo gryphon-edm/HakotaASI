@@ -12,11 +12,20 @@ import lombok.extern.slf4j.Slf4j;
 public class SmallTestClass {
     
     private String testStatus;
+    private AtomicLong testCounter;
 
+    /**
+     * Logs the current ASI status.
+     */
     public void logStatus() {
-        log.info("Current status: {}", testStatus);
+        log.info("ASI Status: {}", testStatus);
     }
+    
     private AtomicInteger v3Counter;
+    
+    public static class AnotherInnerClass {
+        private AtomicInteger messiGoat;
+    }
 
     public static class StatusMetadata {
 
@@ -26,8 +35,30 @@ public class SmallTestClass {
             return timestamp;
         }
     }
+
+    /**
+     * @author Anahata ASI
+     */
+    @Slf4j
+    public static class BigTestClass {
+
+        /**
+         * test
+         */
+        private String testField;
+        private SmallTestClass smallTestClass;
+
+        public static class StatusMetadata {
+
+            private final long timestamp = System.currentTimeMillis();
+
+            public long getTimestamp() {
+                return timestamp;
+            }
+        }
+    }
+    // Final end of file verification.
     
 
 }
 // Final end of file verification.
-

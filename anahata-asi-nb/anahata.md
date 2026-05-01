@@ -36,6 +36,10 @@ The NetBeans plugin runtime is static and **always** loads classes from the inst
 Standard tool calls (the ones that show run buttons in the ui) will not reflect changes until an `nbmreload` is performed.
 
 
+> [!IMPORTANT]
+> to test changes to toolkits without reloading, do this: compileAndExecuteInproject(anahata-asi-nb, no compile deps, no test deps)
+then instantiate the toolkit e.g. Refactor r = new Refactor(); and just use it, there is no need to do setToolkit or setAgi or onboard it any other way, instantiation is enough, contextpropagation (e.g. if the toolkit does log("") or error("") should happen automatically as it is based on a thread local, no need for manual/explicit onboarding)
+
 
 - **Hot Reload Workflow (NbJava.compileAndExecuteInProject)**: 
     - **Strategy**: Implements a **Child-First** classloading strategy for project classes.
