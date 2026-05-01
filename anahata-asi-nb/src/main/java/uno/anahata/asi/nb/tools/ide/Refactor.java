@@ -146,66 +146,137 @@ public class Refactor extends AnahataToolkit {
     }
 
     /**
-     * Performs a programmatic move refactoring of a file or class to a new
-     * destination folder.
+     * Moves a Java class to a new package or integrates it into another class.
+     * <p>
+     * For package moves, use a folder path as target. For member integration, 
+     * use the path of the target .java file.
+     * </p>
      *
-     * @param filePath The absolute path of the file to move.
-     * @param targetFolderPath The absolute path of the destination folder.
+     * @param sourcePath The absolute path of the .java file to move.
+     * @param targetPath The absolute path of the destination folder or .java file.
      * @return A detailed log of the refactoring process.
-     * @throws Exception if there is an error invoking the operation.
+     * @throws Exception if the operation fails.
      */
-    @AgiTool("Moves a file or class to a different package or folder, updating all references.")
-    public String move(
-            @AgiToolParam(value = "The absolute path of the file to move.", rendererId = "path") String filePath,
-            @AgiToolParam(value = "The absolute path of the target folder.", rendererId = "path") String targetFolderPath) throws Exception {
-        FileObject sourceFo = JavaSourceUtils.getFileObject(filePath);
-        FileObject targetFo = JavaSourceUtils.getFileObject(targetFolderPath);
+    @AgiTool("Moves a Java class to a new package or integrates it into another class. For inner classes, use moveInnerToTopLevel first.")
+    public String moveClass(
+            @AgiToolParam(value = "The absolute path of the .java file to move.", rendererId = "path") String sourcePath,
+            @AgiToolParam(value = "The absolute path of the target folder or .java file.", rendererId = "path") String targetPath) throws Exception {
+        FileObject sourceFo = JavaSourceUtils.getFileObject(sourcePath);
+        if (!"java".equals(sourceFo.getExt())) {
+            throw new IllegalArgumentException("Source must be a .java file. Use moveFile for other types.");
+        }
+        FileObject targetFo = JavaSourceUtils.getFileObject(targetPath);
 
-        if (!targetFo.isFolder()) {
-            throw new IllegalArgumentException("Target path must be a folder: " + targetFolderPath);
+        MoveRefactoring refactoring;
+        if (targetFo.isData() && "java".equals(targetFo.getExt())) {
+            TreePathHandle sourceHandle = getTreePathHandleForClass(sourceFo);
+            TreePathHandle targetHandle = getTreePathHandleForClass(targetFo);
+            refactoring = new MoveRefactoring(Lookups.fixed(sourceHandle));
+            refactoring.setTarget(Lookups.fixed(targetHandle));
+        } else if (targetFo.isFolder()) {
+            refactoring = new MoveRefactoring(Lookups.fixed(sourceFo));
+            java.net.URL targetUrl = org.openide.filesystems.URLMapper.findURL(targetFo, org.openide.filesystems.URLMapper.EXTERNAL);
+            if (targetUrl == null) {
+                targetUrl = targetFo.toURL();
+            }
+            refactoring.setTarget(Lookups.singleton(targetUrl));
+        } else {
+            throw new IllegalArgumentException("Target must be a folder or a .java file: " + targetPath);
         }
 
-        MoveRefactoring refactoring = new MoveRefactoring(getLookupForFile(sourceFo));
-        // ATOMICITY FIX: Use ONLY the URL for target to ensure the Java plugin handles the move.
-        java.net.URL targetUrl = org.openide.filesystems.URLMapper.findURL(targetFo, org.openide.filesystems.URLMapper.EXTERNAL);
-        if (targetUrl == null) {
-            targetUrl = targetFo.toURL();
-        }
-        refactoring.setTarget(Lookups.singleton(targetUrl));
-
-        String result = executeRefactoring(refactoring, "Move " + sourceFo.getName());
-        return enrichWithContextInfo(filePath, result, "moved");
+        String result = executeRefactoring(refactoring, "Move Class " + sourceFo.getName());
+        return enrichWithContextInfo(sourcePath, result, "moved");
     }
 
     /**
-     * Performs a programmatic copy refactoring of a file or class to a
-     * destination folder.
+     * Moves a non-Java file to a different folder.
      *
-     * @param filePath The absolute path of the file to copy.
-     * @param targetFolderPath The absolute path of the destination folder.
+     * @param sourcePath The absolute path of the file to move.
+     * @param targetFolderPath The absolute path of the target folder.
      * @return A detailed log of the refactoring process.
-     * @throws Exception if there is an error invoking the operation.
+     * @throws Exception if the operation fails.
      */
-    @AgiTool("Copies a file or class to a different package or folder.")
-    public String copy(
-            @AgiToolParam(value = "The absolute path of the file to copy.", rendererId = "path") String filePath,
+    @AgiTool("Moves a non-Java file to a different folder.")
+    public String moveFile(
+            @AgiToolParam(value = "The absolute path of the file to move.", rendererId = "path") String sourcePath,
             @AgiToolParam(value = "The absolute path of the target folder.", rendererId = "path") String targetFolderPath) throws Exception {
-        FileObject sourceFo = JavaSourceUtils.getFileObject(filePath);
+        FileObject sourceFo = JavaSourceUtils.getFileObject(sourcePath);
         FileObject targetFo = JavaSourceUtils.getFileObject(targetFolderPath);
 
         if (!targetFo.isFolder()) {
             throw new IllegalArgumentException("Target path must be a folder: " + targetFolderPath);
         }
 
-        CopyRefactoring refactoring = new CopyRefactoring(getLookupForFile(sourceFo));
-        // ATOMICITY FIX: Use ONLY the URL for target to ensure the Java plugin handles the move.
+        MoveRefactoring refactoring = new MoveRefactoring(Lookups.fixed(sourceFo));
         java.net.URL targetUrl = org.openide.filesystems.URLMapper.findURL(targetFo, org.openide.filesystems.URLMapper.EXTERNAL);
         if (targetUrl == null) {
             targetUrl = targetFo.toURL();
         }
         refactoring.setTarget(Lookups.singleton(targetUrl));
 
-        return executeRefactoring(refactoring, "Copy " + sourceFo.getName());
+        String result = executeRefactoring(refactoring, "Move File " + sourceFo.getName());
+        return enrichWithContextInfo(sourcePath, result, "moved");
+    }
+
+    /**
+     * Copies a Java class to a new package or folder.
+     *
+     * @param sourcePath The absolute path of the .java file to copy.
+     * @param targetFolderPath The absolute path of the destination folder.
+     * @return A detailed log of the refactoring process.
+     * @throws Exception if the operation fails.
+     */
+    @AgiTool("Copies a Java class to a new package or folder.")
+    public String copyClass(
+            @AgiToolParam(value = "The absolute path of the .java file to copy.", rendererId = "path") String sourcePath,
+            @AgiToolParam(value = "The absolute path of the target folder.", rendererId = "path") String targetFolderPath) throws Exception {
+        FileObject sourceFo = JavaSourceUtils.getFileObject(sourcePath);
+        if (!"java".equals(sourceFo.getExt())) {
+            throw new IllegalArgumentException("Source must be a .java file. Use copyFile for other types.");
+        }
+        FileObject targetFo = JavaSourceUtils.getFileObject(targetFolderPath);
+
+        if (!targetFo.isFolder()) {
+            throw new IllegalArgumentException("Target path must be a folder: " + targetFolderPath);
+        }
+
+        CopyRefactoring refactoring = new CopyRefactoring(Lookups.fixed(sourceFo));
+        java.net.URL targetUrl = org.openide.filesystems.URLMapper.findURL(targetFo, org.openide.filesystems.URLMapper.EXTERNAL);
+        if (targetUrl == null) {
+            targetUrl = targetFo.toURL();
+        }
+        refactoring.setTarget(Lookups.singleton(targetUrl));
+
+        return executeRefactoring(refactoring, "Copy Class " + sourceFo.getName());
+    }
+
+    /**
+     * Copies a non-Java file to a different folder.
+     *
+     * @param sourcePath The absolute path of the file to copy.
+     * @param targetFolderPath The absolute path of the target folder.
+     * @return A detailed log of the refactoring process.
+     * @throws Exception if the operation fails.
+     */
+    @AgiTool("Copies a non-Java file to a different folder.")
+    public String copyFile(
+            @AgiToolParam(value = "The absolute path of the file to copy.", rendererId = "path") String sourcePath,
+            @AgiToolParam(value = "The absolute path of the target folder.", rendererId = "path") String targetFolderPath) throws Exception {
+        FileObject sourceFo = JavaSourceUtils.getFileObject(sourcePath);
+        FileObject targetFo = JavaSourceUtils.getFileObject(targetFolderPath);
+
+        if (!targetFo.isFolder()) {
+            throw new IllegalArgumentException("Target path must be a folder: " + targetFolderPath);
+        }
+
+        CopyRefactoring refactoring = new CopyRefactoring(Lookups.fixed(sourceFo));
+        java.net.URL targetUrl = org.openide.filesystems.URLMapper.findURL(targetFo, org.openide.filesystems.URLMapper.EXTERNAL);
+        if (targetUrl == null) {
+            targetUrl = targetFo.toURL();
+        }
+        refactoring.setTarget(Lookups.singleton(targetUrl));
+
+        return executeRefactoring(refactoring, "Copy File " + sourceFo.getName());
     }
 
     /**
