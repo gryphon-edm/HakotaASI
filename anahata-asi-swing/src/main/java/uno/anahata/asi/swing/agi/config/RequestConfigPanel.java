@@ -87,7 +87,7 @@ public class RequestConfigPanel extends ScrollablePanel implements PropertyChang
 
         // --- 1. MODEL PARAMETERS ---
         JPanel paramsPanel = createSectionPanel("Model Parameters");
-        paramsPanel.setLayout(new MigLayout("fillx, insets 10", "[right]pref[10][grow,fill]10[]"));
+        paramsPanel.setLayout(new MigLayout("insets 10, hidemode 3", "[]10[]10[grow,fill,pref:pref:500]"));
 
         paramsPanel.add(new JLabel("Thinking Level:"));
         thinkingLevelDropdown = new JComboBox<>(ThinkingLevel.values());
@@ -105,29 +105,29 @@ public class RequestConfigPanel extends ScrollablePanel implements PropertyChang
         temperatureDefaultCheckbox = new JCheckBox("Use Model's Default");
         paramsPanel.add(temperatureDefaultCheckbox);
         temperatureControl = new SliderSpinner(new SpinnerNumberModel(1.0, 0.0, 2.0, 0.1), 0, 200, 100.0);
-        paramsPanel.add(temperatureControl, "skip 1, growx, wrap");
+        paramsPanel.add(temperatureControl, "wrap");
 
         paramsPanel.add(new JLabel("Max Output Tokens:"));
         maxOutputTokensDefaultCheckbox = new JCheckBox("Use Model's Default");
         paramsPanel.add(maxOutputTokensDefaultCheckbox);
         maxOutputTokensControl = new SliderSpinner(new SpinnerNumberModel(65000, 1, 1000000, 1), 1, 1000000, 1.0);
-        paramsPanel.add(maxOutputTokensControl, "skip 1, growx, wrap");
+        paramsPanel.add(maxOutputTokensControl, "wrap");
 
         paramsPanel.add(new JLabel("Top K:"));
         topKDefaultCheckbox = new JCheckBox("Use Model's Default");
         paramsPanel.add(topKDefaultCheckbox);
         topKControl = new SliderSpinner(new SpinnerNumberModel(64, 1, 100, 1), 1, 100, 1.0);
-        paramsPanel.add(topKControl, "skip 1, growx, wrap");
+        paramsPanel.add(topKControl, "wrap");
 
         paramsPanel.add(new JLabel("Top P:"));
         topPDefaultCheckbox = new JCheckBox("Use Model's Default");
         paramsPanel.add(topPDefaultCheckbox);
         topPControl = new SliderSpinner(new SpinnerNumberModel(0.95, 0.0, 1.0, 0.05), 0, 100, 100.0);
-        paramsPanel.add(topPControl, "skip 1, growx, wrap");
+        paramsPanel.add(topPControl, "wrap");
 
         paramsPanel.add(new JLabel("Max Candidates:"));
         candidateCountControl = new SliderSpinner(new SpinnerNumberModel(1, 1, 8, 1), 1, 8, 1.0);
-        paramsPanel.add(candidateCountControl, "span 2, wrap");
+        paramsPanel.add(candidateCountControl, "skip 1, wrap");
 
         add(paramsPanel, "wrap");
 
