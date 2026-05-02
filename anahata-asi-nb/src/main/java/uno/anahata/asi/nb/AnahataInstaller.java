@@ -66,11 +66,6 @@ public class AnahataInstaller extends ModuleInstall {
         // Register the NetBeans-native resource UI strategy
         ResourceUiRegistry.getInstance().setResourceUI(new NbResourceUI());
 
-        // Register specialized parameter renderers for file operations
-        ParameterRendererFactory.register(FullTextResourceUpdate.class, FullTextResourceUpdateRenderer.class);
-        ParameterRendererFactory.register(TextResourceReplacements.class, TextResourceReplacementsRenderer.class);
-        ParameterRendererFactory.register(CodeRefinementBatch.class, CodeRefinementBatchRenderer.class);
-
         // Register the ElementHandle module for global JSON support in the IDE
         SchemaProvider.OBJECT_MAPPER.registerModule(new ElementHandleModule());
 
