@@ -256,6 +256,22 @@ public class CodeRefinementIntent2 implements Serializable {
         return sb.toString();
     }
 
+    /**
+     * Determines the FQN that the target member will have after this intent is applied.
+     * For inserts, it derives the name from the declaration.
+     * 
+     * @return The absolute FQN or null if it cannot be determined (e.g. DELETE).
+     */
+    public String getResultingMemberFqn() {
+        if (type == Type.DELETE) return null;
+        if (type == Type.INSERT) {
+            String name = getSimpleNameFromDeclaration(declaration);
+            if (classFqn == null || classFqn.isBlank()) return name;
+            return classFqn + "." + name;
+        }
+        return memberFqn;
+    }
+
     private String getSimpleName(String fqn) {
         if (fqn == null || fqn.isBlank()) return "Unknown";
         int paren = fqn.indexOf('(');

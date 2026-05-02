@@ -1,7 +1,7 @@
 /* Licensed under the Anahata Software License (ASL) v 108. See the LICENSE file for details. Força Barça! */
 package uno.anahata.asi.nb.tools.java.coderefiner;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -12,10 +12,13 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.netbeans.api.java.source.*;
 import com.sun.source.tree.*;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.openide.filesystems.FileObject;
 import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.agi.tool.AgiToolException;
+import uno.anahata.asi.nb.tools.java.JavaSourceUtils;
 import uno.anahata.asi.toolkit.resources.text.AbstractTextResourceWrite;
+import uno.anahata.asi.toolkit.resources.text.LineComment;
 
 /**
  * Version 2.0 of the refinement batch, using the flattened {@link CodeRefinementIntent2}.
@@ -42,6 +45,13 @@ public class CodeRefinementBatch2 extends AbstractTextResourceWrite {
     @Schema(description = "Whether to save the file to disk after refinement. Defaults to true.")
     private boolean save = true;
 
+    /**
+     * Pre-calculated line comments for UI annotations, mapped during content calculation.
+     */
+    @JsonIgnore
+    @Schema(hidden = true)
+    private List<LineComment> calculatedComments = new ArrayList<>();
+
     /** {@inheritDoc} */
     @Override
     protected String doCalculateResultingContent(Agi agi) throws Exception {
@@ -62,11 +72,28 @@ public class CodeRefinementBatch2 extends AbstractTextResourceWrite {
         log.info("[V2-FLATTENED] Replaying surgery on: {}", fo.getNameExt());
 
         JavaSource js = JavaSource.forFileObject(fo);
+        final List<LineComment> mapping = new ArrayList<>();
         ModificationResult mRes = js.runModificationTask(wc -> {
             wc.toPhase(JavaSource.Phase.RESOLVED);
             applyTo(wc);
+            
+            // --- Coordinate Reconnaissance Pass ---
+            // After replaying surgery in memory, we find the resulting line numbers
+            // for each intent that has a reason.
+            for (CodeRefinementIntent2 intent : intents) {
+                String resultingFqn = intent.getResultingMemberFqn();
+                if (resultingFqn != null && intent.getReason() != null && !intent.getReason().isBlank()) {
+                    Tree found = JavaSourceUtils.findTree(wc, resultingFqn);
+                    if (found != null) {
+                        long pos = wc.getTrees().getSourcePositions().getStartPosition(wc.getCompilationUnit(), found);
+                        long line = wc.getCompilationUnit().getLineMap().getLineNumber(pos);
+                        mapping.add(new LineComment((int) line, intent.getReason()));
+                    }
+                }
+            }
         });
-
+        
+        this.calculatedComments = mapping;
         return mRes.getResultingSource(fo);
     }
 

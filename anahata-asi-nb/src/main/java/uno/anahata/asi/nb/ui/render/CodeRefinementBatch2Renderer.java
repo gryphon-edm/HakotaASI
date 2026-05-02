@@ -31,7 +31,7 @@ public class CodeRefinementBatch2Renderer extends AbstractTextResourceWriteRende
         // We rely on the Intent Panel for semantic context of structural changes.
         // mapping AST trees back to static line numbers for bubbles is non-trivial 
         // without replaying the full surgery.
-        return new ArrayList<>();
+         return update.getCalculatedComments();
     }
 
     /** {@inheritDoc} */
