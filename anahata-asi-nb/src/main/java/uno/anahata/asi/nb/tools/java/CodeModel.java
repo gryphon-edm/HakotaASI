@@ -385,7 +385,7 @@ public class CodeModel extends AnahataToolkit {
      *
      * @return All classpaths of all open projects
      */
-    private static ClasspathInfo getGlobalClasspathInfo() {
+    public static ClasspathInfo getGlobalClasspathInfo() {
         Set<ClassPath> sourcePaths = GlobalPathRegistry.getDefault().getPaths(ClassPath.SOURCE);
         Set<ClassPath> compilePaths = GlobalPathRegistry.getDefault().getPaths(ClassPath.COMPILE);
         Set<ClassPath> bootPaths = GlobalPathRegistry.getDefault().getPaths(ClassPath.BOOT);
