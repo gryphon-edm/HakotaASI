@@ -560,7 +560,7 @@ public abstract class AbstractTextResourceWriteRenderer<T extends AbstractTextRe
         panel.add(topRow, BorderLayout.NORTH);
         
         // --- SURGICAL DASHBOARD (Split Layout) ---
-        JPanel dashboard = new JPanel(new MigLayout("fillx, insets 0 15 5 10", "[grow][grow]", "[]"));
+        JPanel dashboard = new JPanel(new MigLayout("fillx, insets 0 15 5 10","[grow, left][]", "[]"));
         dashboard.setOpaque(false);
 
         // 1. Left: Surgical Intent Panel
@@ -576,14 +576,14 @@ public abstract class AbstractTextResourceWriteRenderer<T extends AbstractTextRe
         if (comments != null && !comments.isEmpty()) {
             StringBuilder sb = new StringBuilder("<html><div style='text-align: right;'>");
             for (LineComment lc : comments) {
-                sb.append("<i style='color: #888888; font-size: 9pt;'>Proposed Line ").append(lc.getLineNumber()).append(":</i> ")
-                  .append("<span style='color: #666666; font-size: 9pt;'>").append(lc.getComment()).append("</span><br>");
+sb.append("<i style='color: #888888; font-size: 10pt;'>Line ").append(lc.getLineNumber()).append(":</i> ")
+                  .append("<span style='color: #666666; font-size: 10pt;'>").append(lc.getComment()).append("</span><br>");
             }
             sb.append("</div></html>");
             
             JLabel commentsLabel = new JLabel(sb.toString());
             commentsLabel.setVerticalAlignment(JLabel.TOP);
-            dashboard.add(commentsLabel, "growx, aligny top, alignx right");
+dashboard.add(commentsLabel, "aligny top, alignx right");
         }
         
         if (dashboard.getComponentCount() > 0) {
