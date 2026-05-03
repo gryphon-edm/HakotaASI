@@ -116,13 +116,14 @@ public class Java extends AnahataToolkit {
         registerParentFirstClass(uno.anahata.asi.agi.resource.RefreshPolicy.class);
         registerParentFirstClass(uno.anahata.asi.agi.context.ContextPosition.class);
         registerParentFirstClass(ResourceView.class);
+        registerParentFirstClass(AbstractResourceView.class);
         registerParentFirstClass(TextView.class);
         registerParentFirstClass(ImageView.class);
         registerParentFirstClass(ResourceHandle.class);
         registerParentFirstClass(PathHandle.class);
         registerParentFirstClass(UrlHandle.class);
         registerParentFirstClass(StringHandle.class);
-        registerParentFirstClass(AbstractResourceView.class);
+        
         
         
         log.info("Java toolkit instantiated:");
