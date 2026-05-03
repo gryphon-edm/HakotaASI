@@ -10,6 +10,7 @@ import com.sun.source.tree.ModifiersTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.TreePath;
+import com.sun.source.util.TreePathScanner;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.File;
 import java.io.IOException;
@@ -20,10 +21,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ArrayType;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import lombok.extern.slf4j.Slf4j;
 import org.netbeans.api.java.source.CompilationController;
@@ -54,7 +59,78 @@ import org.openide.cookies.SaveCookie;
  */
 @Slf4j
 public class JavaSourceUtils {
-    
+
+    /**
+     * The authoritative identification standard for all Anahata Java toolkits.
+     */
+    public static final String CANONICAL_FQN_STANDARD = 
+              "### Anahata Canonical Identification Standard (Global)\n"
+            + "All Java toolkits require members to be identified using this exact FQN syntax. **No simple names, no fallbacks**.\n"
+            + "\n"
+            + "| Entity | Canonical Identification FQN Syntax | Example |\n"
+            + "| :--- | :--- | :--- |\n"
+            + "| **Top-Level Type** | `package.sub.ClassName` | `java.util.ArrayList` |\n"
+            + "| **Nested/Inner Type** | `package.sub.Outer$Inner` | `java.util.Map$Entry` |\n"
+            + "| **Field** | `[ClassFQN].fieldName` | `java.lang.System.out` |\n"
+            + "| **Method** | `[ClassFQN].methodName(Param1FQN,...)` | `java.lang.String.concat(java.lang.String)` |\n"
+            + "| **Constructor** | `[ClassFQN].<init>(Param1FQN,...)` | `java.util.ArrayList.<init>(int)` |\n"
+            + "| **Static Block** | `[ClassFQN].<clinit>#n()` | `com.foo.Bar.<clinit>#1()` |\n"
+            + "| **Instance Block** | `[ClassFQN].<init-block>#n()` | `com.foo.Bar.<init-block>#1()` |\n"
+            + "\n"
+            + "**Rules for Identification**:\n"
+            + "- **Separators**: Use `.` for packages and members. Use `$` **strictly and only** to separate nested types.\n"
+            + "- **Parentheses**: **Mandatory** for all methods, constructors, and blocks, even if no-args (e.g. `toString()`).\n"
+            + "- **Parameter FQNs**: Use full FQNs for all parameter types (except primitives).\n"
+            + "- **Type Erasure**: Always use the raw type. **Generics (<...>) are strictly forbidden** in identification FQNs.\n"
+            + "- **Arrays**: Use the `[]` suffix (e.g. `java.lang.String[]`).\n";
+
+    /**
+     * Generates the Anahata Canonical FQN for a given element.
+     */
+    public static String getCanonicalFqn(Element e) {
+        if (e == null) return null;
+        if (e instanceof javax.lang.model.element.PackageElement pe) {
+            return pe.getQualifiedName().toString();
+        }
+        Element enclosing = e.getEnclosingElement();
+        if (enclosing == null || enclosing.getKind() == javax.lang.model.element.ElementKind.PACKAGE) {
+            return (e instanceof TypeElement te) ? te.getQualifiedName().toString() : e.getSimpleName().toString();
+        }
+
+        String parentFqn = getCanonicalFqn(enclosing);
+        if (e.getKind().isClass() || e.getKind().isInterface()) {
+            return parentFqn + "$" + e.getSimpleName();
+        }
+
+        if (e instanceof ExecutableElement ee) {
+            String name = (ee.getKind() == javax.lang.model.element.ElementKind.CONSTRUCTOR) ? "<init>" : ee.getSimpleName().toString();
+            String params = ee.getParameters().stream()
+                    .map(p -> getCanonicalFqn(p.asType()))
+                    .collect(Collectors.joining(","));
+            return parentFqn + "." + name + "(" + params + ")";
+        }
+
+        return parentFqn + "." + e.getSimpleName();
+    }
+
+    /**
+     * Generates the Anahata Canonical FQN for a given type mirror.
+     */
+    public static String getCanonicalFqn(TypeMirror m) {
+        if (m == null) return null;
+        if (m.getKind().isPrimitive()) return m.toString();
+        if (m.getKind() == TypeKind.ARRAY) {
+            return getCanonicalFqn(((ArrayType) m).getComponentType()) + "[]";
+        }
+        if (m instanceof DeclaredType dt) {
+            Element e = dt.asElement();
+            if (e != null) {
+                return getCanonicalFqn(e);
+            }
+        }
+        String s = m.toString();
+        return s.contains("<") ? s.substring(0, s.indexOf('<')) : s;
+    }
 
     /**
      * Extracts the parent FQN (Class or Outer Class) from a member or nested
@@ -142,23 +218,21 @@ public class JavaSourceUtils {
             indexPart = null;
             pureFqn = memberFqn;
         }
-
         final Tree[] found = new Tree[1];
-        new com.sun.source.util.TreePathScanner<Void, Void>() {
+        new TreePathScanner<Void, Void>() {
             @Override
             public Void visitClass(ClassTree node, Void p) {
-                if (found[0] != null) {
-                    return null;
-                }
+                if (found[0] != null) return null;
                 Element el = info.getTrees().getElement(getCurrentPath());
                 if (el instanceof TypeElement te) {
                     String currentFqn = te.getQualifiedName().toString();
                     String normalizedPureFqn = normalizeFqn(pureFqn);
+                    // Case 1: Exact Class Match
                     if (currentFqn.equals(normalizedPureFqn) && !memberFqn.contains("(") && indexPart == null) {
                         found[0] = node;
                         return null;
                     }
-
+                    // Case 2: Member Match inside Class
                     if (normalizedPureFqn.startsWith(currentFqn)) {
                         int currentBlockCount = 0;
                         for (Tree member : node.getMembers()) {
@@ -174,9 +248,14 @@ public class JavaSourceUtils {
                             if (member instanceof MethodTree mt) {
                                 String name = mt.getName().toString();
                                 String targetName = getMemberSimpleName(pureFqn);
-                                if (name.equals(targetName) || (name.equals("<init>") && targetName.equals("<init>"))) {
+                                String className = te.getSimpleName().toString();
+                                // Support both <init> and ClassName for constructors in the FQN
+                                boolean nameMatch = name.equals(targetName) || 
+                                                 (name.equals("<init>") && (targetName.equals("<init>") || targetName.equals(className)));
+                                if (nameMatch) {
                                     if (memberFqn.contains("(")) {
-                                        Element e = info.getTrees().getElement(new TreePath(getCurrentPath(), member));
+                                        TreePath memberPath = new TreePath(getCurrentPath(), member);
+                                        Element e = info.getTrees().getElement(memberPath);
                                         if (e instanceof ExecutableElement ee && matchSignature(info, ee, memberFqn)) {
                                             found[0] = member;
                                             return null;
@@ -188,7 +267,7 @@ public class JavaSourceUtils {
                                 }
                             }
                             if (member instanceof VariableTree vt && vt.getName().contentEquals(getMemberSimpleName(pureFqn))) {
-                                if (currentFqn.equals(getParentFqn(pureFqn))) {
+                                if (currentFqn.equals(normalizeFqn(getParentFqn(pureFqn)))) {
                                     found[0] = member;
                                     return null;
                                 }
@@ -199,10 +278,13 @@ public class JavaSourceUtils {
                 return super.visitClass(node, p);
             }
         }.scan(new TreePath(info.getCompilationUnit()), null);
-
         return found[0];
     }
-    
+    // Case 1: Exact Class Match
+    // Case 2: Member Match inside Class
+    // Support both <init> and ClassName for constructors in the FQN
+        // Support both <init> and ClassName for constructors
+        
     /**
      * Internal helper to match a method element against a string signature.
      * <p>
@@ -210,34 +292,25 @@ public class JavaSourceUtils {
      * contain generics, it will match against the raw AST type.
      * </p>
      */
-    private static boolean matchSignature(CompilationInfo wc, ExecutableElement ee, String methodFqn) {
-        String paramsPart = methodFqn.substring(methodFqn.indexOf('(') + 1, methodFqn.lastIndexOf(')')).trim();
-        List<String> expectedTypes = splitParameters(paramsPart);
-        if (expectedTypes.size() != ee.getParameters().size()) {
-            return false;
+    private static boolean matchSignature(CompilationInfo info, ExecutableElement ee, String methodFqn) {
+        String actualFqn = getCanonicalFqn(ee).replaceAll("\\s+", "");
+        String expectedFqn = methodFqn.replaceAll("\\s+", "");
+        
+        // Normalization: remove generics from both sides to ensure raw signature matching
+        if (expectedFqn.contains("<")) {
+            expectedFqn = expectedFqn.replaceAll("<[^>]*>", "");
         }
-        for (int i = 0; i < expectedTypes.size(); i++) {
-            String expected = expectedTypes.get(i);
-            if (expected.contains(" ")) {
-                String[] parts = expected.split("\\s+");
-                expected = parts[parts.length - 1];
-                if (expected.endsWith(">")) {
-                    expected = parts[parts.length - 2];
-                }
-            }
-            TypeMirror actualMirror = ee.getParameters().get(i).asType();
-            Element actualEl = wc.getTypes().asElement(actualMirror);
-            String actual = (actualEl instanceof TypeElement te)
-                    ? ElementHandle.create(te).getBinaryName()
-                    : actualMirror.toString();
-            if (!expected.contains("<") && actual.contains("<")) {
-                actual = actual.substring(0, actual.indexOf('<'));
-            }
-            if (!actual.endsWith(expected)) {
-                return false;
+        if (actualFqn.contains("<")) {        
+            actualFqn = actualFqn.replaceAll("<[^>]*>", "");
+        }
+        // Special case: Constructor name normalization (<init> vs ClassName)
+        if (ee.getKind() == ElementKind.CONSTRUCTOR) {
+            String className = ee.getEnclosingElement().getSimpleName().toString();
+            if (expectedFqn.contains("." + className + "(")) {
+                expectedFqn = expectedFqn.replace("." + className + "(", ".<init>(");
             }
         }
-        return true;
+        return actualFqn.equals(expectedFqn);
     }
 
     /**
@@ -295,25 +368,17 @@ public class JavaSourceUtils {
         }
         String parentFqn = namePart.substring(0, lastSeparator);
         String name = namePart.substring(lastSeparator + 1);
+        
+        // For lookup we must normalize to dots
         TypeElement parent = info.getElements().getTypeElement(normalizeFqn(parentFqn));
         if (parent == null) {
             return Collections.emptyList();
         }
+        
         List<String> candidates = new ArrayList<>();
         for (Element e : parent.getEnclosedElements()) {
-            if (e.getSimpleName().contentEquals(name)) {
-                if (e instanceof ExecutableElement ee) {
-                    String params = ee.getParameters().stream()
-                            .map(p -> {
-                                String type = p.asType().toString();
-                                return type.contains("<") ? type.substring(0, type.indexOf("<")) : type;
-                            })
-                            .collect(Collectors.joining(","));
-                    String namePrefix = (e.getKind() == javax.lang.model.element.ElementKind.CONSTRUCTOR) ? "<init>" : name;
-                    candidates.add(parentFqn + "." + namePrefix + "(" + params + ")");
-                } else {
-                    candidates.add(parentFqn + "." + name);
-                }
+            if (e.getSimpleName().contentEquals(name) || (name.equals("<init>") && e.getKind() == javax.lang.model.element.ElementKind.CONSTRUCTOR)) {
+                candidates.add(getCanonicalFqn(e));
             }
         }
         return candidates;

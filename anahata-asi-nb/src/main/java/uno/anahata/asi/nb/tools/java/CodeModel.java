@@ -44,16 +44,11 @@ public class CodeModel extends AnahataToolkit {
      */
     @Override
     public List<String> getSystemInstructions() throws Exception {
-        String instructions = "CodeModel Toolkit Instructions:\n" 
-                + "- **One Shot Methods (`loadXxxxByFqn` or `getXxxxByFqn`)**: If you already know or can work out the fully qualified name (FQN) of a type or member, you can use the `xxxByFqn` methods to skip the discovery turn.\n" 
-                + "- **Member FQNs**: \n" 
-                + "  - Fields: `package.Class.fieldName` \n" 
-                + "  - Methods: `package.Class.methodName(ParamType1,ParamType2,...)`. Parentheses '()' are MANDATORY, even for no-arg methods (e.g. 'method()'). Use canonical types (no generics/annotations).\n"
-                + "  - Constructors: `package.Class.<init>(ParamType1,...)` \n"
-                + "  - Initializers: `package.Class.<clinit>#n()` (static) or `package.Class.<init-block>#n()` (instance) where n is the 1-based index.\n"
-                + "  - Arrays: Use '[]' for array parameters (e.g. 'java.lang.String[]').\n"
-                + "- **Disambiguation**: If a `xxxxByFqn` method fails due to ambiguity, use `CodeModel.findTypes` or `getMembers` to get the explicit high-precision FQN.\n"
-                + "- **Hierarchy**: Use `getSubtypes` and `getSupertypes` to explore the inheritance tree.\n";
+        String instructions = JavaSourceUtils.CANONICAL_FQN_STANDARD + "\n"
+                + "CodeModel Toolkit Instructions:\n" 
+                + "- **One Shot Methods (`loadXxxxByFqn` or `getXxxxByFqn`)**: If you already know or can work out the FQN of a type or member, use these methods to skip discovery.\n" 
+                + "- **Disambiguation**: If a `xxxxByFqn` method fails, use `findTypes` or `getMembers` to get the explicit high-precision FQN.\n"
+                + "- **Hierarchy**: Use `getSubtypes` and `getSupertypes` to explore inheritance.\n";
         return Collections.singletonList(instructions);
     }
 

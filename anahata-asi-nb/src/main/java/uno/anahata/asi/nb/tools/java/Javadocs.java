@@ -24,6 +24,16 @@ import uno.anahata.asi.nb.tools.java.JavaSourceUtils;
 @AgiToolkit("Structural Javadoc management. Allows updating descriptions, authors, tags, and parameters using the AST.")
 public class Javadocs extends AnahataToolkit {
 
+    @Override
+    public List<String> getSystemInstructions() throws Exception {
+        return Collections.singletonList(JavaSourceUtils.CANONICAL_FQN_STANDARD
+                + "\n"
+                + "Javadocs Toolkit Instructions:\n"
+                + "- Always use the Anahata Canonical FQN to identify the target member.\n"
+                + "- Descriptions support Markdown and HTML.\n"
+        );
+    }
+
     /**
      * Sets or updates Javadoc for a class, field, constructor, method or any
      * member in general.

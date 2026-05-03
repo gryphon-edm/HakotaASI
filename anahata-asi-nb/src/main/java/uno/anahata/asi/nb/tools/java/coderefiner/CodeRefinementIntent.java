@@ -57,16 +57,16 @@ public class CodeRefinementIntent implements Serializable {
     @Schema(description = "The ABSOLUTE FQN of the member to operation on (e.g. 'com.foo.Bar.myMethod(java.util.List)'). FQNs are preferred for parameters. Generic brackets '<...>' are not required and will be ignored during matching.")
     private String memberFqn;
 
-    @Schema(description = "The member signature (e.g. 'public void foo(List<String> items)'). Mandatory for 'insert', optional for 'update'. Javadocs are not supported here.")
+    @Schema(description = "The member signature (e.g. 'public void foo(List<String> items)'). Mandatory for 'INSERT', optional for 'UPDATE'. Javadocs are not supported here.")
     private String declaration;
 
-    @Schema(description = "The WHOLE body code. For methods, logic inside braces. For fields, the initializer expression (part after '='). Optional for 'insert' and 'update'.")
+    @Schema(description = "The WHOLE body code. For methods, logic inside braces. For fields, the initializer expression (part after '=') so leave it blank if there is no initializer expression. Can be used with 'INSERT' and 'UPDATE'.")
     private String body;
 
     @Schema(description = "Position relative to the anchor member. Mandatory for 'insert' and 'move'.")
     private RelativePosition position;
 
-    @Schema(description = "Anchor member name relative to class (e.g. 'myMethod()'). Mandatory for BEFORE/AFTER positions in 'insert' and 'move'.")
+    @Schema(description = "Anchor member name relative to class (e.g. 'myMethod()'). Mandatory for BEFORE/AFTER positions in 'INSERT' and 'MOVE'.")
     private String anchorMemberName;
 
     @Schema(description = "The reason for this structural change. Will be displayed in the UI.")
@@ -283,6 +283,13 @@ public class CodeRefinementIntent implements Serializable {
 
     private String getSimpleNameFromDeclaration(String decl) {
         String clean = decl.trim();
+        while (clean.startsWith("@")) {
+            int space = clean.indexOf(' ');
+            if (space == -1) {
+                break;
+            }
+            clean = clean.substring(space).trim();
+        }
         int paren = clean.indexOf('(');
         int end = (paren != -1) ? paren : (clean.endsWith(";") ? clean.length() - 1 : clean.length());
         int start = clean.lastIndexOf(' ', end - 1);

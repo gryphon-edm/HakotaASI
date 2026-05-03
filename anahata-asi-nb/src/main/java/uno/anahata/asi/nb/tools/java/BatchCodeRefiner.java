@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import lombok.extern.slf4j.Slf4j;
@@ -62,14 +63,14 @@ public class BatchCodeRefiner extends AnahataToolkit {
 
     @Override
     public List<String> getSystemInstructions() throws Exception {
-        return Collections.singletonList("BatchCodeRefiner Toolkit Instructions:\n"
+        return Collections.singletonList(JavaSourceUtils.CANONICAL_FQN_STANDARD
+                + "\n"
+                + "### BatchCodeRefiner Toolkit Instructions\n"
                 + "1. **Context Locked**: You MUST have the resource in your RAG message (context) to propose a refinement.\n"
-                + "2. **Batch Intents**: You can combine multiple structural changes (INSERT, UPDATE, DELETE, MOVE) for a single file in the same tool call.\n"
+                + "2. **Batch Intents**: You can combine multiple structural changes (INSERT, UPDATE, DELETE, MOVE) in one call.\n"
                 + "3. **Optimistic Locking**: Always use the `lastModified` timestamp from the RAG message.\n"
-                + "4. **Identification**: Use **Absolute FQNs** for targets (`classFqn`, `memberFqn`). Use **Relative Signatures** (e.g. `myMethod()`) for `anchorMemberName`.\n"
-                + "5. **Field Initializers**: For field insertions/updates with initializers, put the expression (code after '=') in the `body` field.\n"
-                + "6. **Manual Overrides**: Users can edit your proposals in the UI; your logic handles both AST and text overrides."
-                + "7. **Javadocs toolkit for javadocs**: This toolkit doesn't support javadocs in the declaration. Use the javadocs toolkit to set the javadocs."
+                + "4. **Field Initializers**: Put the expression (code after '=') in the `body` field or leave the body empty for fields if you don't want any initialzier expression.\n"
+                + "5. **Javadocs**: Use the specialized Javadocs toolkit for updating documentation.\n"
         );
     }
 
@@ -82,7 +83,11 @@ public class BatchCodeRefiner extends AnahataToolkit {
      * @return The effectively applied changes as a unified diff.
      * @throws Exception if validation or execution fails.
      */
-    @AgiTool("The definitive structural Java refiner. Applies a batch of modifications to a java file. Does not support javadoc on the declaration")
+    @AgiTool("The definitive structural Java refiner. "
+            + "Applies a batch of member lvel modifications to a java file. "
+            + "Does not support javadoc on the declaration. "
+            + "For fields, declaration is what goes to the left of the '=', body is the initializer expression to the right of the '=', leave 'body' empty if you just want to insert a field without initializer expression. "
+            + "Do not attempt to insert imports using this tool, just put the fully qualified types and optimize true and the tool will import them automatically. Use 'CodeRefiner.addImports' to simply add imports.")
     public String refine(
             @AgiToolParam("The robust refinement batch.") CodeRefinementBatch batch
     ) throws Exception {
@@ -234,15 +239,19 @@ public class BatchCodeRefiner extends AnahataToolkit {
                 name = mt.getName().toString();
                 if (wc != null) {
                     TreePath path = TreePath.getPath(wc.getCompilationUnit(), m);
-                    Element e = wc.getTrees().getElement(path);
-                    if (e instanceof ExecutableElement ee) {
-                        String params = ee.getParameters().stream().map(p -> {
-                            String t = p.asType().toString();
-                            int bracket = t.indexOf('<');
-                            return bracket != -1 ? t.substring(0, bracket) : t;
-                        }).collect(Collectors.joining(","));
-                        signature = (name.equals("<init>") ? "<init>" : name) + "(" + params + ")";
+                    if (path != null) {
+                        Element e = wc.getTrees().getElement(path);
+                        if (e instanceof ExecutableElement ee) {
+                            String params = ee.getParameters().stream().map(p-> {
+                                return JavaSourceUtils.getCanonicalFqn(p.asType());
+                            }).collect(Collectors.joining(","));
+                            signature = (name.equals("<init>") ? "<init>" : name) + "(" + params + ")";
+                        }
                     }
+                }
+                if (signature == null) {
+                    String params = mt.getParameters().stream().map(p -> p.getType().toString().replaceAll("\\s+", "")).collect(Collectors.joining(","));
+                    signature = (name.equals("<init>") ? "<init>" : name) + "(" + params + ")";
                 }
             } else if (m instanceof VariableTree vt) {
                 name = vt.getName().toString();
@@ -396,38 +405,29 @@ public class BatchCodeRefiner extends AnahataToolkit {
     /**
      * Throws a detailed exception if a member is not found, providing candidate suggestions.
      */
-    public static void throwMemberNotFound(WorkingCopy wc, String memberFqn) throws AgiToolException {
+    public static void throwMemberNotFound(WorkingCopy wc, String memberFqn) {
         int paren = memberFqn.indexOf("(");
         String namePart = paren != -1 ? memberFqn.substring(0, paren) : memberFqn;
         int lastSeparator = Math.max(namePart.lastIndexOf("."), namePart.lastIndexOf("$"));
         if (lastSeparator == -1) {
-            throw new AgiToolException("Member not found: " + memberFqn);
+            throw new AgiToolException("Member not found: " + memberFqn + ". Please use the Anahata Canonical Identification FQN standard.");
         }
-
         String parentFqn = namePart.substring(0, lastSeparator);
         String name = namePart.substring(lastSeparator + 1);
         TypeElement parent = wc.getElements().getTypeElement(JavaSourceUtils.normalizeFqn(parentFqn));
         if (parent == null) {
-            throw new AgiToolException("Member not found: " + memberFqn + " (Parent class not found: " + parentFqn + ")");
+            throw new AgiToolException("Member not found: " + memberFqn + " (Parent class not found: " + parentFqn + "). Ensure nested types use '$' as separator.");
         }
-
         List<String> candidates = new ArrayList<>();
         for (Element e : parent.getEnclosedElements()) {
-            if (e.getSimpleName().contentEquals(name)) {
-                if (e instanceof ExecutableElement ee) {
-                    String params = ee.getParameters().stream()
-                            .map(p -> p.asType().toString().replaceAll("<.*>", ""))
-                            .collect(Collectors.joining(","));
-                    candidates.add(parentFqn + "." + (e.getKind() == javax.lang.model.element.ElementKind.CONSTRUCTOR ? "<init>" : name) + "(" + params + ")");
-                } else {
-                    candidates.add(parentFqn + "." + name);
-                }
+            if (e.getSimpleName().contentEquals(name) || (name.equals("<init>") && e.getKind() == ElementKind.CONSTRUCTOR)) {
+                candidates.add(JavaSourceUtils.getCanonicalFqn(e));
             }
         }
         StringBuilder sb = new StringBuilder("Member not found: ").append(memberFqn);
         if (!candidates.isEmpty()) {
-            sb.append("\nDid you mean one of these canonical FQNs?\n");
-            candidates.forEach(c -> sb.append("- ").append(c).append("\n"));
+            sb.append("\nDid you mean one of these canonical identification FQNs?\n");
+            candidates.forEach(c-> sb.append("- ").append(c).append("\n"));
         }
         throw new AgiToolException(sb.toString());
     }

@@ -41,7 +41,9 @@ public class CodeRefiner extends AnahataToolkit {
 
     @Override
     public List<String> getSystemInstructions() throws Exception {
-        return Collections.singletonList("CodeRefiner: Maintenance toolkit for Java source files.\n"
+        return Collections.singletonList(JavaSourceUtils.CANONICAL_FQN_STANDARD
+                + "\n"
+                + "CodeRefiner: Maintenance toolkit for Java source files.\n"
                 + "- **addImports**: Structurally adds new imports to the file.\n"
                 + "- **optimizeImports**: Removes unused imports and converts FQNs to simple names where possible.\n"
                 + "- **reformat**: Applies IDE formatting rules to the file (requires the file to be open in the editor).");

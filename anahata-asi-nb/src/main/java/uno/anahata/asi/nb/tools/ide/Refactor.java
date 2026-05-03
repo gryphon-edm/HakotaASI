@@ -6,6 +6,7 @@ import com.sun.source.util.TreePath;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import javax.lang.model.element.Element;
@@ -68,10 +69,18 @@ import static uno.anahata.asi.nb.tools.java.JavaSourceUtils.findTree;
  * @author anahata
  */
 @Slf4j
-@AgiToolkit("Programmatic refactoring tools for NetBeans. "
-        + "All member-based tools require the Anahata Canonical Member FQN (e.g., 'com.foo.Bar.myMethod(int,java.lang.String)'). "
-        + "Parentheses are mandatory for methods/constructors even if no-args. Parameters must be fully qualified.")
+@AgiToolkit("Programmatic refactoring tools for NetBeans.")
 public class Refactor extends AnahataToolkit {
+
+    @Override
+    public List<String> getSystemInstructions() throws Exception {
+        return Collections.singletonList(JavaSourceUtils.CANONICAL_FQN_STANDARD
+                + "\n"
+                + "Refactor Toolkit Instructions:\n"
+                + "- Use these tools to perform safe, project-wide refactorings.\n"
+                + "- All member-based tools require the Anahata Canonical FQN.\n"
+        );
+    }
 
     /**
      * DTO for specifying changes to method parameters.

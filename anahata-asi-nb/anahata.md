@@ -38,7 +38,7 @@ Standard tool calls (the ones that show run buttons in the ui) will not reflect 
 
 > [!IMPORTANT]
 > to test changes to toolkits without reloading, do this: compileAndExecuteInproject(anahata-asi-nb, no compile deps, no test deps)
-then instantiate the toolkit e.g. Refactor r = new Refactor(); and just use it, there is no need to do setToolkit or setAgi or onboard it any other way, instantiation is enough, contextpropagation (e.g. if the toolkit does log("") or error("") should happen automatically as it is based on a thread local, no need for manual/explicit onboarding)
+then instantiate the toolkit e.g. Refactor r = new Refactor(); and just use it, **there is no need to do setToolkit or setAgi** or onboard it any other way, instantiation is enough, contextpropagation (e.g. if the toolkit does log("") or error("") should happen automatically as it is based on a thread local, no need for manual/explicit onboarding)
 
 
 - **Hot Reload Workflow (NbJava.compileAndExecuteInProject)**: 

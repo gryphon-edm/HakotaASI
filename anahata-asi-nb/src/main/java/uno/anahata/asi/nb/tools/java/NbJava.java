@@ -36,6 +36,7 @@ import uno.anahata.asi.swing.toolkit.SwingJava;
 import uno.anahata.asi.agi.tool.AgiToolkit;
 import uno.anahata.asi.agi.tool.AgiToolParam;
 import uno.anahata.asi.agi.tool.AgiTool;
+import uno.anahata.asi.nb.resources.handle.NbHandle;
 import uno.anahata.asi.toolkit.java.classpath.VeryPrettyClassPathPrinter;
 
 /**
@@ -58,6 +59,7 @@ public class NbJava extends SwingJava {
     @Override
     public void initialize() {
         super.initialize();
+        registerParentFirstClass(NbHandle.class);
         setDefaultClasspath(NetBeansModuleUtils.getNetBeansClasspath());
         log.info("initialize() default classPath:" + getDefaultClasspath());
     }
