@@ -35,6 +35,7 @@ import javax.tools.SimpleJavaFileObject;
 import javax.tools.ToolProvider;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import uno.anahata.asi.AbstractAsiContainer;
 import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.internal.TextUtils;
 import uno.anahata.asi.agi.message.RagMessage;
@@ -123,9 +124,7 @@ public class Java extends AnahataToolkit {
         registerParentFirstClass(PathHandle.class);
         registerParentFirstClass(UrlHandle.class);
         registerParentFirstClass(StringHandle.class);
-        
-        
-        
+        registerParentFirstClass(AbstractAsiContainer.class);
         log.info("Java toolkit instantiated:");
     }
     
