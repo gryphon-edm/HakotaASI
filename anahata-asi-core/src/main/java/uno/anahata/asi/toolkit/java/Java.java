@@ -23,6 +23,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
+import javax.swing.text.html.ImageView;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.FileObject;
@@ -37,6 +38,10 @@ import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.internal.TextUtils;
 import uno.anahata.asi.agi.message.RagMessage;
+import uno.anahata.asi.agi.resource.handle.PathHandle;
+import uno.anahata.asi.agi.resource.handle.ResourceHandle;
+import uno.anahata.asi.agi.resource.handle.StringHandle;
+import uno.anahata.asi.agi.resource.handle.UrlHandle;
 import uno.anahata.asi.agi.resource.view.AbstractResourceView;
 import uno.anahata.asi.agi.resource.view.ResourceView;
 import uno.anahata.asi.agi.resource.view.TextView;
@@ -111,8 +116,14 @@ public class Java extends AnahataToolkit {
         registerParentFirstClass(uno.anahata.asi.agi.resource.RefreshPolicy.class);
         registerParentFirstClass(uno.anahata.asi.agi.context.ContextPosition.class);
         registerParentFirstClass(ResourceView.class);
-        registerParentFirstClass(AbstractResourceView.class);
         registerParentFirstClass(TextView.class);
+        registerParentFirstClass(ImageView.class);
+        registerParentFirstClass(ResourceHandle.class);
+        registerParentFirstClass(PathHandle.class);
+        registerParentFirstClass(UrlHandle.class);
+        registerParentFirstClass(StringHandle.class);
+        registerParentFirstClass(AbstractResourceView.class);
+        
         
         log.info("Java toolkit instantiated:");
     }
