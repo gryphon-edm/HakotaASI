@@ -242,6 +242,8 @@ public class BatchCodeRefiner extends AnahataToolkit {
      * @return The index, or -1 if not found.
      */
     private static int findMemberIndex(WorkingCopy wc, List<? extends Tree> members, String memberName) {
+        String target = memberName.replaceAll("<[^>]*>", "").replaceAll("\\s+", "");
+
         for (int i = 0; i < members.size(); i++) {
             Tree m = members.get(i);
             String name = null;
@@ -253,7 +255,7 @@ public class BatchCodeRefiner extends AnahataToolkit {
                     if (path != null) {
                         Element e = wc.getTrees().getElement(path);
                         if (e instanceof ExecutableElement ee) {
-                            String params = ee.getParameters().stream().map(p-> {
+                            String params = ee.getParameters().stream().map(p -> {
                                 return JavaSourceUtils.getCanonicalFqn(p.asType());
                             }).collect(Collectors.joining(","));
                             signature = (name.equals("<init>") ? "<init>" : name) + "(" + params + ")";
@@ -261,7 +263,9 @@ public class BatchCodeRefiner extends AnahataToolkit {
                     }
                 }
                 if (signature == null) {
-                    String params = mt.getParameters().stream().map(p -> p.getType().toString().replaceAll("\\s+", "")).collect(Collectors.joining(","));
+                    String params = mt.getParameters().stream()
+                            .map(p -> p.getType().toString().replaceAll("<[^>]*>", "").replaceAll("\\s+", ""))
+                            .collect(Collectors.joining(","));
                     signature = (name.equals("<init>") ? "<init>" : name) + "(" + params + ")";
                 }
             } else if (m instanceof VariableTree vt) {
@@ -271,9 +275,18 @@ public class BatchCodeRefiner extends AnahataToolkit {
             } else if (m.getKind() == Tree.Kind.BLOCK) {
                 name = ((BlockTree) m).isStatic() ? "<clinit>" : "<init-block>";
             }
-            if (memberName.equals(name) || memberName.equals(signature)) {
+
+            if (name == null) {
+                continue;
+            }
+
+            String candidateName = name;
+            String candidateSig = (signature != null) ? signature.replaceAll("<[^>]*>", "").replaceAll("\\s+", "") : null;
+
+            if (target.equals(candidateName) || target.equals(candidateSig)) {
                 return i;
             }
+
             if (memberName.contains("#")) {
                 String typePart = memberName.substring(0, memberName.indexOf('#'));
                 int targetIndex = Integer.parseInt(memberName.substring(memberName.indexOf('#') + 1, memberName.indexOf('(')));
