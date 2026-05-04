@@ -99,8 +99,21 @@ public class JavaTypeSearch {
         // Deduplicate by FQN to handle reloaded NBMS or multiple registrations while preserving project-based order
         Map<String, JavaType> uniqueMap = new LinkedHashMap<>();
         for (JavaTypeDescription jtd : javaDescriptors) {
-            JavaType jt = new JavaType(jtd);
-            uniqueMap.putIfAbsent(jt.getFqn(), jt);
+            FileObject fo = jtd.getFileObject();
+            if (fo != null) {
+                JavaType jt = new JavaType(jtd);
+                JavaType existing = uniqueMap.get(jt.getFqn());
+                if (existing == null) {
+                    uniqueMap.put(jt.getFqn(), jt);
+                } else {
+                    // Prioritize source files (.java) over compiled classes (.class)
+                    boolean currentIsSource = "java".equalsIgnoreCase(fo.getExt());
+                    boolean existingIsSource = existing.getUrl().toString().toLowerCase().endsWith(".java");
+                    if (currentIsSource && !existingIsSource) {
+                        uniqueMap.put(jt.getFqn(), jt);
+                    }
+                }
+            }
         }
         this.results = Collections.unmodifiableList(new ArrayList<>(uniqueMap.values()));
         if (log.isInfoEnabled()) {
