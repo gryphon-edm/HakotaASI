@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.agi.provider.AbstractModel;
 import uno.anahata.asi.internal.JacksonUtils;
 import uno.anahata.asi.openai.compatible.OpenAiCompatibleProvider;
-import uno.anahata.asi.openai.compatible.ReasoningStyle;
+import uno.anahata.asi.openai.compatible.OpenAiCompatibleReasoningStyle;
 
 /**
  * A specialized provider for the Hugging Face Inference API that performs deep
@@ -85,12 +85,12 @@ public class HuggingFaceProvider extends OpenAiCompatibleProvider {
 
                         String modelType = json.path("model_type").asText("").toLowerCase();
                         if (modelType.contains("deepseek") || modelType.contains("qwen")) {
-                            model.setReasoningStyle(ReasoningStyle.FIELD);
+                            model.setReasoningStyle(OpenAiCompatibleReasoningStyle.FIELD);
                             model.setReasoningFieldName("reasoning_content");
                         } else if (modelType.contains("glm") || json.path("architectures").toString().toLowerCase().contains("glm")) {
                             // GLM models are top-tier for development and support function calling natively
                             model.setSupportsFunctionCalling(true);
-                            model.setReasoningStyle(ReasoningStyle.TAGS);
+                            model.setReasoningStyle(OpenAiCompatibleReasoningStyle.TAGS);
                             model.setReasoningTags(List.of("<|thought|>", "<|assistant|>"));
                         }
                     } else {
@@ -109,7 +109,7 @@ public class HuggingFaceProvider extends OpenAiCompatibleProvider {
                         }
                         // Detect R1 style tags in template or markers
                         if (chatTemplate.contains("<think>")) {
-                            model.setReasoningStyle(ReasoningStyle.TAGS);
+                            model.setReasoningStyle(OpenAiCompatibleReasoningStyle.TAGS);
                             model.setReasoningTags(List.of("<think>", "</think>"));
                         }
                     } else {
