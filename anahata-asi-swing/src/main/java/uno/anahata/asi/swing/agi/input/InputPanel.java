@@ -47,6 +47,9 @@ import uno.anahata.asi.swing.internal.EdtPropertyChangeListener;
 import uno.anahata.asi.swing.internal.SwingTask;
 import uno.anahata.asi.swing.internal.UICapture;
 import uno.anahata.asi.swing.audio.MicrophonePanel;
+import java.net.URI;
+import uno.anahata.asi.swing.icons.LinkIcon;
+import uno.anahata.asi.swing.components.ExceptionDialog;
 
 /**
  * A fully functional and responsive user input component for the V2 agi.
@@ -86,6 +89,7 @@ public class InputPanel extends JPanel {
     private JButton screenshotButton;
     /** The button to capture and attach application frames. */
     private JButton captureFramesButton;
+    private JButton addUrlButton;
     /** The renderer for the live message preview. */
     private InputUserMessagePanel inputMessagePreview;
     /** The scroll pane for the preview renderer. */
@@ -271,9 +275,14 @@ public class InputPanel extends JPanel {
         captureFramesButton.setToolTipText("Attach Application Frames (History)");
         captureFramesButton.addActionListener(e -> attachWindowCaptures());
 
+        addUrlButton = new JButton(new LinkIcon(16));
+        addUrlButton.setToolTipText("Add URL Resource (V2)");
+        addUrlButton.addActionListener(e -> addUrl());
+
         actionButtonPanel.add(attachButton);
         actionButtonPanel.add(screenshotButton);
         actionButtonPanel.add(captureFramesButton);
+        actionButtonPanel.add(addUrlButton);
 
         notificationLabel = new JLabel("");
         notificationLabel.setForeground(new Color(0, 120, 0));
@@ -401,6 +410,28 @@ public class InputPanel extends JPanel {
         currentMessage.addAttachment(p);
         updateSendButtonState();
         scrollToBottomPreview();
+    }
+
+    private void addUrl() {
+        String url = JOptionPane.showInputDialog(this, "Enter the URL to add as a resource:", "Add URL Resource", JOptionPane.PLAIN_MESSAGE);
+        if (url != null && !url.trim().isEmpty()) {
+            executeTask("Register URL Resource", () -> {
+                try {
+                    URI uri = new URI(url.trim());
+                    ResourceHandle handle = agi.getConfig().createResourceHandle(uri);
+                    Resource resource = new Resource(handle);
+                    agi.getResourceManager().register(resource, "added to context by user via add url button");
+                    return true;
+                } catch (Exception ex) {
+                    log.error("Failed to register URL resource: " + url, ex);
+                    throw ex;
+                }
+            }, success -> {
+                showNotification("URL resource registered");
+            }, error -> {
+                ExceptionDialog.show(this, "Add URL Resource", "Failed to register the provided URL as a managed resource.", error);
+            });
+        }
     }
 
     /** Opens file chooser and registers selected files as resources. */
@@ -608,6 +639,7 @@ public class InputPanel extends JPanel {
         attachButton.setEnabled(enabled);
         screenshotButton.setEnabled(enabled);
         captureFramesButton.setEnabled(enabled);
+        addUrlButton.setEnabled(enabled);
         microphonePanel.setMicrophoneComponentsEnabled(enabled);
         declineAndSendButton.setEnabled(enabled);
     }
