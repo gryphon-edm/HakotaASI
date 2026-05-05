@@ -1,4 +1,3 @@
-/* Licensed under the Anahata Software License (ASL) v 108. See the LICENSE file for details. Força Barça! */
 package uno.anahata.asi.toolkit.resources;
 
 import uno.anahata.asi.agi.resource.view.TextViewportSettings;
@@ -65,9 +64,7 @@ public class Resources extends AnahataToolkit {
                 + "3. **Updating resources**: All update resource tools flush the changes to disk inmediatly when `EXECUTED`.\n "
                 + "4. **Rag Message**: The Rag Message is the source of truth for resource modifications, it gets freshly generated when the user completes his turn (i.e. after all tools in the batch have been executed or declined). "
                 + "All resources registered with `LIVE` refresh policy are garanteed to be up to date (in sync) with the underlying storage.\n"
-                + "5. **totalOccurrences Mandatory Checksum**: You MUST provide the exact total number of matches for your `target` string in the current file. This ensures your context is in sync.\n"
-                + "6. **occurrenceIndexes Surgical targeting**: To replace specific instances of identical strings, provide a list of 1-based indices (e.g. `[1, 3]`). If null or empty, all occurrences are replaced.\n"
-                + "7. **Your risponsability**: You are risponsible for managing what resources are in context, if the user wants to switch task, it is your risponsability to unload resources from context as you load the ones for the next task. Don't leave dangling resources in context. A true ASI can hold infinite sessions without burning input tokens with resources that are not longer relevant."
+                + "5. **Your risponsability**: You are risponsible for managing what resources are in context, if the user wants to switch task, it is your risponsability to unload resources from context as you load the ones for the next task. Don't leave dangling resources in context. A true ASI can hold infinite sessions without burning input tokens with resources that are not longer relevant."
         /*+ "5. **Resources.editTextResource tool**: This is not a git style tool that requires surrounding anchor lines. It is a strict, surgical 1-based line number tool with optimistic locking validation for text resources loaded with includeLineNumbers=true."
                         + " The UI for this tool shows the user a rich graphical diff visualizer with the edits you intend to make to the text resource and overlays comic-style annotations with the reasons for your edits on the right hand side of the diff viewer. "
                         + "\n\tUse this tool **paying careful attention to the line numbers in the RAG message** and use it in a **user-oriented way** choosing the appropiate type of edit (insert / replace / delete) for each logical change you intend to make."
@@ -204,7 +201,7 @@ public class Resources extends AnahataToolkit {
         getAgi().getResourceManager().register(resource, getActor());
 
         log("Created text file: " + create.getPath());
-        return resource.getId();
+        return "File created and resource registered with id " + resource.getId() + " lastModified=" + resource.getLastLoadTimestamp();
     }
 
     /**
@@ -222,7 +219,7 @@ public class Resources extends AnahataToolkit {
         res.write(revised);
         update.setResultingContent(res.asText());
         log("Updated text file: " + res.getName());
-        return update.getUnifiedDiff(getAgi());
+        return update.getUnifiedDiff(getAgi()) + "\n---END OF DIFF---\nResource saved. New Last Modified: " + res.getLastLoadTimestamp();
     }
 
     /**
@@ -244,7 +241,7 @@ public class Resources extends AnahataToolkit {
         res.write(revised);
         replacements.setResultingContent(res.asText());
         log("Performed replacements in: " + res.getName());
-        return replacements.getUnifiedDiff(getAgi());
+        return replacements.getUnifiedDiff(getAgi()) + "\n---END OF DIFF---\nResource saved. New Last Modified: " + res.getLastLoadTimestamp();
     }
 
     /**
@@ -282,6 +279,6 @@ public class Resources extends AnahataToolkit {
         res.write(revised);
         edits.setResultingContent(res.asText());
         log("Applied semantic line edits to: " + res.getName());
-        return edits.getUnifiedDiff(getAgi());
+        return edits.getUnifiedDiff(getAgi()) + "\n---END OF DIFF---\nResource saved. New Last Modified: " + res.getLastLoadTimestamp();
     }
 }
