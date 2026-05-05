@@ -255,7 +255,7 @@ public class OpenAiItemAdapter {
                     .put("audio", b64)
                     .put("format", format);
         } else {
-            throw new AiProviderException("Image and audio only today");
+            throw new AiProviderException("Image and audio only today. Will not add this " + mimeType + " blob " + data.length + " to: " + contentArray);
 
             // OpenAI Responses API: Generic files use an 'input_file' nested object.
             // Note: 'input_audio' is currently not supported in the Responses API, 

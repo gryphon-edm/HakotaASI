@@ -129,7 +129,10 @@ public class OpenAiModel extends AbstractModel {
 
     @Override
     public List<ServerTool> getAvailableServerTools() {
-        return Collections.emptyList();
+        List<ServerTool> tools = new ArrayList<>();
+        tools.add(new ServerTool("web_search", "Web Search", "Search the web using OpenAI's built-in tool."));
+        tools.add(new ServerTool("code_interpreter", "Code Interpreter", "Execute Python code in a secure sandbox."));
+        return tools;
     }
 
     @Override
@@ -191,9 +194,9 @@ public class OpenAiModel extends AbstractModel {
             root.put("instructions", String.join("\n\n", si));
         }
 
-        // Tools
+        // Tools (Local and Hosted)
+        ArrayNode toolsArray = root.putArray("tools");
         if (request.config().getLocalTools() != null && !request.config().getLocalTools().isEmpty()) {
-            ArrayNode toolsArray = root.putArray("tools");
             Map<uno.anahata.asi.agi.tool.spi.AbstractToolkit, List<AbstractTool>> grouped = (Map) request.config().getLocalTools().stream()
                     .collect(java.util.stream.Collectors.groupingBy(AbstractTool::getToolkit));
 
@@ -210,6 +213,22 @@ public class OpenAiModel extends AbstractModel {
             }
         }
         
+        // Hosted Server Tools
+        if (request.config().isServerToolsEnabled()) {
+            for (ServerTool st : request.config().getEnabledServerTools()) {
+                if ("web_search".equals(st.getId())) {
+                    toolsArray.addObject().put("type", "web_search");
+                } else if ("code_interpreter".equals(st.getId())) {
+                    toolsArray.addObject().put("type", "code_interpreter");
+                }
+            }
+        }
+        
+        // If no tools added, remove the array to keep the payload clean
+        if (toolsArray.isEmpty()) {
+            root.remove("tools");
+        }
+
         // 2. Memory / History
         ArrayNode input = root.putArray("input");
         boolean includePruned = request.config().isIncludePruned();
