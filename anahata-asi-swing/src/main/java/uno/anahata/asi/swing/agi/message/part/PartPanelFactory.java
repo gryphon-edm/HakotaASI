@@ -12,6 +12,9 @@ import uno.anahata.asi.agi.message.ModelBlobPart;
 import uno.anahata.asi.agi.message.ModelTextPart;
 import uno.anahata.asi.agi.message.TextPart;
 import uno.anahata.asi.agi.tool.spi.AbstractToolCall;
+import uno.anahata.asi.agi.message.ModelCodeExecutionCallPart;
+import uno.anahata.asi.agi.message.ModelCodeExecutionResultPart;
+import uno.anahata.asi.agi.message.ModelSearchCallPart;
 import uno.anahata.asi.swing.agi.AgiPanel;
 import uno.anahata.asi.swing.agi.message.part.tool.ToolCallPanel;
 
@@ -37,7 +40,13 @@ public final class PartPanelFactory {
      * @return The created part panel, or null if the part type is unsupported.
      */
     public static AbstractPartPanel<?> createPartPanel(AgiPanel agiPanel, AbstractPart part) {
-        if (part instanceof ModelTextPart modelTextPart) {
+        if (part instanceof ModelCodeExecutionCallPart codeCallPart) {
+            return new ModelCodeExecutionCallPartPanel(agiPanel, codeCallPart);
+        } else if (part instanceof ModelCodeExecutionResultPart codeOutputPart) {
+            return new ModelCodeExecutionResultPartPanel(agiPanel, codeOutputPart);
+        } else if (part instanceof ModelSearchCallPart searchCallPart) {
+            return new ModelSearchCallPartPanel(agiPanel, searchCallPart);
+        } else if (part instanceof ModelTextPart modelTextPart) {
             return new TextPartPanel(agiPanel, modelTextPart);
         } else if (part instanceof ModelBlobPart modelBlobPart) {
             return new BlobPartPanel(agiPanel, modelBlobPart);
