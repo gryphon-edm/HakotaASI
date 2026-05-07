@@ -74,14 +74,13 @@ public class NetBeansAsiContainer extends AbstractSwingAsiContainer {
         // Ensure Gemini is registered with stable UUID
         AbstractAiProvider gemini = getProviderByClass(GeminiAiProvider.class);
         
-        if (gemini == null) {
-            registerProvider(new GeminiAiProvider());
-        } else if (!"Gemini".equals(gemini.getUuid())) {
-            log.info("Migrating legacy Gemini provider ({}) to stable ID", gemini.getUuid());
-            unregisterProvider(gemini.getUuid());
-            gemini.setUuid("Gemini");
-            gemini.setFolderName("Gemini");
-            registerProvider(gemini);
+        //AbstractAiProvider gemini = getProviderByClass(GeminiAiProvider.class);
+        if (getProvider("Gemni") == null) {
+            registerProvider(new GeminiAiProvider(false));
+        } 
+        
+        if (getProvider("GemniEnterprise") == null) {
+            registerProvider(new GeminiAiProvider(true));
         }
         /*
         if (getProvider("OpenAI") == null) {
