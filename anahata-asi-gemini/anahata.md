@@ -23,3 +23,9 @@ This module's sole responsibility is to act as an **Adapter** between the Google
 -   **`GeminiCliAgiConfig.java`:** Registers the `GeminiAgiProvider` for CLI usage.
 
 -   **`CliMain.java` (in Standalone)**: Launcher for the core CLI with this provider.
+
+
+## tasks
+1 in gemini, hosted call executable code parts and their responses have an id, when streaming, we  need to see what the chunks look like and how to append them to the previous chunk or whether it is already appending because they subclass text part
+2 when replaying history, we need to see what to do with ModelWebSearchCall from openai because gemini doesn't seem to ha veone?
+3 see what the deal is with grounding metadata when streaming because according to google ai studio, 
