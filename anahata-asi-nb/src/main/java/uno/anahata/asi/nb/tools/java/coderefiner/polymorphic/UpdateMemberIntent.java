@@ -81,7 +81,7 @@ public class UpdateMemberIntent extends CodeRefinementIntentPolymorphic {
                     }
                 }
             } else {
-                newTree = BatchCodeRefiner.parseMember(wc, declaration, body);
+                newTree = BatchCodeRefiner.parseMember(wc, declaration, body, wc.getClasspathInfo());
                 if (body == null) {
                     if (oldTree instanceof MethodTree oldMt && newTree instanceof MethodTree newMt) {
                         newTree = make.Method(newMt.getModifiers(), newMt.getName(), newMt.getReturnType(), newMt.getTypeParameters(), newMt.getParameters(), newMt.getThrows(), oldMt.getBody(), (AnnotationTree) newMt.getDefaultValue());
