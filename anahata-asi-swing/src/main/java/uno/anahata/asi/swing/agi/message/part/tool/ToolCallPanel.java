@@ -216,9 +216,8 @@ public class ToolCallPanel extends AbstractPartPanel<AbstractToolCall<?, ?>> {
         
         // Add expand/collapse logic to the response titled panel header
         if (responseTitledPanel.getComponentCount() > 0) {
-            Component header = getComponent(0);
-            header.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
-            header.addMouseListener(new MouseAdapter() {
+            responseTitledPanel.getComponent(0).setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
+            responseTitledPanel.getComponent(0).addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     AbstractToolResponse<?> resp = getPart().getResponse();
