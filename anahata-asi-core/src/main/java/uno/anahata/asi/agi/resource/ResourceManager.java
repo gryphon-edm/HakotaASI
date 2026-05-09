@@ -188,6 +188,16 @@ public class ResourceManager extends BasicPropertyChangeSource implements Rebind
     public Optional<Resource> findByPath(@NonNull String path) {
         return findByUri(Paths.get(path).toUri().toString());
     }
+
+    /**
+     * Finds the UUID of a managed resource by its URI.
+     * 
+     * @param uri The URI to search for.
+     * @return The UUID of the resource, or null if not found.
+     */
+    public String getUuidByUri(@NonNull String uri) {
+        return findByUri(uri).map(Resource::getId).orElse(null);
+    }
     
     /**
      * Finds a managed resource by its uuid
