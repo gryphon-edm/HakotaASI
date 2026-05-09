@@ -268,9 +268,11 @@ public class Agi extends BasicPropertyChangeSource {
     /**
      * Performs an automatic backup of the session to the active sessions
      * directory.
+     * 
+     * @param reason the reason for the autosave
      */
-    public void autoSave() {
-        config.getAsiContainer().autoSaveSession(this);
+    public void autoSave(String reason) {
+        config.getAsiContainer().autoSaveSession(this, reason);
     }
 
     /**
@@ -292,7 +294,7 @@ public class Agi extends BasicPropertyChangeSource {
             propertyChangeSupport.firePropertyChange("open", old, open);
             // Authoritative Persistence: always auto-save on visibility changes 
             // to ensure UI layout is remembered across restarts.
-            autoSave();
+            autoSave("open " + open);
         }
     }
 
@@ -330,7 +332,7 @@ public class Agi extends BasicPropertyChangeSource {
         }
 
         propertyChangeSupport.firePropertyChange("selectedModel", oldModel, selectedModel);
-        autoSave();
+        autoSave("model changed to: " + selectedModel.getModelId());
     }
 
     /**
@@ -394,7 +396,7 @@ public class Agi extends BasicPropertyChangeSource {
             if (message != null && !message.isEmpty()) {
                 log.info("Adding user message to context  {}", message);
                 contextManager.addMessage(message);
-                autoSave();
+                autoSave("sendMessage added message " + message.getSequentialId() + " to context");
             }
             executeTurnLoop();
         } finally {
@@ -462,7 +464,7 @@ public class Agi extends BasicPropertyChangeSource {
                 turnComplete = performSingleTurn();
             }
             // Auto-save after turn loop completes
-            autoSave();
+            autoSave("turn loop finished");
         } finally {
             this.currentExecutionThread = null;
         }
@@ -493,7 +495,7 @@ public class Agi extends BasicPropertyChangeSource {
                 if (staged != null && !staged.isEmpty()) {
                     log.info("Picking up staged message before API call.");
                     contextManager.addMessage(staged);
-                    autoSave();
+                    autoSave("performSingleTurn added stagedMessage to context");
                 }
 
                 statusManager.fireStatusChanged(AgiStatus.AWAKENING_KUNDALINI);
@@ -667,7 +669,7 @@ public class Agi extends BasicPropertyChangeSource {
         if (!contextManager.getHistory().contains(message)) {
             contextManager.addMessage(message);
         }
-        autoSave();
+        autoSave("chooseCandidate " + message.getSequentialId());
 
         // Check if tools can be executed automatically.
         if (message.isAutoRunnable()) {
@@ -856,7 +858,7 @@ public class Agi extends BasicPropertyChangeSource {
             log.info("Setting nickname for session {}: {} -> {}", config.getSessionId(), old, nickname);
             this.nickname = nickname;
             propertyChangeSupport.firePropertyChange("nickname", old, nickname);
-            autoSave();
+            autoSave("nickname changed to " + nickname);
         }
 
     }
