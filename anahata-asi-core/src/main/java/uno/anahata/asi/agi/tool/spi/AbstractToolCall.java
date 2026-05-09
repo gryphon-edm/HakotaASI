@@ -97,7 +97,14 @@ public abstract class AbstractToolCall<T extends AbstractTool<?, ?>, R extends A
         
         // 1. Initialize the response object.
         this.response = createResponse();
-        setExpanded(tool.getPermission() != ToolPermission.APPROVE_ALWAYS);
+        uno.anahata.asi.agi.ExpandToolsPreference expandPref = getAgiConfig().getExpandTools();
+        if (expandPref == uno.anahata.asi.agi.ExpandToolsPreference.ALL) {
+            setExpanded(true);
+        } else if (expandPref == uno.anahata.asi.agi.ExpandToolsPreference.PROMPT) {
+            setExpanded(tool.getPermission() == ToolPermission.PROMPT);
+        } else {
+            setExpanded(false);
+        }
         // 2. Publication: Add only the call to the message. 
         // The response is accessed via the call.
         message.addPart(this);
