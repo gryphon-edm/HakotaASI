@@ -3,15 +3,12 @@
 This file tracks the actionable tasks and tactical goals for the Anahata ASI (V2) project.
 
 ## 0. Zero Day Go Live: 
-- [ ] remove duplicates of CodeModel.findTypes for reloaded nbms
-- [X] findAndReplace with wrong totalOccurrences gives a bad error message (resulting content is identical)
+- [X] remove duplicates of CodeModel.findTypes for reloaded nbms
+- [ ] **Investigate Session Save**: Investigate at what points we are saving the session to prevent NetBeans crashes from losing data.
 - [ ] change resource and session uuids to be way smaller or consider using atomicLong for resourceuids
 - [ ] check if stop providing on a resource makes it actually stop providing
 - [ ] check if updating the text viewport manually does update it
 - [ ] model changing session nickname doesnt work or maybe the ui is not updating it
-- [ ] check fileobject moves do move
-- [X] BatchCodeRefiner adding line number comments to each intent to show in the ui like the other bubbles
-- [X] line comments on top of diff viewer are not aligned to the right
 - [ ] test javadoc toolkit and see what would it take to allow InsertIntent or UpdateIntent to take a Javadoc object but this could take a long time
 - [ ] Tool's turns to expire doesn't have a field in context details panel
 - [ ] Change AbstractMessagePanel and AbstractPartPanel and ToolCallPanel to show a different mouse point when hovering over the JXTitledPane headers
@@ -27,6 +24,7 @@ This file tracks the actionable tasks and tactical goals for the Anahata ASI (V2
 - [ ] path parameter renderer in netbeans and resource param renderer?
     
 ## 2. Post Go Live (v1.1)
+- [ ] **Investigate editTextResource Diff limitations**: Investigate why in `editTextResource` we cannot edit the right-hand side of the diff or do cherry-picking.
 - [ ] **[CORE] Generic "TOO LARGE" Response Handling**: Implement a mechanism to detect when a `JavaMethodToolResponse` (including logs, errors, and result) exceeds a safe token/size threshold. If too large, the status should be set to `TOO_LARGE` and the content truncated or replaced with a summary to prevent context window exhaustion.
 - [ ] Error highlighting and code folds on diff viewer and java tool
 - [ ] Rework system instructions to be more natural
