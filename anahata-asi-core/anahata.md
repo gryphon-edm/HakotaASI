@@ -11,6 +11,7 @@ This document outlines the vision and architecture of the `anahata-asi-core` pro
 > The absolute priority for all development is **Simplicity and Stability** (or Stability through Simplicity). These principles rule above all others. 
 > - **Core Discussion**: Any proposed changes to this module **MUST** be discussed and agreed upon with the user in the conversation before calling `updateTextFile`.
 > - **No Dirty Hacks**: Avoid "dirty hacks" or workarounds (e.g., `SwingUtils.runInEDT` should be used for UI-bound logic, but domain logic must remain thread-safe and decoupled). If a design leads to race conditions, it requires proper refactoring.
+> - **Logic Push-Down**: Maximize business logic and feature orchestration in `anahata-asi-core` (like `AbstractAsiContainer` or `Agi` lifecycle methods). The more logic we keep in the core, the more we can reuse it across different UI layers (Swing, JavaFX, CLI, Web).
 > - **Unified Content API**: Always prefer `message.addTextPart(text)` or `message.addBlobPart(...)` over direct instantiation of `TextPart` or `BlobPart`.
 > - **API Leanliness**: Avoid redundant signatures or secondary constructors. Keep the API lean and consistent.
 
