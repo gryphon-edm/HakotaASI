@@ -6,6 +6,7 @@ package uno.anahata.asi.swing;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.FlowLayout;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +30,7 @@ import org.jdesktop.swingx.treetable.AbstractTreeTableModel;
 import uno.anahata.asi.AsiContainerPreferences;
 import uno.anahata.asi.agi.AgiConfig;
 import uno.anahata.asi.agi.tool.AgiTool;
+import uno.anahata.asi.agi.tool.AgiToolkit;
 import uno.anahata.asi.agi.tool.ToolPermission;
 import uno.anahata.asi.agi.tool.spi.java.JavaObjectToolkit;
 import uno.anahata.asi.swing.agi.SwingAgiConfig;
@@ -84,10 +86,11 @@ public class ToolkitPermissionsPanel extends JPanel {
         treeTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF); // Prevent stretching
 
         // Set surgical column widths
-        treeTable.getColumnModel().getColumn(0).setPreferredWidth(350); // Toolkit/Tool
+        treeTable.getColumnModel().getColumn(0).setPreferredWidth(250); // Toolkit/Tool
         treeTable.getColumnModel().getColumn(1).setPreferredWidth(120); // Global Permission
         treeTable.getColumnModel().getColumn(1).setMinWidth(120);
         treeTable.getColumnModel().getColumn(1).setMaxWidth(120);
+        treeTable.getColumnModel().getColumn(2).setPreferredWidth(450); // Description
         
         // 1. Tool / Toolkit Icon Renderer
         treeTable.setTreeCellRenderer(new DefaultTreeCellRenderer() {
@@ -143,8 +146,13 @@ public class ToolkitPermissionsPanel extends JPanel {
             treeTable.expandRow(i);
         }
 
-        add(new JScrollPane(treeTable), BorderLayout.CENTER);
-        add(new JLabel("<html><div style='padding: 10px;'><b>Global Tool Rules of Engagement:</b> Set the default safety level for every tool grouped by toolkit. Changes apply to all sessions.</div></html>"), BorderLayout.NORTH);
+        add(treeTable.getTableHeader(), BorderLayout.NORTH);
+        add(treeTable, BorderLayout.CENTER);
+        
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        footer.setOpaque(false);
+        footer.add(new JLabel("<html><div style='padding: 10px;'><b>Global Tool Rules of Engagement:</b> Set the default safety level for every tool grouped by toolkit. Changes apply to all sessions.</div></html>"));
+        add(footer, BorderLayout.SOUTH);
     }
 
     /**
@@ -172,14 +180,17 @@ public class ToolkitPermissionsPanel extends JPanel {
             Map<String, ToolPermission> currentPermissions = prefs.getToolPermissions();
 
             for (Class<?> toolkitClass : template.getToolClasses()) {
-                ToolkitNode tkNode = new ToolkitNode(toolkitClass.getSimpleName());
+                AgiToolkit tkAnn = toolkitClass.getAnnotation(AgiToolkit.class);
+                String tkDesc = tkAnn != null ? tkAnn.value() : "";
+                
+                ToolkitNode tkNode = new ToolkitNode(toolkitClass.getSimpleName(), tkDesc);
                 toolkitNodes.add(tkNode);
                 for (Method m : JavaObjectToolkit.getAllAnnotatedMethods(toolkitClass)) {
                     AgiTool toolAnnotation = m.getAnnotation(AgiTool.class);
                     if (toolAnnotation != null) {
                         String toolName = tkNode.name + "." + m.getName();
                         ToolPermission p = currentPermissions.getOrDefault(toolName, toolAnnotation.permission());
-                        tkNode.tools.add(new ToolNode(m.getName(), p, tkNode));
+                        tkNode.tools.add(new ToolNode(m.getName(), toolAnnotation.value(), p, tkNode));
                     }
                 }
             }
@@ -188,22 +199,36 @@ public class ToolkitPermissionsPanel extends JPanel {
         /** {@inheritDoc} */
         @Override
         public int getColumnCount() {
-            return 2;
+            return 3;
         }
 
         /** {@inheritDoc} */
         @Override
         public String getColumnName(int column) {
-            return column == 0 ? "Toolkit / Tool" : "Global Permission";
+            return switch (column) {
+                case 0 -> "Toolkit / Tool";
+                case 1 -> "Global Permission";
+                case 2 -> "Description";
+                default -> "";
+            };
         }
 
         /** {@inheritDoc} */
         @Override
         public Object getValueAt(Object node, int column) {
             if (node instanceof ToolkitNode tk) {
-                return column == 0 ? tk.name : null;
+                return switch (column) {
+                    case 0 -> tk.name;
+                    case 2 -> tk.description;
+                    default -> null;
+                };
             } else if (node instanceof ToolNode tool) {
-                return column == 0 ? tool.name : tool.permission;
+                return switch (column) {
+                    case 0 -> tool.name;
+                    case 1 -> tool.permission;
+                    case 2 -> tool.description;
+                    default -> null;
+                };
             }
             return null;
         }
@@ -271,10 +296,15 @@ public class ToolkitPermissionsPanel extends JPanel {
         private static class ToolkitNode {
             /** The simple name of the toolkit class. */
             String name;
+            /** The description from @AgiToolkit. */
+            String description;
             /** The list of tools contained within this toolkit. */
             List<ToolNode> tools = new ArrayList<>();
             /** Constructs a toolkit node. */
-            ToolkitNode(String name) { this.name = name; }
+            ToolkitNode(String name, String description) { 
+                this.name = name; 
+                this.description = description; 
+            }
         }
 
         /**
@@ -283,13 +313,18 @@ public class ToolkitPermissionsPanel extends JPanel {
         private static class ToolNode {
             /** The name of the tool method. */
             String name;
+            /** The description from @AgiTool. */
+            String description;
             /** The current global permission level. */
             ToolPermission permission;
             /** The parent toolkit node. */
             ToolkitNode parent;
             /** Constructs a tool node. */
-            ToolNode(String name, ToolPermission p, ToolkitNode parent) {
-                this.name = name; this.permission = p; this.parent = parent;
+            ToolNode(String name, String description, ToolPermission p, ToolkitNode parent) {
+                this.name = name; 
+                this.description = description;
+                this.permission = p; 
+                this.parent = parent;
             }
         }
     }

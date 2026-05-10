@@ -21,16 +21,23 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import javax.swing.JScrollPane;
 import lombok.extern.slf4j.Slf4j;
 import net.miginfocom.swing.MigLayout;
 import uno.anahata.asi.AsiContainerPreferences;
 import uno.anahata.asi.agi.AgiConfig;
 import uno.anahata.asi.agi.provider.AbstractAiProvider;
 import uno.anahata.asi.agi.provider.AbstractModel;
-import uno.anahata.asi.swing.agi.config.SessionConfigPanel;
+import uno.anahata.asi.swing.agi.config.AgiConfigPanel;
+import uno.anahata.asi.swing.agi.config.RequestConfigPanel;
 import uno.anahata.asi.swing.icons.AddIcon;
+import uno.anahata.asi.swing.icons.CancelIcon;
 import uno.anahata.asi.swing.icons.RestartIcon;
+import uno.anahata.asi.swing.icons.SaveIcon;
+import uno.anahata.asi.swing.icons.SettingsIcon;
 import uno.anahata.asi.swing.internal.SwingTask;
+
+import uno.anahata.asi.swing.components.ScrollablePanel;
 
 /**
  * A centralized, multi-tabbed Command Center for managing the ASI container.
@@ -39,7 +46,7 @@ import uno.anahata.asi.swing.internal.SwingTask;
  * @author anahata
  */
 @Slf4j
-public class AsiContainerPreferencesPanel extends JPanel {
+public class AsiContainerPreferencesPanel extends ScrollablePanel {
  
     /** The parent container panel providing access to the global executor. */
     private final AbstractAsiContainerPanel containerPanel;
@@ -53,7 +60,18 @@ public class AsiContainerPreferencesPanel extends JPanel {
     /** Dropdown for selecting the default AI model for the container. */
     private JComboBox<String> modelDropdown;
  
+    /** The master tabbed pane for configuration categories. */
     private final JTabbedPane mainTabs;
+    
+    /** Callback to close the host dialog or frame. */
+    private Runnable closeCallback;
+
+    /** The primary action button to persist changes. */
+    private JButton saveBtn;
+    /** The action button to discard changes and exit. */
+    private JButton cancelBtn;
+    /** The specialized button to restore factory DNA. */
+    private JButton resetBtn;
     
     private final List<AbstractAiProvider> unsavedProviders = new ArrayList<>();
     private final List<AiProviderPanel> activeProviderPanels = new ArrayList<>();
@@ -79,7 +97,6 @@ public class AsiContainerPreferencesPanel extends JPanel {
         this.prefs = container.getPreferences();
         
         setLayout(new BorderLayout());
-        setPreferredSize(new Dimension(950, 750));
 
         this.mainTabs = new JTabbedPane();
         
@@ -97,8 +114,9 @@ public class AsiContainerPreferencesPanel extends JPanel {
         }
 
         mainTabs.addTab("General Defaults", createGeneralTab());
-        mainTabs.addTab("DNA Templates", createTemplatesTab());
-        mainTabs.addTab("Tool Permissions", new ToolkitPermissionsPanel(container));
+        mainTabs.addTab("Agi Config", createScrollPane(createAgiTemplateTab()));
+        mainTabs.addTab("Request Config", createScrollPane(createRequestTemplateTab()));
+        mainTabs.addTab("Tool Permissions", createScrollPane(new ToolkitPermissionsPanel(container)));
         mainTabs.addTab("AI Providers", createAiProvidersTab());
 
         if (initialTabIndex >= 0 && initialTabIndex < mainTabs.getTabCount()) {
@@ -106,9 +124,122 @@ public class AsiContainerPreferencesPanel extends JPanel {
         }
 
         add(mainTabs, BorderLayout.CENTER);
-        
+        add(createBottomButtonPanel(), BorderLayout.SOUTH);
+
         // Initialize model discovery
         refreshModelDropdown();
+    }
+
+    /**
+     * Standardizes the creation of JScrollPanes for use within preferences tabs, 
+     * ensuring consistent scroll speed and borderless rendering.
+     * 
+     * @param c The component to wrap.
+     * @return A configured JScrollPane.
+     */
+    private JScrollPane createScrollPane(Component c) {
+        JScrollPane scroll = new JScrollPane(c);
+        scroll.setBorder(null);
+        scroll.getVerticalScrollBar().setUnitIncrement(24);
+        return scroll;
+    }
+
+    /**
+     * Constructs the bottom command bar with the 'Reset' action anchored to 
+     * the left and 'Save/Cancel' to the right.
+     * 
+     * @return The populated action panel.
+     */
+    private JPanel createBottomButtonPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setOpaque(false);
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        resetBtn = new JButton("Reset to Defaults", new RestartIcon(16));
+        resetBtn.setToolTipText("Wipe current templates and restore from Anahata factory defaults.");
+        resetBtn.addActionListener(e -> handleReset());
+
+        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        rightPanel.setOpaque(false);
+        
+        saveBtn = new JButton("Save", new SaveIcon(16));
+        saveBtn.addActionListener(e -> handleSave());
+
+        cancelBtn = new JButton("Cancel", new CancelIcon(16));
+        cancelBtn.addActionListener(e -> {
+            if (closeCallback != null) closeCallback.run();
+        });
+
+        rightPanel.add(saveBtn);
+        rightPanel.add(cancelBtn);
+
+        panel.add(resetBtn, BorderLayout.WEST);
+        panel.add(rightPanel, BorderLayout.EAST);
+
+        return panel;
+    }
+
+    /**
+     * Triggers the synchronized save sequence and invokes the close callback 
+     * upon success.
+     */
+    private void handleSave() {
+        try {
+            save();
+            if (closeCallback != null) closeCallback.run();
+            JOptionPane.showMessageDialog(this, "Global configuration saved and applied.", "Success", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception ex) {
+            log.error("Failed to save preferences", ex);
+            JOptionPane.showMessageDialog(this, "Failed to save: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /**
+     * Wipes the template configurations and hot-reloads the UI components 
+     * to reflect the new DNA.
+     */
+    private void handleReset() {
+        int choice = JOptionPane.showConfirmDialog(this,
+                "Are you sure you want to reset the Agi and Request configurations to factory defaults?\n" +
+                "Your API keys and Providers will NOT be affected.",
+                "Reset to Defaults", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+
+        if (choice == JOptionPane.YES_OPTION) {
+            prefs.resetAgiTemplate(container);
+            prefs.setRequestTemplate(new uno.anahata.asi.agi.provider.RequestConfig(null));
+            
+            // UI Hot-Reload: Re-initialize the tabs to reflect new template
+            int selected = mainTabs.getSelectedIndex();
+            mainTabs.removeAll();
+            mainTabs.addTab("General Defaults", createGeneralTab());
+            mainTabs.addTab("Agi Config", createScrollPane(createAgiTemplateTab()));
+            mainTabs.addTab("Request Config", createScrollPane(createRequestTemplateTab()));
+            mainTabs.addTab("Tool Permissions", createScrollPane(new ToolkitPermissionsPanel(container)));
+            mainTabs.addTab("AI Providers", createAiProvidersTab());
+            mainTabs.setSelectedIndex(selected);
+            
+            JOptionPane.showMessageDialog(this, "Configurations reset successfully. Please click Save to persist.");
+        }
+    }
+
+    /**
+     * Sets the callback to close the host window.
+     * @param closeCallback the callback.
+     */
+    public void setCloseCallback(Runnable closeCallback) {
+        this.closeCallback = closeCallback;
+    }
+
+
+    /**
+     * Programmatically selects a specific tab in the preferences dashboard.
+     * 
+     * @param index The index of the tab to select.
+     */
+    public void selectTab(int index) {
+        if (index >= 0 && index < mainTabs.getTabCount()) {
+            mainTabs.setSelectedIndex(index);
+        }
     }
 
     /**
@@ -250,52 +381,27 @@ public class AsiContainerPreferencesPanel extends JPanel {
      * 
      * @return The templates management panel.
      */
-    private JPanel createTemplatesTab() {
+    private JPanel createAgiTemplateTab() {
         JPanel panel = new JPanel(new BorderLayout());
         
-        boolean outdated = prefs.isAgiTemplateOutdated(container);
-        
-        // Toolbar for template actions
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        if (outdated) {
-            JLabel warn = new JLabel("<html><font color='#e67e22'><b>DNA Evolution Detected!</b> Stored template toolset is out of sync with this version.</font></html>");
-            toolbar.add(warn);
-        }
-        
-        JButton resetBtn = new JButton("Reset DNA to Defaults", new RestartIcon(16));
-        if (outdated) {
-            resetBtn.setForeground(java.awt.Color.RED);
-        }
-        resetBtn.setToolTipText("Wipe current template and restore from Anahata factory defaults. Existing sessions are not affected.");
-        resetBtn.addActionListener(e -> {
-            int choice = JOptionPane.showConfirmDialog(this, 
-                "Are you sure you want to reset the DNA template to factory defaults?\n" +
-                "This will restore the default toolkits and policies for this version of Anahata.\n" +
-                "Your API keys and Providers will NOT be affected.", 
-                "Reset Template", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            
-            if (choice == JOptionPane.YES_OPTION) {
-                prefs.resetAgiTemplate(container);
-                mainTabs.setComponentAt(mainTabs.indexOfTab("DNA Templates"), createTemplatesTab());
-                mainTabs.setSelectedIndex(mainTabs.indexOfTab("DNA Templates"));
-                JOptionPane.showMessageDialog(this, "DNA Template reset successfully. Please click Save to persist.");
-            }
-        });
-        toolbar.add(resetBtn);
-        panel.add(toolbar, BorderLayout.SOUTH);
-
-        // DNA Templates use the SessionConfigPanel aggregator bound to the global templates
-        SessionConfigPanel templatesPanel = new SessionConfigPanel(
-                prefs.getAgiTemplate(), 
-                prefs.getRequestTemplate(), 
-                null // No live Agi session
-        );
-        
+        AgiConfigPanel templatesPanel = new AgiConfigPanel(prefs.getAgiTemplate());
         panel.add(templatesPanel, BorderLayout.CENTER);
         
-        JLabel header = new JLabel("<html><div style='padding: 10px;'><b>Session DNA Templates:</b> These settings are inherited by every new session born in this container. Changes made here do not affect existing sessions.</div></html>");
+        JLabel header = new JLabel("<html><div style='padding: 10px;'><b>Agi Config:</b> These settings are inherited by every new session born in this container. Changes made here do not affect existing sessions.</div></html>");
         panel.add(header, BorderLayout.NORTH);
         
+        return panel;
+    }
+
+    private JPanel createRequestTemplateTab() {
+        JPanel panel = new JPanel(new BorderLayout());
+        RequestConfigPanel reqPanel = new RequestConfigPanel(
+                prefs.getRequestTemplate(), 
+                null
+        );
+        panel.add(reqPanel, BorderLayout.CENTER);
+        JLabel header = new JLabel("<html><div style='padding: 10px;'><b>Request Config:</b> These settings are inherited by every new session born in this container.</div></html>");
+        panel.add(header, BorderLayout.NORTH);
         return panel;
     }
 
@@ -338,7 +444,7 @@ public class AsiContainerPreferencesPanel extends JPanel {
             AiProviderPanel keysPanel = new AiProviderPanel(containerPanel, p, () -> {
                 removeProvider(p, providerTabs);
             });
-            providerTabs.addTab(p.getDisplayName(), keysPanel);
+            providerTabs.addTab(p.getDisplayName(), createScrollPane(keysPanel));
             activeProviderPanels.add(keysPanel);
         }
         
@@ -348,7 +454,7 @@ public class AsiContainerPreferencesPanel extends JPanel {
                 unsavedProviders.remove(p);
                 refreshProviderTabs(providerTabs);
             });
-            providerTabs.addTab("<html><b>* " + p.getDisplayName() + "</b></html>", keysPanel);
+            providerTabs.addTab("<html><b>* " + p.getDisplayName() + "</b></html>", createScrollPane(keysPanel));
             activeProviderPanels.add(keysPanel);
         }
     }

@@ -5,10 +5,11 @@ package uno.anahata.asi.swing;
 
 
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
 import java.awt.event.HierarchyEvent;
 import javax.swing.Box;
 import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
@@ -21,10 +22,10 @@ import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.swing.icons.DeleteIcon;
 import uno.anahata.asi.swing.icons.CancelIcon;
-import uno.anahata.asi.swing.icons.SaveIcon;
 import uno.anahata.asi.swing.icons.LoadSessionIcon;
 
 import uno.anahata.asi.swing.agi.status.TaskStatusComponent;
+import uno.anahata.asi.swing.icons.IconUtils;
 import uno.anahata.asi.swing.icons.RestartIcon;
 import uno.anahata.asi.swing.icons.SettingsIcon;
 
@@ -78,6 +79,13 @@ public abstract class AbstractAsiContainerPanel extends JPanel {
         settingsBtn.setToolTipText("Configure global ASI settings and API keys");
         settingsBtn.addActionListener(e -> showPreferences());
         toolBar.add(settingsBtn);
+
+        if (asiContainer.getPreferences().isLoadFailed()) {
+            JLabel warningLabel = new JLabel("<html><font color='red'><b>&#9888; Check Preferences</b></font></html>");
+            warningLabel.setToolTipText("Evolutionary leap detected. Previous settings were backed up.");
+            toolBar.add(Box.createHorizontalStrut(5));
+            toolBar.add(warningLabel);
+        }
 
         toolBar.add(Box.createHorizontalGlue());
 
@@ -193,35 +201,50 @@ public abstract class AbstractAsiContainerPanel extends JPanel {
 
     /**
      * Displays the global ASI preferences dashboard with a specific tab selected.
+     * <p>
+     * Implementation details: Switches from modal JDialog to a non-modal JFrame 
+     * to support full OS window management (maximization). Implements a 
+     * single-instance pattern to reuse the existing frame if already open.
+     * </p>
      * 
      * @param initialTabIndex The index of the tab to open.
      */
     public void showPreferences(int initialTabIndex) {
-        AsiContainerPreferencesPanel prefsPanel = new AsiContainerPreferencesPanel(this, initialTabIndex);
+        javax.swing.JFrame frame = asiContainer.getPreferencesFrame();
         
-        JButton saveBtn = new JButton("Save", new SaveIcon(16));
-        JButton cancelBtn = new JButton("Cancel", new CancelIcon(16));
-        
-        Object[] options = {saveBtn, cancelBtn};
-        
-        JOptionPane pane = new JOptionPane(prefsPanel, JOptionPane.PLAIN_MESSAGE, JOptionPane.DEFAULT_OPTION, new SettingsIcon(32), options, null);
-        javax.swing.JDialog dialog = pane.createDialog(SwingUtilities.getWindowAncestor(this), "ASI Container Preferences");
-        dialog.setLocationRelativeTo(SwingUtilities.getWindowAncestor(this));
-        
-        saveBtn.addActionListener(e -> {
-            try {
-                prefsPanel.save();
-                dialog.dispose();
-                JOptionPane.showMessageDialog(this, "Global configuration saved and applied.", "Success", JOptionPane.INFORMATION_MESSAGE);
-            } catch (Exception ex) {
-                log.error("Failed to save preferences", ex);
-                JOptionPane.showMessageDialog(dialog, "Failed to save: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        if (frame != null && frame.isVisible()) {
+            frame.toFront();
+            if (frame.getContentPane() instanceof AsiContainerPreferencesPanel p) {
+                p.selectTab(initialTabIndex);
             }
+            return;
+        }
+
+        frame = new javax.swing.JFrame("ASI Container Preferences");
+        frame.setDefaultCloseOperation(javax.swing.JFrame.DISPOSE_ON_CLOSE);
+        
+        try {
+            frame.setIconImages(IconUtils.getLogoImages());
+        } catch (Exception e) {
+            log.warn("Failed to set frame icons", e);
+        }
+
+        AsiContainerPreferencesPanel prefsPanel = new AsiContainerPreferencesPanel(this, initialTabIndex);
+        frame.setLayout(new BorderLayout());
+        frame.add(prefsPanel, BorderLayout.CENTER);
+        
+        final javax.swing.JFrame finalFrame = frame;
+        prefsPanel.setCloseCallback(() -> {
+            finalFrame.dispose();
+            asiContainer.setPreferencesFrame(null);
         });
         
-        cancelBtn.addActionListener(e -> dialog.dispose());
+        asiContainer.setPreferencesFrame(frame);
         
-        dialog.setVisible(true);
+        frame.setPreferredSize(new java.awt.Dimension(1000, 800));
+        frame.pack();
+        frame.setLocationRelativeTo(SwingUtilities.getWindowAncestor(this));
+        frame.setVisible(true);
     }
 
 

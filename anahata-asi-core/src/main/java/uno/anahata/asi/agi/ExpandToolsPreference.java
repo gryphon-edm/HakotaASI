@@ -16,15 +16,15 @@ public enum ExpandToolsPreference implements Serializable {
     /**
      * All tool calls are initially expanded.
      */
-    ALL("ALL"),
+    ALL("Expand all tool calls"),
     /**
      * Only tool calls that require user confirmation (Permission is PROMPT) are initially expanded.
      */
-    PROMPT("PROMPT"),
+    PROMPT("Only those with Prompt permission"),
     /**
      * Tool calls are initially collapsed.
      */
-    NONE("NONE");
+    NONE("None (always collapsed)");
 
     private final String displayValue;
 

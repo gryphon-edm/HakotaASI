@@ -129,6 +129,49 @@ public class IconUtils {
     }
 
     /**
+     * Converts any standard Swing Icon to a java.awt.Image.
+     * <p>
+     * Implementation details: If the icon is an instance of {@link ImageIcon}, 
+     * it returns the underlying image directly. Otherwise, it creates a 
+     * {@link BufferedImage} and paints the icon into it. This allows 
+     * programmatic icons to be used for window icons and other native-facing 
+     * APIs.
+     * </p>
+     * 
+     * @param icon The icon to convert.
+     * @return The resulting Image, or null if the input was null.
+     */
+    public static Image toImage(Icon icon) {
+        if (icon == null) {
+            return null;
+        }
+        
+        if (icon instanceof ImageIcon imageIcon) {
+            return imageIcon.getImage();
+        }
+
+        int w = icon.getIconWidth();
+        int h = icon.getIconHeight();
+        
+        // Safety guard for uninitialized or zero-sized icons
+        if (w <= 0 || h <= 0) {
+            w = 1; h = 1; 
+        }
+
+        BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = image.createGraphics();
+        
+        // Use high-quality rendering for the capture
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        
+        icon.paintIcon(new Component() {}, g, 0, 0);
+        g.dispose();
+        
+        return image;
+    }
+
+    /**
      * Creates a disabled (grayed out and semi-transparent) version of the given icon.
      * 
      * @param icon The original icon.

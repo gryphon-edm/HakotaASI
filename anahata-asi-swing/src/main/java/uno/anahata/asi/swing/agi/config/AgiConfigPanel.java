@@ -63,7 +63,7 @@ public class AgiConfigPanel extends ScrollablePanel implements PropertyChangeLis
     }
 
     private void initComponents() {
-        setLayout(new MigLayout("fillx, insets 10", "[grow,fill]", "[]10[]10[]"));
+        setLayout(new MigLayout("fillx, insets 10 10 100 10", "[grow,fill]"));
         // --- 1. LOOP PANEL ---
         JPanel loopPanel = createSectionPanel("Loop Logic & Behavior");
         loopPanel.setLayout(new MigLayout("fillx, insets 10", "[right]pref[10][grow,fill]"));
@@ -83,7 +83,7 @@ public class AgiConfigPanel extends ScrollablePanel implements PropertyChangeLis
         autoReplyToolsCheckbox = new JCheckBox("Automatically re-prompt after tool execution");
         loopPanel.add(new JLabel("Auto-Reply Tools:"));
         loopPanel.add(autoReplyToolsCheckbox, "wrap");
-        add(loopPanel, "wrap");
+        add(loopPanel, "wrap, gapbottom 10");
 
         // --- 2. RETRY PANEL ---
         JPanel retryPanel = createSectionPanel("API Retry Policy");
@@ -97,7 +97,7 @@ public class AgiConfigPanel extends ScrollablePanel implements PropertyChangeLis
         apiMaxDelaySpinner = new JSpinner(new SpinnerNumberModel(30000L, 1000L, 300000L, 1000L));
         retryPanel.add(new JLabel("Max Delay (ms):"));
         retryPanel.add(apiMaxDelaySpinner, "wrap");
-        add(retryPanel, "wrap");
+        add(retryPanel, "wrap, gapbottom 10");
 
         // --- 3. METABOLIC PANEL ---
         JPanel metabolismPanel = createSectionPanel("Context Metabolism (The DNA)");
@@ -117,7 +117,7 @@ public class AgiConfigPanel extends ScrollablePanel implements PropertyChangeLis
         thoughtMaxDepthSpinner = new JSpinner(new SpinnerNumberModel(12, 1, 1000, 1));
         metabolismPanel.add(new JLabel("Thought Max Depth:"));
         metabolismPanel.add(thoughtMaxDepthSpinner, "wrap");
-        add(metabolismPanel, "wrap");
+        add(metabolismPanel, "wrap, gapbottom 20");
         setupListeners();
     }
 
