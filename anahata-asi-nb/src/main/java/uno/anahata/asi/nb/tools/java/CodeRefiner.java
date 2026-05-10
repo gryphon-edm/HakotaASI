@@ -245,5 +245,93 @@ public class CodeRefiner extends AnahataToolkit {
         }
     }
 
+    /**
+     * Adds an annotation to a class, method, or field.
+     *
+     * @param filePath the absolute path of the Java file
+     * @param memberFqn the ABSOLUTE FQN of the member
+     * @param annotation the annotation to add
+     * @param save whether to save
+     * @return a success message
+     * @throws Exception if it fails
+     */
+    @AgiTool("Adds an annotation to a class, method, or field.")
+    public String addAnnotation(
+            @AgiToolParam(value = "The absolute path of the Java file.", rendererId = "path") String filePath,
+            @AgiToolParam("The ABSOLUTE FQN of the member (e.g. 'com.foo.Bar.myMethod(int)').") String memberFqn,
+            @AgiToolParam("The annotation to add (e.g. '@Override' or '@SneakyThrows').") String annotation,
+            @AgiToolParam("Whether to save.") boolean save) throws Exception {
+
+        FileObject fo = JavaSourceUtils.getFileObject(filePath);
+        JavaSource js = JavaSource.forFileObject(fo);
+        js.runModificationTask(wc -> {
+            wc.toPhase(JavaSource.Phase.RESOLVED);
+            Tree tree = JavaSourceUtils.findTree(wc, memberFqn);
+            if (tree == null) {
+                throw new AgiToolException("Member not found: " + memberFqn);
+            }
+            
+            TreeMaker make = wc.getTreeMaker();
+            ModifiersTree oldMods = null;
+            if (tree instanceof MethodTree mt) {
+                oldMods = mt.getModifiers();
+            } else if (tree instanceof VariableTree vt) {
+                oldMods = vt.getModifiers();
+            } else if (tree instanceof ClassTree ct) {
+                oldMods = ct.getModifiers();
+            }
+            
+            if (oldMods != null) {
+                String annName = annotation.startsWith("@") ? annotation.substring(1) : annotation;
+                AnnotationTree annTree = make.Annotation(make.Identifier(annName), Collections.emptyList());
+                ModifiersTree newMods = make.addModifiersAnnotation(oldMods, annTree);
+                wc.rewrite(oldMods, newMods);
+            }
+        }).commit();
+        if (save) {
+            JavaSourceUtils.handleSave(fo);
+        }
+        return "Added annotation " + annotation + " to " + memberFqn;
+    }
+
+    /**
+     * Sets or updates the Javadoc of a class, method, or field.
+     *
+     * @param filePath the absolute path of the Java file
+     * @param memberFqn the ABSOLUTE FQN of the member
+     * @param javadoc the Javadoc intent
+     * @param save whether to save
+     * @return a success message
+     * @throws Exception if it fails
+     */
+    /*
+    @AgiTool("Sets or updates the Javadoc of a class, method, or field.")
+    public String setJavadoc(
+            @AgiToolParam(value = "The absolute path of the Java file.", rendererId = "path") String filePath,
+            @AgiToolParam("The ABSOLUTE FQN of the member.") String memberFqn,
+            @AgiToolParam("The structured Javadoc definition.") uno.anahata.asi.nb.tools.java.coderefiner.JavadocIntent javadoc,
+            @AgiToolParam("Whether to save.") boolean save) throws Exception {
+
+        uno.anahata.asi.nb.tools.java.coderefiner.CodeRefinementBatch batch = new uno.anahata.asi.nb.tools.java.coderefiner.CodeRefinementBatch();
+        String uri = new java.io.File(filePath).toURI().toString();
+        String uuid = getAgi().getResourceManager().getUuidByUri(uri);
+        if (uuid == null) {
+            throw new AgiToolException("File is not in the context window. Please load it first.");
+        }
+        batch.setResourceUuid(uuid);
+        batch.setLastModified(getAgi().getResourceManager().get(uuid).getLastLoadTimestamp());
+        batch.setSave(save);
+        batch.setOptimize(true);
+        
+        uno.anahata.asi.nb.tools.java.coderefiner.CodeRefinementIntent intent = new uno.anahata.asi.nb.tools.java.coderefiner.CodeRefinementIntent();
+        intent.setType(uno.anahata.asi.nb.tools.java.coderefiner.CodeRefinementIntent.Type.UPDATE);
+        intent.setMemberFqn(memberFqn);
+        intent.setJavadoc(javadoc);
+        batch.setIntents(Collections.singletonList(intent));
+        
+        BatchCodeRefiner refiner = getToolkit(BatchCodeRefiner.class);
+        return refiner.refine(batch);
+    }
+*/
 
 }

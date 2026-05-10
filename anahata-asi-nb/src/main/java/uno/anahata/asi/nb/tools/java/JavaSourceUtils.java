@@ -88,7 +88,9 @@ public class JavaSourceUtils {
      * Generates the Anahata Canonical FQN for a given element.
      */
     public static String getCanonicalFqn(Element e) {
-        if (e == null) return null;
+        if (e == null) {
+            return null;
+        }
         if (e instanceof javax.lang.model.element.PackageElement pe) {
             return pe.getQualifiedName().toString();
         }
@@ -117,8 +119,12 @@ public class JavaSourceUtils {
      * Generates the Anahata Canonical FQN for a given type mirror.
      */
     public static String getCanonicalFqn(TypeMirror m) {
-        if (m == null) return null;
-        if (m.getKind().isPrimitive()) return m.toString();
+        if (m == null) {
+            return null;
+        }
+        if (m.getKind().isPrimitive()) {
+            return m.toString();
+        }
         if (m.getKind() == TypeKind.ARRAY) {
             return getCanonicalFqn(((ArrayType) m).getComponentType()) + "[]";
         }
@@ -199,6 +205,7 @@ public class JavaSourceUtils {
     
 
     public static Tree findTree(CompilationInfo info, final String memberFqn) {
+        
         final String pureFqn;
         final String indexPart;
         if (memberFqn.contains("#")) {
@@ -222,7 +229,9 @@ public class JavaSourceUtils {
         new TreePathScanner<Void, Void>() {
             @Override
             public Void visitClass(ClassTree node, Void p) {
-                if (found[0] != null) return null;
+                if (found[0] != null) {
+                    return null;
+                }
                 Element el = info.getTrees().getElement(getCurrentPath());
                 if (el instanceof TypeElement te) {
                     String currentFqn = te.getQualifiedName().toString();

@@ -85,6 +85,9 @@ public class CodeRefinementIntent implements Serializable {
     @Schema(description = "The reason for this structural change. Will be displayed in the UI.")
     private String reason;
 
+    @Schema(description = "Optional Javadoc to apply to the member. If updating a member and left null, the existing Javadoc is preserved.")
+    private JavadocIntent javadoc;
+
     @JsonIgnore
     private int calculatedIndex = -1;
 
@@ -106,6 +109,9 @@ public class CodeRefinementIntent implements Serializable {
     private transient String extractedBody;
 
     @JsonIgnore
+    private transient String extractedJavadoc;
+
+    @JsonIgnore
     private transient com.sun.source.tree.Tree savedTreeForMove;
 
     /**
@@ -125,6 +131,9 @@ public class CodeRefinementIntent implements Serializable {
 
         Tree member = null;
         if (type != Type.INSERT) {
+            if (memberFqn == null || memberFqn.isBlank()) {
+                throw new AgiToolException("memberFqn is mandatory for " + type + " intents.");
+            }
             member = BatchCodeRefiner.findMemberInWorkingCopy(info, memberFqn);
             if (member == null) {
                 BatchCodeRefiner.throwMemberNotFound(info, memberFqn);
@@ -146,7 +155,7 @@ public class CodeRefinementIntent implements Serializable {
                 inferredParentFqn = null;
             } else {
                 javax.lang.model.element.Element parentElement = info.getTrees().getElement(path.getParentPath());
-                inferredParentFqn = uno.anahata.asi.nb.tools.java.JavaSourceUtils.getCanonicalFqn(parentElement);
+                inferredParentFqn = parentElement != null ? uno.anahata.asi.nb.tools.java.JavaSourceUtils.getCanonicalFqn(parentElement) : null;
             }
         } else {
             inferredParentFqn = null; // Default to root CU for inserts without classFqn
@@ -200,15 +209,19 @@ public class CodeRefinementIntent implements Serializable {
         List<Tree> members = getContainerMembersByResolvedIndex(wc, modifiedMembers);
 
         if (clearance) {
-            // Use the anchor name to calculate the relative index in the simulation.
-            calculatedIndex = BatchCodeRefiner.getInsertIndex(wc, members, position, anchorMemberName);
+            // No action during clearance
         } else {
+            calculatedIndex = BatchCodeRefiner.getInsertIndex(wc, members, position, anchorMemberName);
             GeneratorUtilities gu = GeneratorUtilities.get(wc);
-            Tree newMember = BatchCodeRefiner.parseMember(wc, declaration, body, cpInfo);
+            String effectiveDecl = declaration;
+            if (javadoc != null) {
+                effectiveDecl = javadoc.generateString() + "\n" + effectiveDecl;
+            }
+            Tree newMember = BatchCodeRefiner.parseMember(wc, effectiveDecl, body, cpInfo);
             if (optimize) {
                 newMember = gu.importFQNs(newMember);
             }
-members.add(calculatedIndex != -1 ? Math.min(calculatedIndex, members.size()) : members.size(), newMember);
+            members.add(calculatedIndex != -1 ? Math.min(calculatedIndex, members.size()) : members.size(), newMember);
         }
     }
 
@@ -218,8 +231,6 @@ members.add(calculatedIndex != -1 ? Math.min(calculatedIndex, members.size()) : 
     }
 
     private void applyUpdate(WorkingCopy wc, Map<Tree, List<Tree>> modifiedMembers, boolean optimize, boolean clearance, org.netbeans.api.java.source.ClasspathInfo cpInfo) throws Exception {
-        List<com.sun.source.tree.Tree> members = getContainerMembersByResolvedIndex(wc, modifiedMembers);
-
         if (clearance) {
             com.sun.source.tree.Tree oldTreeInSim = BatchCodeRefiner.findMemberInWorkingCopy(wc, memberFqn);
             if (oldTreeInSim == null) {
@@ -231,21 +242,54 @@ members.add(calculatedIndex != -1 ? Math.min(calculatedIndex, members.size()) : 
             if (body == null) {
                 extractedBody = getExtractedBody(wc, oldTreeInSim);
             }
-            int idx = BatchCodeRefiner.findMemberIndex(wc, members, oldTreeInSim);
-            if (idx != -1) {
-                calculatedIndex = idx;
-                members.remove(idx);
+            int startPos = (int) wc.getTrees().getSourcePositions().getStartPosition(wc.getCompilationUnit(), oldTreeInSim);
+            if (startPos > 0) {
+                String textBefore = wc.getText().substring(0, startPos);
+                int javadocEnd = textBefore.lastIndexOf("*/");
+                int javadocStart = textBefore.lastIndexOf("/**");
+                if (javadocStart != -1 && javadocEnd != -1 && javadocStart < javadocEnd) {
+                    String inBetween = textBefore.substring(javadocEnd + 2);
+                    if (inBetween.trim().isEmpty()) {
+                        extractedJavadoc = textBefore.substring(javadocStart, javadocEnd + 2);
+                    }
+                }
+            }
+            
+            com.sun.source.util.TreePath path = wc.getTrees().getPath(wc.getCompilationUnit(), oldTreeInSim);
+            if (path != null) {
+                com.sun.source.doctree.DocCommentTree oldDoc = wc.getDocTrees().getDocCommentTree(path);
+                if (oldDoc != null) {
+                    wc.rewrite(oldTreeInSim, oldDoc, null);
+                }
             }
         } else {
-            if (declaration != null || body != null) {
-                com.sun.source.tree.Tree newTree = BatchCodeRefiner.parseMember(wc,
-                        declaration != null ? declaration : extractedDeclaration,
-                        body != null ? body : extractedBody, cpInfo);
+            List<com.sun.source.tree.Tree> members = getContainerMembersByResolvedIndex(wc, modifiedMembers);
+            if (declaration != null || body != null || javadoc != null) {
+                String effectiveDecl = declaration != null ? declaration : extractedDeclaration;
+                if (javadoc != null) {
+                    effectiveDecl = javadoc.generateString() + "\n" + effectiveDecl;
+                } else if (extractedJavadoc != null) {
+                    effectiveDecl = extractedJavadoc + "\n" + effectiveDecl;
+                }
+                com.sun.source.tree.Tree newTree = BatchCodeRefiner.parseMember(wc, effectiveDecl, body != null ? body : extractedBody, cpInfo);
 
                 if (optimize) {
                     newTree = org.netbeans.api.java.source.GeneratorUtilities.get(wc).importFQNs(newTree);
                 }
-                members.add(Math.min(calculatedIndex, members.size()), newTree);
+                
+                com.sun.source.tree.Tree oldTreeInSim = BatchCodeRefiner.findMemberInWorkingCopy(wc, memberFqn);
+                int idx = oldTreeInSim != null ? BatchCodeRefiner.findMemberIndex(wc, members, oldTreeInSim) : -1;
+
+                if (idx != -1) {
+                    members.set(idx, newTree);
+                } else {
+                    idx = BatchCodeRefiner.findMemberIndex(wc, members, BatchCodeRefiner.getMemberSignature(memberFqn));
+                    if (idx != -1) {
+                        members.set(idx, newTree);
+                    } else {
+                        throw new AgiToolException("Could not locate member for update during reconstruction: " + memberFqn);
+                    }
+                }
             }
         }
     }
@@ -273,7 +317,9 @@ members.add(calculatedIndex != -1 ? Math.min(calculatedIndex, members.size()) : 
         CompilationUnitTree cut = wc.getCompilationUnit();
         if (tree instanceof MethodTree mt) {
             BlockTree block = mt.getBody();
-            if (block == null) return null;
+            if (block == null) {
+                return null;
+            }
             int start = (int) sp.getStartPosition(cut, block);
             int end = (int) sp.getEndPosition(cut, block);
             String text = wc.getText().substring(start, end).trim();
@@ -324,10 +370,10 @@ members.add(calculatedIndex != -1 ? Math.min(calculatedIndex, members.size()) : 
                 members.remove(idx);
             }
             savedTreeForMove = BatchCodeRefiner.cloneTree(wc.getTreeMaker(), memberTree);
-            calculatedIndex = BatchCodeRefiner.getInsertIndex(wc, members, position, anchorMemberName);
         } else {
             List<com.sun.source.tree.Tree> members = getContainerMembersByResolvedIndex(wc, modifiedMembers);
-members.add(calculatedIndex != -1 ? Math.min(calculatedIndex, members.size()) : members.size(), savedTreeForMove);
+            calculatedIndex = BatchCodeRefiner.getInsertIndex(wc, members, position, anchorMemberName);
+            members.add(calculatedIndex != -1 ? Math.min(calculatedIndex, members.size()) : members.size(), savedTreeForMove);
         }
     }
 

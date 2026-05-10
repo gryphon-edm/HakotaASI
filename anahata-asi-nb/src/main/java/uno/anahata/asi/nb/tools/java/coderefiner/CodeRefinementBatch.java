@@ -27,12 +27,14 @@ import uno.anahata.asi.toolkit.resources.text.LineComment;
 import java.util.Collections;
 
 /**
- * Version 2.0 of the refinement batch, using the flattened {@link CodeRefinementIntent}.
+ * Version 2.0 of the refinement batch, using the flattened
+ * {@link CodeRefinementIntent}.
  * <p>
- * This class is designed to be indestructible for LLMs that struggle with polymorphic 
- * JSON schemas, providing a linear, stable list of structural intents.
+ * This class is designed to be indestructible for LLMs that struggle with
+ * polymorphic JSON schemas, providing a linear, stable list of structural
+ * intents.
  * </p>
- * 
+ *
  * @author anahata
  */
 @Data
@@ -52,13 +54,16 @@ public class CodeRefinementBatch extends AbstractTextResourceWrite {
     private boolean save = true;
 
     /**
-     * Pre-calculated line comments for UI annotations, mapped during content calculation.
+     * Pre-calculated line comments for UI annotations, mapped during content
+     * calculation.
      */
     @JsonIgnore
     @Schema(hidden = true)
     private List<LineComment> calculatedComments = new ArrayList<>();
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected String doCalculateResultingContent(Agi agi) throws Exception {
         if (originalContent == null) {
@@ -85,16 +90,24 @@ public class CodeRefinementBatch extends AbstractTextResourceWrite {
         try (OutputStream os = simFo.getOutputStream()) {
             os.write(originalFo.asBytes());
         }
-        
+
         // 3. Reconnaissance Pass: Resolve coordinates on the REAL file first.
         // This captures the "Type DNA" and stable indices while the project CP is active.
         JavaSource originalJs = JavaSource.forFileObject(originalFo);
+        final Exception[] resolveError = new Exception[1];
         originalJs.runUserActionTask(wc -> {
-            wc.toPhase(JavaSource.Phase.RESOLVED);
-            for (CodeRefinementIntent intent : intents) {
-                intent.resolve(wc);
+            try {
+                wc.toPhase(JavaSource.Phase.RESOLVED);
+                for (CodeRefinementIntent intent : intents) {
+                    intent.resolve(wc);
+                }
+            } catch (Exception e) {
+                resolveError[0] = e;
             }
         }, true);
+        if (resolveError[0] != null) {
+            throw resolveError[0];
+        }
 
         // 4. Create Classpath-Aware JavaSource for simulation
         JavaSource simJs = JavaSource.create(cpInfo, simFo);
@@ -111,7 +124,6 @@ public class CodeRefinementBatch extends AbstractTextResourceWrite {
             wc.toPhase(JavaSource.Phase.RESOLVED);
             applyTo(wc, false, cpInfo);
 
-            
             // --- Coordinate Reconnaissance Pass ---
             for (CodeRefinementIntent intent : intents) {
                 String resultingFqn = intent.getResultingMemberFqn();
@@ -126,16 +138,17 @@ public class CodeRefinementBatch extends AbstractTextResourceWrite {
             }
         });
 
-this.calculatedComments = mapping;
+        this.calculatedComments = mapping;
         String ret = mRes.getResultingSource(simFo);
         return ret;
     }
 
     /**
      * Authoritatively applies the batch to the provided working copy.
-     * 
+     *
      * @param wc The working copy.
-     * @param clearance If true, only deletes targets. If false, only inserts/updates replacements.
+     * @param clearance If true, only deletes targets. If false, only
+     * inserts/updates replacements.
      */
     public void applyTo(WorkingCopy wc, boolean clearance, ClasspathInfo cpInfo) throws Exception {
         log.info("[V2-STRATEGY] Starting application of {} intents (Clearance={}).", intents.size(), clearance);
@@ -146,9 +159,6 @@ this.calculatedComments = mapping;
         if (clearance) {
             // Sort by resolved index descending: remove from bottom-to-top so indices remain stable.
             sortedIntents.sort((a, b) -> Integer.compare(b.getResolvedIndex(), a.getResolvedIndex()));
-        } else {
-            // Sort by calculated index ascending: insert from top-to-bottom.
-            sortedIntents.sort((a, b) -> Integer.compare(a.getCalculatedIndex(), b.getCalculatedIndex()));
         }
 
         for (CodeRefinementIntent intent : sortedIntents) {
@@ -169,18 +179,21 @@ this.calculatedComments = mapping;
         }
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void validate(Agi agi) throws Exception {
+        super.validate(agi);
         if (resourceUuid == null) {
             throw new AgiToolException("Resource uuid not provided");
         }
         captureOriginalContent(agi);
-        
+
         if (intents == null || intents.isEmpty()) {
             throw new AgiToolException("Refinement batch must contain at least one intent.");
         }
-        
+
         // Manual implementation of identity validation
         if (java.util.Objects.equals(originalContent, calculateResultingContent(agi))) {
             throw new AgiToolException("Update rejected: The resulting content is identical to the current file content on disk.");

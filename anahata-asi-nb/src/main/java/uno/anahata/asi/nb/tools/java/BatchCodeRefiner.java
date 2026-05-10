@@ -57,7 +57,7 @@ import static uno.anahata.asi.nb.tools.java.coderefiner.RelativePosition.START;
  * @author anahata
  */
 @Slf4j
-@AgiToolkit("Advanced structural Java refinement (Batch Mode). Authoritative and robust against Lombok expansions.")
+@AgiToolkit("Advanced structural Java refinement (Batch Mode). Too buggy don't use. Not ready, don't try to enable it.")
 public class BatchCodeRefiner extends AnahataToolkit {
 
     /**
@@ -65,7 +65,7 @@ public class BatchCodeRefiner extends AnahataToolkit {
      */
     @Override
     public void initialize() {
-        getToolkit().setEnabled(true);
+        getToolkit().setEnabled(false);
     }
 
     @Override
@@ -73,13 +73,14 @@ public class BatchCodeRefiner extends AnahataToolkit {
         return Collections.singletonList(JavaSourceUtils.CANONICAL_FQN_STANDARD
                 + "\n"
                 + "### BatchCodeRefiner Toolkit Instructions\n"
+                + "0. **Do not use unless you are a reasoning model like Gemini 3.1 Pro or more capable**"
                 + "1. **Context Locked**: You MUST have the resource in your RAG message (context) to propose a refinement.\n"
                 + "2. **Batch Intents**: You can combine multiple structural changes (INSERT, UPDATE, DELETE, MOVE) in one call.\n"
                 + "3. **Optimistic Locking**: Always use the `lastModified` timestamp from the RAG message. "
                         + "\n\tNote: You can't update the same file twice in the same turn otherwise the first one will change the lastModified and the second one will fail with an optimistic locking exception but you can do as many inserts and updates as you want in a single tool call\n"
                 + "4. **Field Initializers**: Put the expression (code after '=') in the `body` field or leave the body empty for fields if you don't want any initialzier expression.\n"
-                + "4.1 **Inline Comments**: AST generation natively strips inline comments within method bodies. Use the `Resources` toolkit (`findAndReplaceInTextResource`) for textual edits if you must preserve/inject inline comments.\n"
-                + "5. **Javadocs**: Use the specialized Javadocs toolkit for updating documentation.\n"
+                + "4.1 **Inline Comments**: Natively supported! You can include inline comments directly in the `body` string.\n"
+                + "5. **Javadocs**: Use the structured `javadoc` property (JavadocIntent) in the intent to inject Javadocs on the fly! If omitted during UPDATE, existing Javadoc is preserved.\n"
                 + "6. **No imports**: Do not use this tookit to add imports, use CodeRefiner..\n"
                 + "7. **No records**: Do not use this tookit to inser or update records, there is a bug in netbeans when adding or updating records using the AST apis, use the Resources toolkit for records.\n"
                 + "8. **No training knowledge**: Do not use your training knoweldge, this toolkit is unique to Anahata you have to pay very close attention to the tool definition and the paramters schema.\n"
@@ -101,8 +102,8 @@ public class BatchCodeRefiner extends AnahataToolkit {
             + "When updating a member, you can update both the declaration and the body in the same UPDATE intent or you can just do the body or just the declaration. "
             + "Never include the declaration of a field or a method in the 'body' attribute, the member declaration (signature) can only be in the 'declaration' field only. The 'body' can only contain either whats inside the {} or whatever is to the right of the '='. "
             + "If you update the declaration of a method, you must include the full delcaration with all annotations and all throws clauses. "
-            + "Does not support member level javadocs on the 'declaration' (and obvioulsy not in the 'body'). "
-            + "Use the javadocs toolkit for adding javadoc in a separate tool call because 1) this tool does not support javadocs and 2) Javadocs.setJavadoc also changes the latModified timestamp on disk"
+            + "Provides a fully integrated `javadoc` object property so you can document members synchronously with code changes! "
+            + "Inline comments inside the `body` string are also natively preserved!"
             + "Does not support java records due to a bug in netbeans. "
             + "It's not a find-and-replace tool, use the Resources toolkit for that. "
             + "You can't use this tool to add imports, just use the fqn of any types not in the imports list with optimize=true to let netbeans import them automatically or use CodeRefiner.addImports to surgically add imports. "
@@ -236,7 +237,7 @@ public class BatchCodeRefiner extends AnahataToolkit {
      * @param memberName The name or signature to look for.
      * @return The index, or -1 if not found.
      */
-    private static int findMemberIndex(org.netbeans.api.java.source.CompilationInfo info, List<? extends Tree> members, String memberName) {
+    public static int findMemberIndex(org.netbeans.api.java.source.CompilationInfo info, List<? extends Tree> members, String memberName) {
         String target = memberName.replaceAll("<[^>]*>", "").replaceAll("\\s+", "");
 
         for (int i = 0; i < members.size(); i++) {
@@ -251,7 +252,8 @@ public class BatchCodeRefiner extends AnahataToolkit {
                         Element e = info.getTrees().getElement(path);
                         if (e instanceof ExecutableElement ee) {
                             String params = ee.getParameters().stream().map(p -> {
-                                return JavaSourceUtils.getCanonicalFqn(p.asType());
+                                javax.lang.model.type.TypeMirror tm = p.asType();
+                                return tm != null ? JavaSourceUtils.getCanonicalFqn(tm) : "Unknown";
                             }).collect(Collectors.joining(","));
                             signature = (name.equals("<init>") ? "<init>" : name) + "(" + params + ")";
                         }
@@ -351,7 +353,11 @@ public class BatchCodeRefiner extends AnahataToolkit {
                     }
                 }
                 if (t != null) {
-                    result[0] = wc.getTreeMaker().asNew(t);
+                    org.netbeans.api.java.source.GeneratorUtilities gu = org.netbeans.api.java.source.GeneratorUtilities.get(wc);
+                    com.sun.source.tree.Tree importedTree = gu.importComments(t, innerWc.getCompilationUnit());
+                    com.sun.source.tree.Tree newTree = wc.getTreeMaker().asNew(importedTree);
+                    gu.copyComments(importedTree, newTree, true);
+                    result[0] = newTree;
                 }
             }
         }, true);
@@ -362,13 +368,16 @@ public class BatchCodeRefiner extends AnahataToolkit {
      * Resolves the insertion index relative to anchors.
      */
     public static int getInsertIndex(org.netbeans.api.java.source.CompilationInfo info, List<? extends Tree> members, RelativePosition position, String anchor) throws AgiToolException {
-        int anchorIdx = anchor != null ? findMemberIndex(info, members, getMemberSignature(anchor)) : -1;
-        if (anchor != null && anchorIdx == -1) {
+        if ((position == RelativePosition.BEFORE || position == RelativePosition.AFTER) && (anchor == null || anchor.isBlank())) {
+            throw new AgiToolException("anchorMemberName is mandatory for relative position " + position);
+        }
+        int anchorIdx = anchor != null && !anchor.isBlank() ? findMemberIndex(info, members, getMemberSignature(anchor)) : -1;
+        if (anchor != null && !anchor.isBlank() && anchorIdx == -1) {
             throw new AgiToolException("Anchor member not found: " + anchor);
         }
         return switch (position) {
             case START -> 0;
-case END -> Integer.MAX_VALUE;
+            case END -> Integer.MAX_VALUE;
             case BEFORE -> anchorIdx;
             case AFTER -> anchorIdx + 1;
         };
