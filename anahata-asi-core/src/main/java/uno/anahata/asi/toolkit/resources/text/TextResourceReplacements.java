@@ -127,7 +127,12 @@ public class TextResourceReplacements extends AbstractTextResourceWrite {
             if (indexes != null) {
                 for (Integer idx : indexes) {
                     if (idx > count || idx <= 0) {
-                        throw new AgiToolException("Surgical Range Error: Requested occurrence index " + idx + " but only " + count + " occurrences found.");
+                        throw new AgiToolException("Surgical Checksum Failed for replacement #"  + replacementIndex 
+                        + " \n-target: [" + StringUtils.abbreviateMiddle(target, "...", 108) + "...]. " 
+                        + " \n-replacement: [" + StringUtils.abbreviateMiddle(target, "...", 108) + "...]. " 
+                        + " \n-reason:" + replacement.getReason()
+                        + " \n-occurrendeIdexes:" + replacement.getOccurrenceIndexes()
+                        + "\nSurgical Range Error: Requested occurrence index " + idx + " but only " + count + " occurrences found.");
                     }
                 }
             }
