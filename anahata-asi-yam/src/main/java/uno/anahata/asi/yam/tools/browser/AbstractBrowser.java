@@ -30,30 +30,58 @@ import uno.anahata.asi.persistence.Rebindable;
  * (like Chrome or Firefox) must handle the browser-specific launch protocols,
  * DevTools connections, and process management.
  * </p>
- * 
+ *
  * @author anahata
  */
 @Slf4j
 public abstract class AbstractBrowser extends AnahataToolkit implements Rebindable {
 
-    /** The centralized registry mapping drone IDs to their stateful objects. */
+    /**
+     * The centralized registry mapping drone IDs to their stateful objects.
+     */
     protected final Map<String, BrowserDrone> drones = new ConcurrentHashMap<>();
 
     /**
      * Resolves the active WebDriver for the requested drone.
      * <p>
-     * If the connection is broken or lost, this method should attempt to 
+     * If the connection is broken or lost, this method should attempt to
      * re-establish the connection to the underlying port.
      * </p>
-     * 
+     *
      * @param droneId The unique ID of the drone.
      * @return The active WebDriver, or null if it cannot be resolved.
      */
     protected abstract WebDriver getDriver(String droneId);
 
     /**
+     * Gets the current status of the browser driver for a specific drone.
+     *
+     * @param droneId The ID of the drone.
+     * @return A status report.
+     */
+    @AgiTool("Gets the current status of a specific drone.")
+    public String getStatus(@AgiToolParam("The ID of the drone.") String droneId) {
+        BrowserDrone d = drones.get(droneId);
+        if (d == null) {
+            return "Drone not found: " + droneId;
+        }
+        if (d.initializing) {
+            return "Drone '" + droneId + "' is currently initializing...";
+        }
+        if (getDriver(droneId) == null) {
+            return "No active browser session for '" + droneId + "'. Last error:\n" + (d.lastError != null ? d.lastError : "None");
+        }
+        try {
+            return "Connected '" + droneId + "' to: " + d.currentUrl;
+        } catch (Exception e) {
+            log.error("Failed to get current URL for drone: {}", droneId, e);
+            return "Driver '" + droneId + "' is present but unresponsive: " + e.getMessage();
+        }
+    }
+
+    /**
      * Closes all active browser processes.
-     * 
+     *
      * @return A status message describing the cleanup operations.
      */
     @AgiTool("Terminates all running browser processes on the host system.")
@@ -65,7 +93,7 @@ public abstract class AbstractBrowser extends AnahataToolkit implements Rebindab
      * Implementations should ideally use native DevTools protocols to avoid
      * forcing window focus and causing screen flickering.
      * </p>
-     * 
+     *
      * @param droneId The ID of the drone.
      * @return A list of formatted tab titles and URLs.
      */
@@ -73,7 +101,6 @@ public abstract class AbstractBrowser extends AnahataToolkit implements Rebindab
     public abstract List<String> listTabs(@AgiToolParam("The ID of the drone.") String droneId);
 
     // --- UNIVERSAL SELENIUM TOOLS ---
-
     /**
      * Navigates the specified drone to a new URL.
      *
@@ -85,12 +112,12 @@ public abstract class AbstractBrowser extends AnahataToolkit implements Rebindab
     public String navigate(
             @AgiToolParam("The ID of the drone.") String droneId,
             @AgiToolParam("The URL to navigate to.") String url) {
-        
+
         WebDriver driver = getDriver(droneId);
         if (driver == null) {
             return "No active session for drone: " + droneId;
         }
-        
+
         driver.get(url);
         return "Navigated drone '" + droneId + "' to: " + url;
     }
@@ -107,7 +134,7 @@ public abstract class AbstractBrowser extends AnahataToolkit implements Rebindab
     public String getScreenshot(
             @AgiToolParam("The ID of the drone.") String droneId,
             @AgiToolParam("The name of the screenshot file.") String name) throws Exception {
-        
+
         WebDriver driver = getDriver(droneId);
         if (driver == null) {
             return "No active session for drone: " + droneId;
@@ -134,7 +161,7 @@ public abstract class AbstractBrowser extends AnahataToolkit implements Rebindab
     public String switchToTab(
             @AgiToolParam("The ID of the drone.") String droneId,
             @AgiToolParam("The index of the tab.") int index) {
-        
+
         WebDriver driver = getDriver(droneId);
         if (driver == null) {
             return "No active session for drone: " + droneId;
@@ -161,7 +188,7 @@ public abstract class AbstractBrowser extends AnahataToolkit implements Rebindab
         if (driver == null) {
             return "No active session for drone: " + droneId;
         }
-        
+
         driver.navigate().back();
         return "Navigated drone '" + droneId + "' back.";
     }
@@ -178,7 +205,7 @@ public abstract class AbstractBrowser extends AnahataToolkit implements Rebindab
         if (driver == null) {
             return "No active session for drone: " + droneId;
         }
-        
+
         driver.navigate().forward();
         return "Navigated drone '" + droneId + "' forward.";
     }
@@ -195,7 +222,7 @@ public abstract class AbstractBrowser extends AnahataToolkit implements Rebindab
         if (driver == null) {
             return "No active session for drone: " + droneId;
         }
-        
+
         driver.navigate().refresh();
         return "Refreshed drone '" + droneId + "'.";
     }
@@ -212,7 +239,7 @@ public abstract class AbstractBrowser extends AnahataToolkit implements Rebindab
         if (driver == null) {
             return "No active session for drone: " + droneId;
         }
-        
+
         return driver.getPageSource();
     }
 
@@ -228,7 +255,7 @@ public abstract class AbstractBrowser extends AnahataToolkit implements Rebindab
         if (driver == null) {
             return "No active session for drone: " + droneId;
         }
-        
+
         return driver.findElement(By.tagName("body")).getText();
     }
 
@@ -244,26 +271,26 @@ public abstract class AbstractBrowser extends AnahataToolkit implements Rebindab
         if (driver == null) {
             return "No active session for drone: " + droneId;
         }
-        
+
         List<WebElement> inputs = driver.findElements(By.cssSelector("input, textarea, select"));
         StringBuilder sb = new StringBuilder("Found " + inputs.size() + " form elements:\n");
         for (WebElement input : inputs) {
             sb.append("- Tag: ").append(input.getTagName())
-              .append(", Type: ").append(input.getAttribute("type"))
-              .append(", Name: ").append(input.getAttribute("name"))
-              .append(", ID: ").append(input.getAttribute("id"))
-              .append("\n");
+                    .append(", Type: ").append(input.getAttribute("type"))
+                    .append(", Name: ").append(input.getAttribute("name"))
+                    .append(", ID: ").append(input.getAttribute("id"))
+                    .append("\n");
         }
-        
+
         List<WebElement> buttons = driver.findElements(By.tagName("button"));
         sb.append("\nFound ").append(buttons.size()).append(" buttons:\n");
         for (WebElement button : buttons) {
             sb.append("- Text: ").append(button.getText())
-              .append(", ID: ").append(button.getAttribute("id"))
-              .append(", Type: ").append(button.getAttribute("type"))
-              .append("\n");
+                    .append(", ID: ").append(button.getAttribute("id"))
+                    .append(", Type: ").append(button.getAttribute("type"))
+                    .append("\n");
         }
-        
+
         return sb.toString();
     }
 
@@ -278,18 +305,18 @@ public abstract class AbstractBrowser extends AnahataToolkit implements Rebindab
     public String clickElement(
             @AgiToolParam("The ID of the drone.") String droneId,
             @AgiToolParam("The ID, Name, or visible text of the element.") String identifier) {
-        
+
         WebDriver driver = getDriver(droneId);
         if (driver == null) {
             return "No active session for drone: " + droneId;
         }
-        
+
         WebElement el = locateElementGracefully(driver, identifier);
         if (el != null) {
             el.click();
             return "Clicked element: " + identifier;
         }
-        
+
         return "Could not find element: " + identifier;
     }
 
@@ -304,18 +331,18 @@ public abstract class AbstractBrowser extends AnahataToolkit implements Rebindab
     public String scrollToElement(
             @AgiToolParam("The ID of the drone.") String droneId,
             @AgiToolParam("The ID, Name, or visible text of the element.") String identifier) {
-        
+
         WebDriver driver = getDriver(droneId);
         if (driver == null) {
             return "No active session for drone: " + droneId;
         }
-        
+
         WebElement el = locateElementGracefully(driver, identifier);
         if (el != null) {
             ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", el);
             return "Scrolled to element: " + identifier;
         }
-        
+
         return "Could not find element to scroll to: " + identifier;
     }
 
@@ -332,15 +359,15 @@ public abstract class AbstractBrowser extends AnahataToolkit implements Rebindab
             @AgiToolParam("The ID of the drone.") String droneId,
             @AgiToolParam("The CSS selector of the element.") String cssSelector,
             @AgiToolParam("The maximum time to wait in seconds.") int timeoutSeconds) {
-        
+
         WebDriver driver = getDriver(droneId);
         if (driver == null) {
             return "No active session for drone: " + droneId;
         }
-        
+
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(timeoutSeconds));
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(cssSelector)));
-        
+
         return "Element '" + cssSelector + "' is now visible.";
     }
 
@@ -355,12 +382,12 @@ public abstract class AbstractBrowser extends AnahataToolkit implements Rebindab
     public Object executeScript(
             @AgiToolParam("The ID of the drone.") String droneId,
             @AgiToolParam("The JavaScript code to execute.") String script) {
-        
+
         WebDriver driver = getDriver(droneId);
         if (driver == null) {
             return "No active session for drone: " + droneId;
         }
-        
+
         JavascriptExecutor js = (JavascriptExecutor) driver;
         return js.executeScript(script);
     }
@@ -376,18 +403,18 @@ public abstract class AbstractBrowser extends AnahataToolkit implements Rebindab
     public String fillForm(
             @AgiToolParam("The ID of the drone.") String droneId,
             @AgiToolParam("A map of field IDs or Names to values.") Map<String, String> data) {
-        
+
         WebDriver driver = getDriver(droneId);
         if (driver == null) {
             return "No active session for drone: " + droneId;
         }
-        
+
         StringBuilder sb = new StringBuilder("Form filling results:\n");
-        
+
         for (Map.Entry<String, String> entry : data.entrySet()) {
             String key = entry.getKey();
             String value = entry.getValue();
-            
+
             WebElement el = locateElementGracefully(driver, key);
             if (el != null) {
                 el.clear();
@@ -397,7 +424,7 @@ public abstract class AbstractBrowser extends AnahataToolkit implements Rebindab
                 sb.append("- Could not find field: ").append(key).append("\n");
             }
         }
-        
+
         return sb.toString();
     }
 
@@ -423,14 +450,16 @@ public abstract class AbstractBrowser extends AnahataToolkit implements Rebindab
     }
 
     /**
-     * Helper method to safely locate elements without throwing raw Selenium exceptions.
+     * Helper method to safely locate elements without throwing raw Selenium
+     * exceptions.
      * <p>
-     * This avoids empty try-catch blocks and adheres to the Fail Fast architecture 
-     * by checking collection boundaries natively.
+     * This avoids empty try-catch blocks and adheres to the Fail Fast
+     * architecture by checking collection boundaries natively.
      * </p>
-     * 
+     *
      * @param driver The WebDriver instance.
-     * @param identifier The element identifier (ID, Name, Link Text, or XPath text).
+     * @param identifier The element identifier (ID, Name, Link Text, or XPath
+     * text).
      * @return The WebElement, or null if not found.
      */
     protected WebElement locateElementGracefully(WebDriver driver, String identifier) {
@@ -438,22 +467,22 @@ public abstract class AbstractBrowser extends AnahataToolkit implements Rebindab
         if (!elements.isEmpty()) {
             return elements.get(0);
         }
-        
+
         elements = driver.findElements(By.name(identifier));
         if (!elements.isEmpty()) {
             return elements.get(0);
         }
-        
+
         elements = driver.findElements(By.linkText(identifier));
         if (!elements.isEmpty()) {
             return elements.get(0);
         }
-        
+
         elements = driver.findElements(By.xpath("//*[contains(text(), '" + identifier + "')]"));
         if (!elements.isEmpty()) {
             return elements.get(0);
         }
-        
+
         return null;
     }
 }
