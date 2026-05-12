@@ -17,9 +17,11 @@ import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.agi.AgiConfig;
 import uno.anahata.asi.swing.agi.AgiPanel;
 import uno.anahata.asi.swing.agi.SwingAgiConfig;
+import java.util.Optional;
 import uno.anahata.asi.swing.icons.AutoReplyIcon;
-import uno.anahata.asi.swing.icons.CompressIcon;
 import uno.anahata.asi.swing.icons.IconUtils;
+import uno.anahata.asi.swing.icons.ScreenShareIcon;
+import uno.anahata.asi.swing.toolkit.Screens;
 import uno.anahata.asi.swing.icons.LeafIcon;
 import uno.anahata.asi.swing.icons.LeafIcon.LeafState;
 import uno.anahata.asi.swing.icons.RestartIcon;
@@ -54,8 +56,8 @@ public class ToolbarPanel extends JPanel {
     private JToggleButton togglePrunedButton;
     /** Button to clear the agi history. */
     private JButton clearAgiButton;
-    /** Button to trigger context compression. */
-    private JButton compressContextButton;
+    /** Button for live screen sharing. */
+    private JButton screenShareButton;
 
     /**
      * Constructs a new ToolbarPanel.
@@ -80,13 +82,7 @@ public class ToolbarPanel extends JPanel {
         clearAgiButton.addActionListener(this::clearAgi);
         add(clearAgiButton);
 
-        // 2. Compress Context Button (Top)
-        compressContextButton = createIconButton(new CompressIcon(ICON_SIZE), "Compress the context.");
-        compressContextButton.addActionListener(this::compressContext);
-        // TODO: This needs to trigger a special, one-off API call that only includes the ContextWindow tools.
-        // This requires a new mechanism in the Agi orchestrator.
-        compressContextButton.setEnabled(false);
-        add(compressContextButton);
+
 
         // Vertical Glue to push toggles to the middle
         add(Box.createVerticalGlue());
@@ -111,6 +107,13 @@ public class ToolbarPanel extends JPanel {
         toggleAutoreplyButton = createIconToggleButton(new AutoReplyIcon(ICON_SIZE), "", config.isAutoReplyTools());
         toggleAutoreplyButton.addActionListener(this::toggleAutoreply);
         add(toggleAutoreplyButton);
+
+        // 7. Screen Share Button (Middle)
+        screenShareButton = createIconButton(new ScreenShareIcon(ICON_SIZE, false), "Live Screen Sharing");
+        screenShareButton.addActionListener(e -> {
+            new SharedScreenEditorFrame(agi).setVisible(true);
+        });
+        add(screenShareButton);
         
         // Vertical Glue to keep the toggles in the middle
         add(Box.createVerticalGlue());
@@ -121,6 +124,11 @@ public class ToolbarPanel extends JPanel {
 
         // Initial state sync
         syncToggles();
+
+        // Listen for screen sharing changes
+        agi.getToolkit(Screens.class).ifPresent(s -> {
+            new EdtPropertyChangeListener(this, s, "sharingChanged", evt -> syncToggles());
+        });
     }
 
     /**
@@ -171,14 +179,6 @@ public class ToolbarPanel extends JPanel {
     private void clearAgi(ActionEvent e) {
         log.info("Clear Agi button pressed.");
         agi.clear();
-    }
-
-    /**
-     * Action listener for the compress context button.
-     * @param e The action event.
-     */
-    private void compressContext(ActionEvent e) {
-        log.info("Compress Context button pressed. Action is currently disabled.");
     }
     
     /**
@@ -237,6 +237,16 @@ public class ToolbarPanel extends JPanel {
         toggleAutoreplyButton.setSelected(config.isAutoReplyTools());
         toggleAutoreplyButton.setToolTipText(config.isAutoReplyTools() ? 
                 "Auto reply tools enabled: click to disable" : "Auto reply tools disabled: click to enable");
+
+        boolean sharing = false;
+        Optional<Screens> screens = agi.getToolkit(Screens.class);
+        if (screens.isPresent()) {
+            sharing = !screens.get().getSharedDeviceIndexes().isEmpty() || !screens.get().getSharedRegions().isEmpty();
+            screenShareButton.setEnabled(true);
+        } else {
+            screenShareButton.setEnabled(false);
+        }
+        screenShareButton.setIcon(new ScreenShareIcon(ICON_SIZE, sharing));
     }
 
     /**
