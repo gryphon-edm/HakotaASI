@@ -3,6 +3,7 @@
  */
 package uno.anahata.asi.swing.agi.message.part.text;
 
+import com.vladsch.flexmark.ext.attributes.AttributesExtension;
 import com.vladsch.flexmark.ext.autolink.AutolinkExtension;
 import com.vladsch.flexmark.ext.emoji.EmojiExtension;
 import com.vladsch.flexmark.ext.gfm.strikethrough.StrikethroughExtension;
@@ -62,7 +63,8 @@ public class MarkupTextSegmentRenderer extends AbstractTextSegmentRenderer {
                 StrikethroughExtension.create(),
                 TaskListExtension.create(),
                 EmojiExtension.create(),
-                TypographicExtension.create()
+                TypographicExtension.create(),
+                AttributesExtension.create()
                 //AdmonitionExtension.create()
         ));
         options.set(HtmlRenderer.SOFT_BREAK, "<br />");
