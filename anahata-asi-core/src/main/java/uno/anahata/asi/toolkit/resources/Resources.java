@@ -131,7 +131,7 @@ public class Resources extends AnahataToolkit {
             ids.add(resource.getId());
         }
 
-        manager.registerAll(toRegister, getActor());
+        manager.registerAll(toRegister, "Resource Loaded by " + getActor());
         return ids;
     }
 
@@ -198,7 +198,7 @@ public class Resources extends AnahataToolkit {
 
         ResourceHandle handle = getAgi().getConfig().createResourceHandle(path.toUri());
         Resource resource = new Resource(handle);
-        getAgi().getResourceManager().register(resource, getActor());
+        getAgi().getResourceManager().register(resource, "Text File Created by " + getActor());
 
         log("Created text file: " + create.getPath());
         return "File created and resource registered with id " + resource.getId() + " lastModified=" + resource.getLastLoadTimestamp();
