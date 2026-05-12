@@ -3,16 +3,10 @@
 This file tracks the actionable tasks and tactical goals for the Anahata ASI (V2) project.
 
 ## 0. Zero Day Go Live: 
-- [X] remove duplicates of CodeModel.findTypes for reloaded nbms
-- [ ] **Investigate Session Save**: Investigate at what points we are saving the session to prevent NetBeans crashes from losing data.
-- [ ] change resource and session uuids to be way smaller or consider using atomicLong for resourceuids
-- [ ] check if stop providing on a resource makes it actually stop providing
-- [ ] check if updating the text viewport manually does update it
-- [ ] model changing session nickname doesnt work or maybe the ui is not updating it
-- [ ] test javadoc toolkit and see what would it take to allow InsertIntent or UpdateIntent to take a Javadoc object but this could take a long time
+- [ ] updateTextResource doesnt let you edit the right hand side of the diff
+- [ ] check ide logs work
+- [ ] make "cached data" in MediaView transient? possibly in text resources too?
 - [ ] Tool's turns to expire doesn't have a field in context details panel
-- [ ] Change AbstractMessagePanel and AbstractPartPanel and ToolCallPanel to show a different mouse point when hovering over the JXTitledPane headers
-- [ ] add a string parameter to autobackup to log what is triggering it, check all places that trigger an autobackup and update the docos to reflect that
 - [ ] change all log.info to log.debug
 
 
