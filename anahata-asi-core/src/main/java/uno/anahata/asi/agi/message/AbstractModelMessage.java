@@ -44,7 +44,12 @@ public abstract class AbstractModelMessage<R extends Response> extends AbstractM
     private String providerId;
 
     /**
-     * The ID of the model that generated this message.
+     * The UUID of the AbstractAiProvider that generated this message.
+     */
+    private String providerUuid;
+
+    /**
+     * The ID of the AbstractModel that generated this message.
      */
     private String modelId;
 
@@ -112,6 +117,9 @@ public abstract class AbstractModelMessage<R extends Response> extends AbstractM
     public AbstractModelMessage(@NonNull Agi agi, @NonNull String modelId) {
         super(agi);
         this.modelId = modelId;
+        if (agi.getSelectedModel() != null) {
+            this.providerUuid = agi.getSelectedModel().getProvider().getUuid();
+        }
     }
 
     /**

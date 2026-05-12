@@ -234,10 +234,11 @@ public class GeminiModel extends AbstractModel {
         RequestConfig config = request.config();
         List<AbstractMessage> history = request.history();
         boolean includePruned = config.isIncludePruned();
+        String currentProviderUuid = getProvider().getUuid();
 
         // 1-to-N Mapping: A single turn-holding ModelMessage expands into multiple API contents.
         List<Content> googleHistory = history.stream()
-                .map(msg -> new GeminiContentAdapter(msg, includePruned).toGoogle())
+                .map(msg -> new GeminiContentAdapter(msg, includePruned, currentProviderUuid).toGoogle())
                 .flatMap(List::stream)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toCollection(ArrayList::new));

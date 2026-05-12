@@ -39,6 +39,11 @@ import uno.anahata.asi.agi.tool.ToolResponseAttachment;
 @RequiredArgsConstructor
 public class GeminiPartAdapter {
     private final AbstractPart anahataPart;
+    private final boolean includeThoughtSignature;
+
+    public GeminiPartAdapter(AbstractPart anahataPart) {
+        this(anahataPart, true);
+    }
 
     /**
      * Performs the conversion for simple, one-to-one Anahata parts.
@@ -51,7 +56,7 @@ public class GeminiPartAdapter {
         if (anahataPart instanceof ThoughtSignature) {
             thoughtSignature = ((ThoughtSignature) anahataPart).getThoughtSignature();
         }
-        if (thoughtSignature != null) {
+        if (includeThoughtSignature && thoughtSignature != null) {
             partBuilder.thoughtSignature(thoughtSignature);
         }
 
