@@ -53,20 +53,7 @@ public class Chrome extends AbstractBrowser {
         getToolkit().setEnabled(false);
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>Rebinds the transient driver states after session deserialization.</p>
-     */
-    @Override
-    public void rebind() {
-        super.rebind();
-        log.info("Rebinding Chrome toolkit.");
-        for (BrowserDrone drone : drones.values()) {
-            drone.driver = null;
-            drone.initializing = false;
-        }
-    }
-
+    
     /**
      * {@inheritDoc}
      * <p>Provides context-specific instructions to the ASI regarding Chrome automation.</p>
@@ -105,21 +92,27 @@ public class Chrome extends AbstractBrowser {
                         d.id, d.port, d.headless, d.profile, d.userDataDir, state, url));
             }
         }
+        String systemDefaultDir = ChromeUtils.getDefaultChromeUserDataDir();
+        sb.append("\n- **System Default User Data Dir**: `").append(systemDefaultDir).append("`\n");
+
         File arsenalDir = AbstractAsiContainer.getWorkDirSubDir("yam/chrome").toFile();
-        sb.append("\n### Chrome Toolkit Directory\n");
+        sb.append("\n### Chrome Toolkit Directory (Arsenal)\n");
         sb.append("**Path**: `").append(arsenalDir.getAbsolutePath()).append("`\n");
         if (arsenalDir.exists()) {
             File[] files = arsenalDir.listFiles();
             if (files != null && files.length > 0) {
                 for (File f : files) {
-                    sb.append("- ").append(f.getName()).append(f.isDirectory() ? "/" : "").append("\n");
                     if (f.isDirectory()) {
+                        boolean isLocked = hasLock(f);
+                        sb.append("- ").append(f.getName()).append(isLocked ? " [LOCKED]\n" : "\n");
                         File[] profiles = f.listFiles(p -> p.isDirectory() && (p.getName().equals("Default") || p.getName().startsWith("Profile ")));
                         if (profiles != null && profiles.length > 0) {
                             for (File p : profiles) {
-                                sb.append("  - ").append(p.getName()).append("/\n");
+                                sb.append("  - ").append(p.getName()).append("\n");
                             }
                         }
+                    } else {
+                        sb.append("- ").append(f.getName()).append("\n");
                     }
                 }
             } else {
@@ -153,7 +146,6 @@ public class Chrome extends AbstractBrowser {
         
         BrowserDrone drone = new BrowserDrone();
         drone.id = droneId;
-        drones.put(droneId, drone);
         drone.profile = profile;
         drone.headless = (headless != null && headless);
 
@@ -161,14 +153,14 @@ public class Chrome extends AbstractBrowser {
         String defaultManagedDir = new File(arsenalDir, "default").getAbsolutePath();
 
         if (dataDir == null || dataDir.isBlank()) {
-            drone.userDataDir = defaultManagedDir;
+            drone.userDataDir = drone.headless ? null : defaultManagedDir;
         } else if (!dataDir.contains("/") && !dataDir.contains("\\")) {
             drone.userDataDir = new File(arsenalDir, dataDir).getAbsolutePath();
         } else {
             drone.userDataDir = dataDir;
         }
 
-        if (drone.userDataDir.equals(ChromeUtils.getDefaultChromeUserDataDir())) {
+        if (drone.userDataDir != null && drone.userDataDir.equals(ChromeUtils.getDefaultChromeUserDataDir())) {
             drone.userDataDir = defaultManagedDir;
         }
 
@@ -207,7 +199,9 @@ public class Chrome extends AbstractBrowser {
                 }
             }
             if (remotePort != -1) {
-                return connectToExistingInternal(drone, remotePort);
+                String res = connectToExistingInternal(drone, remotePort);
+                if (drone.driver != null || drone.port > 0) drones.put(droneId, drone);
+                return res;
             }
         }
         
@@ -215,34 +209,11 @@ public class Chrome extends AbstractBrowser {
             drone.profile = detectActiveProfile(drone.userDataDir);
         }
         
-        return launchProfileChromeInternal(drone, null);
+        String res = launchProfileChromeInternal(drone, null);
+        if (drone.driver != null || drone.port > 0) drones.put(droneId, drone);
+        return res;
     }
 
-    /**
-     * Gets the current status of the browser driver for a specific drone.
-     *
-     * @param droneId The ID of the drone.
-     * @return A status report.
-     */
-    @AgiTool("Gets the current status of a specific drone.")
-    public String getStatus(@AgiToolParam("The ID of the drone.") String droneId) {
-        BrowserDrone d = drones.get(droneId);
-        if (d == null) {
-            return "Drone not found: " + droneId;
-        }
-        if (d.initializing) {
-            return "Drone '" + droneId + "' is currently initializing...";
-        }
-        if (getDriver(droneId) == null) {
-            return "No active browser session for '" + droneId + "'. Last error:\n" + (d.lastError != null ? d.lastError : "None");
-        }
-        try {
-            return "Connected '" + droneId + "' to: " + d.currentUrl;
-        } catch (Exception e) {
-            log.error("Failed to get current URL for drone: {}", droneId, e);
-            return "Driver '" + droneId + "' is present but unresponsive: " + e.getMessage();
-        }
-    }
 
     /**
      * {@inheritDoc}
@@ -428,7 +399,7 @@ public class Chrome extends AbstractBrowser {
                     sb.append(" [Data: ").append(dataDir).append("]");
                 }
                 p.info().startInstant().ifPresent(i -> sb.append(" [Started: ").append(i).append("]"));
-                sb.append("\n");
+                sb.append("\n      Cmd: ").append(cmdLine).append("\n");
             }
         } catch (Exception e) {
             log.error("Error scanning Chrome processes", e);
@@ -531,6 +502,7 @@ public class Chrome extends AbstractBrowser {
     }
 
     private String detectActiveProfile(String userDataDir) {
+        if (userDataDir == null) return "Default";
         File dir = new File(userDataDir);
         if (!dir.exists() || !dir.isDirectory()) {
             return "Default";
