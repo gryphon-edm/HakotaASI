@@ -4,9 +4,7 @@
 package uno.anahata.asi.swing;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
-import java.awt.FlowLayout;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,13 +13,13 @@ import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTree;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import net.miginfocom.swing.MigLayout;
 import org.jdesktop.swingx.JXTreeTable;
 import org.jdesktop.swingx.decorator.ColorHighlighter;
 import org.jdesktop.swingx.decorator.ComponentAdapter;
@@ -146,13 +144,16 @@ public class ToolkitPermissionsPanel extends JPanel {
             treeTable.expandRow(i);
         }
 
-        add(treeTable.getTableHeader(), BorderLayout.NORTH);
-        add(treeTable, BorderLayout.CENTER);
+        // 5. Header Section (Rules + Table Header)
+        JPanel headerPanel = new JPanel(new MigLayout("ins 0, fillx", "[grow,fill]"));
+        headerPanel.setOpaque(false);
         
-        JPanel footer = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        footer.setOpaque(false);
-        footer.add(new JLabel("<html><div style='padding: 10px;'><b>Global Tool Rules of Engagement:</b> Set the default safety level for every tool grouped by toolkit. Changes apply to all sessions.</div></html>"));
-        add(footer, BorderLayout.SOUTH);
+        JLabel rulesLabel = new JLabel("<html><div style='padding: 10px;'><b>Global Tool Rules of Engagement:</b> Set the default safety level for every tool grouped by toolkit. Changes apply to all sessions.</div></html>");
+        headerPanel.add(rulesLabel, "wrap");
+        headerPanel.add(treeTable.getTableHeader(), "growx");
+
+        add(headerPanel, BorderLayout.NORTH);
+        add(treeTable, BorderLayout.CENTER);
     }
 
     /**
