@@ -20,7 +20,8 @@ import uno.anahata.asi.swing.toolkit.Screens;
 import uno.anahata.asi.swing.toolkit.SwingJava;
 import uno.anahata.asi.toolkit.java.Java;
 import uno.anahata.asi.toolkit.resources.text.FullTextFileCreate;
-import uno.anahata.asi.yam.tools.Chrome;
+import uno.anahata.asi.yam.tools.chrome.Chrome;
+import uno.anahata.asi.yam.tools.firefox.Firefox;
 import uno.anahata.asi.yam.tools.Radio;
 import uno.anahata.asi.yam.tools.Speech;
 
@@ -61,6 +62,8 @@ public class SwingAgiConfig extends AgiConfig {
         getToolClasses().add(Radio.class);
         getToolClasses().add(Speech.class);
         getToolClasses().add(Chrome.class);
+        getToolClasses().add(Firefox.class);
+        //getToolClasses().add(OldChrome.class);
         getToolClasses().add(Screens.class);
     }
 
