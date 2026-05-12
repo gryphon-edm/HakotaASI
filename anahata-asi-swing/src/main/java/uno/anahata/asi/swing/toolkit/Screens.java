@@ -138,9 +138,11 @@ public class Screens extends AnahataToolkit {
     public String toggleDeviceSharing(@AgiToolParam("The index of the device") int deviceIdx) {
         if (sharedDeviceIndexes.contains(deviceIdx)) {
             sharedDeviceIndexes.remove(Integer.valueOf(deviceIdx));
+            getPropertyChangeSupport().firePropertyChange("sharingChanged", null, null);
             return "Stopped sharing Screen " + deviceIdx;
         } else {
             sharedDeviceIndexes.add(deviceIdx);
+            getPropertyChangeSupport().firePropertyChange("sharingChanged", null, null);
             return "Started sharing Screen " + deviceIdx;
         }
     }
@@ -164,6 +166,7 @@ public class Screens extends AnahataToolkit {
             @AgiToolParam("A Name for the region you are capturing") String name) {
         String id = UUID.randomUUID().toString();
         sharedRegions.add(new SharedRegion(id, new Rectangle(x, y, w, h), name != null ? name : "Region " + (sharedRegions.size() + 1)));
+        getPropertyChangeSupport().firePropertyChange("sharingChanged", null, null);
         return "Started sharing region " + id;
     }
     
@@ -176,6 +179,9 @@ public class Screens extends AnahataToolkit {
     @AgiTool("Stops sharing a specific region by its ID.")
     public String stopSharingRegion(@AgiToolParam("The UUID of the shared region") String regionId) {
         boolean removed = sharedRegions.removeIf(r -> r.getId().equals(regionId));
+        if (removed) {
+            getPropertyChangeSupport().firePropertyChange("sharingChanged", null, null);
+        }
         return removed ? "Stopped sharing region " + regionId : "Region not found: " + regionId;
     }
 
