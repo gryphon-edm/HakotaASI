@@ -86,6 +86,19 @@ public abstract class AbstractPartPanel<T extends AbstractPart> extends JXTitled
     /** Label for the thought signature, if present. */
     private JLabel thoughtSignatureLabel;
 
+    /** Flag to force the panel and its content to be visible and expanded regardless of state. */
+    private boolean forceExpanded = false;
+
+    /**
+     * Sets the forceExpanded flag, if true, the part will be expanded regardless of the expanded attribute of the AbstractPart.
+     * @param forceExpanded the new value
+     */
+    public void setForceExpanded(boolean forceExpanded) {
+        this.forceExpanded = forceExpanded;
+        updateContentVisibility();
+        updateVisibility();
+    }
+
     /**
      * Constructs a new AbstractPartPanel.
      *
@@ -377,7 +390,7 @@ public abstract class AbstractPartPanel<T extends AbstractPart> extends JXTitled
      */
     protected void updateContentVisibility() {
         boolean isEffectivelyPruned = part.isEffectivelyPruned();
-        boolean shouldShowContent = (!isEffectivelyPruned || agiConfig.isShowPruned()) && part.isExpanded();
+        boolean shouldShowContent = forceExpanded || ((!isEffectivelyPruned || agiConfig.isShowPruned()) && part.isExpanded());
         getContentContainer().setVisible(shouldShowContent);
     }
 
@@ -388,6 +401,6 @@ public abstract class AbstractPartPanel<T extends AbstractPart> extends JXTitled
      */
     protected void updateVisibility() {
         boolean isEffectivelyPruned = part.isEffectivelyPruned();
-        setVisible(!isEffectivelyPruned || agiConfig.isShowPruned());
+        setVisible(forceExpanded || !isEffectivelyPruned || agiConfig.isShowPruned());
     }
 }
