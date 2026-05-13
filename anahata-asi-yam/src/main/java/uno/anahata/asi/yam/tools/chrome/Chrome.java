@@ -65,6 +65,7 @@ public class Chrome extends AbstractBrowser {
                 + "- **Connection Protocol**: Use the `connect()` tool as your primary entry point. It automatically detects running browsers and handles the restart protocol if necessary.\n"
                 + "- **Scraping Tips (Headless vs Visual)**: Use the visual `Chrome` toolkit to bypass strong bot protections (DataDome, Cloudflare) by hijacking the user's authenticated fingerprint.\n"
                 + "- **Multi-Drone Routing**: All methods require a `droneId` to target the specific browser session.\n"
+                + "- **Missing Binaries**: If Selenium cannot find the browser binary, use the `Shell` toolkit to locate it (e.g., `which google-chrome`) and pass the absolute path to the `binaryPath` parameter.\n"
                 + "- **Extensibility**: The `Java` toolkit has `Selenium` and `Jsoup` on its classpath. Use it to cover any advanced gaps."
         );
     }
@@ -138,7 +139,8 @@ public class Chrome extends AbstractBrowser {
             @AgiToolParam(value = "A unique ID for this drone.", required = true) String droneId,
             @AgiToolParam(value = "An optional profile name to force. If null, auto-detected.", required = false) String profile,
             @AgiToolParam(value = "Whether to launch headless. Default false.", required = false) Boolean headless,
-            @AgiToolParam(value = "Custom user data dir. If null, defaults to system.", required = false) String dataDir) throws AgiToolException {
+            @AgiToolParam(value = "Custom user data dir. If null, defaults to system.", required = false) String dataDir,
+            @AgiToolParam(value = "Optional path to the Chrome binary.", required = false) String binaryPath) throws AgiToolException {
         
         if (drones.containsKey(droneId)) {
             throw new AgiToolException("Drone ID '" + droneId + "' already exists. Please choose a different ID or close it first.");
@@ -148,6 +150,7 @@ public class Chrome extends AbstractBrowser {
         drone.id = droneId;
         drone.profile = profile;
         drone.headless = (headless != null && headless);
+        drone.binaryPath = binaryPath;
 
         File arsenalDir = AbstractAsiContainer.getWorkDirSubDir("yam/chrome").toFile();
         String defaultManagedDir = new File(arsenalDir, "default").getAbsolutePath();
@@ -609,6 +612,9 @@ public class Chrome extends AbstractBrowser {
             if (d.profile != null && !d.profile.isEmpty()) {
                 options.addArguments("--profile-directory=" + d.profile);
             }
+            if (d.binaryPath != null && !d.binaryPath.isEmpty()) {
+                options.setBinary(d.binaryPath);
+            }
             initDriver(d, options, null);
             return d.driver != null ? "Headless drone '" + d.id + "' launched." : "Failed to launch headless drone.";
         }
@@ -627,7 +633,7 @@ public class Chrome extends AbstractBrowser {
         }
 
         try {
-            String chromeBinary = SystemUtils.IS_OS_MAC ? "\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\"" : (SystemUtils.IS_OS_WINDOWS ? "start chrome" : "google-chrome");
+            String chromeBinary = d.binaryPath != null && !d.binaryPath.isEmpty() ? "\"" + d.binaryPath + "\"" : (SystemUtils.IS_OS_MAC ? "\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\"" : (SystemUtils.IS_OS_WINDOWS ? "start chrome" : "google-chrome"));
             String cmd = String.format("%s --user-data-dir=\"%s\" --profile-directory=\"%s\" --remote-allow-origins=* --disable-dev-shm-usage --remote-debugging-port=%d --remote-debugging-address=127.0.0.1 --new-window --restore-last-session --no-first-run --no-default-browser-check --disable-features=InProductHelp --disable-component-update --disable-default-apps --disable-blink-features=AutomationControlled --disable-extensions", chromeBinary, effectiveDataDir, d.profile, remotePort);
             if (initialUrl != null) {
                 cmd += " \"" + initialUrl + "\"";
