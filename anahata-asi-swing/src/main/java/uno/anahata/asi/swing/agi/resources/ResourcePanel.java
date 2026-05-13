@@ -411,20 +411,39 @@ public class ResourcePanel extends ScrollablePanel {
      * @return The rendered model perspective component.
      */
     private JComponent createModelPerspectiveComponent() {
-        RagMessage rawMsg = new RagMessage(agiPanel.getAgi());
-        try {
-            rawMsg.addTextPart(currentResource.getHeader());
-            if (currentResource.getContextPosition() == ContextPosition.SYSTEM_INSTRUCTIONS) {
-                currentResource.getSystemInstructions().forEach(rawMsg::addTextPart);
-            } else {
-                currentResource.populateMessage(rawMsg);
-            }
-        } catch (Exception e) {
-            rawMsg.addTextPart("**Error generating perspective:**\n" + ExceptionUtils.getStackTrace(e));
-        }
+        JPanel container = new JPanel(new BorderLayout());
+        JLabel loadingLabel = new JLabel("Generating Model Perspective...", SwingConstants.CENTER);
+        loadingLabel.setFont(loadingLabel.getFont().deriveFont(Font.ITALIC, 16f));
+        container.add(loadingLabel, BorderLayout.CENTER);
 
-        RagMessagePanel panel = new RagMessagePanel(agiPanel, rawMsg, false, false);
-        panel.render();
-        return panel;
+        // Snapshot current resource for thread safety
+        final Resource resourceSnapshot = currentResource;
+
+        new SwingTask<RagMessage>(agiPanel, "Model Perspective: " + resourceSnapshot.getName(), () -> {
+            RagMessage rawMsg = new RagMessage(agiPanel.getAgi());
+            try {
+                rawMsg.addTextPart(resourceSnapshot.getHeader());
+                if (resourceSnapshot.getContextPosition() == ContextPosition.SYSTEM_INSTRUCTIONS) {
+                    resourceSnapshot.getSystemInstructions().forEach(rawMsg::addTextPart);
+                } else {
+                    resourceSnapshot.populateMessage(rawMsg);
+                }
+            } catch (Exception e) {
+                rawMsg.addTextPart("**Error generating perspective:**\n" + ExceptionUtils.getStackTrace(e));
+            }
+            return rawMsg;
+        }, rawMsg -> {
+            if (currentResource != resourceSnapshot) {
+                return; // Abort if resource changed
+            }
+            RagMessagePanel panel = new RagMessagePanel(agiPanel, rawMsg, false, false);
+            panel.render();
+            container.removeAll();
+            container.add(panel, BorderLayout.CENTER);
+            container.revalidate();
+            container.repaint();
+        }).start();
+
+        return container;
     }
 }
