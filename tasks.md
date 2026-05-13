@@ -23,7 +23,7 @@ This file tracks the actionable tasks and tactical goals for the Anahata ASI (V2
 - [ ] Error highlighting and code folds on diff viewer and java tool
 - [ ] Rework system instructions to be more natural
 - [ ] **ContextPanel**: Still some flickers when i have a node selected in the tree and a resource changes or a message arrives the right hand side disappears
-- [ ] **ContextPanel Message / part Details**: The messages are not like in the conversation view, the have a massive horizontal scrollbar, see if in the part viewer we can force it to show expanded without changing the expanded attribute on the model
+- [x] **ContextPanel Message / part Details**: The messages are not like in the conversation view, the have a massive horizontal scrollbar, see if in the part viewer we can force it to show expanded without changing the expanded attribute on the model
 
 - [ ] **NetBeans Local History File System Integration **:
     - [ ] Local History integration via change messages.
