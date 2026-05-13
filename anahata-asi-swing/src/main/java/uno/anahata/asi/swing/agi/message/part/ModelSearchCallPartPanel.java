@@ -11,12 +11,12 @@ import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import lombok.NonNull;
-import uno.anahata.asi.agi.message.ModelSearchCallPart;
+import uno.anahata.asi.agi.message.web.WebSearchCallPart;
 import uno.anahata.asi.swing.agi.AgiPanel;
 import uno.anahata.asi.swing.icons.SearchIcon;
 
 /**
- * A specialized panel for rendering {@link ModelSearchCallPart} instances.
+ * A specialized panel for rendering {@link WebSearchCallPart} instances.
  * <p>
  * Displays the search queries initiated by the model with a clear "System Action"
  * visual style and a search icon.
@@ -24,7 +24,7 @@ import uno.anahata.asi.swing.icons.SearchIcon;
  * 
  * @author anahata
  */
-public class ModelSearchCallPartPanel extends AbstractPartPanel<ModelSearchCallPart> {
+public class ModelSearchCallPartPanel extends AbstractPartPanel<WebSearchCallPart> {
 
     /**
      * Constructs a new ModelSearchCallPartPanel.
@@ -32,7 +32,7 @@ public class ModelSearchCallPartPanel extends AbstractPartPanel<ModelSearchCallP
      * @param agiPanel The parent agi panel.
      * @param part The search call part to render.
      */
-    public ModelSearchCallPartPanel(@NonNull AgiPanel agiPanel, @NonNull ModelSearchCallPart part) {
+    public ModelSearchCallPartPanel(@NonNull AgiPanel agiPanel, @NonNull WebSearchCallPart part) {
         super(agiPanel, part);
     }
 

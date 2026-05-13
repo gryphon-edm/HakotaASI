@@ -16,9 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.agi.message.AbstractModelMessage;
 import uno.anahata.asi.agi.message.ModelBlobPart;
-import uno.anahata.asi.agi.message.ModelCodeExecutionCallPart;
-import uno.anahata.asi.agi.message.ModelCodeExecutionResultPart;
-import uno.anahata.asi.agi.message.ModelSearchCallPart;
+import uno.anahata.asi.agi.message.code.HostedCodeExecutionCallPart;
+import uno.anahata.asi.agi.message.code.HostedCodeExecutionResultPart;
+import uno.anahata.asi.agi.message.web.WebSearchCallPart;
 import uno.anahata.asi.agi.message.TextPart;
 import uno.anahata.asi.agi.provider.FinishReason;
 import uno.anahata.asi.agi.tool.spi.AbstractToolCall;
@@ -170,11 +170,11 @@ public class OpenAiModelMessage extends AbstractModelMessage<OpenAiResponse> {
              }
 
              String displayText = String.format("Searching the web for: %s", queries);
-             ModelSearchCallPart part = new ModelSearchCallPart(this, displayText, queries, null);
+             WebSearchCallPart part = new WebSearchCallPart(this, displayText, queries, null);
              part.setProviderId(id);
         } else if ("code_interpreter_call".equals(type)) {
              String code = item.path("code").asText("");
-             ModelCodeExecutionCallPart callPart = new ModelCodeExecutionCallPart(this, code, "python", null);
+             HostedCodeExecutionCallPart callPart = new HostedCodeExecutionCallPart(this, code, "python", null);
              callPart.setProviderId(id);
              
              // Responses API: Outputs (logs, images) are nested in the call item
@@ -183,7 +183,7 @@ public class OpenAiModelMessage extends AbstractModelMessage<OpenAiResponse> {
                  for (JsonNode out : outputs) {
                      String outType = out.path("type").asText();
                      if ("logs".equals(outType)) {
-                         ModelCodeExecutionResultPart resultPart = new ModelCodeExecutionResultPart(this, out.path("logs").asText(""), null);
+                         HostedCodeExecutionResultPart resultPart = new HostedCodeExecutionResultPart(this, out.path("logs").asText(""), null);
                          resultPart.setProviderId(id);
                          resultPart.setParentCall(callPart);
                      } else if ("image".equals(outType)) {

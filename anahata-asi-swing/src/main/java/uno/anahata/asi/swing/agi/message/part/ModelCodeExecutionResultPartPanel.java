@@ -10,12 +10,12 @@ import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import lombok.NonNull;
-import uno.anahata.asi.agi.message.ModelCodeExecutionResultPart;
+import uno.anahata.asi.agi.message.code.HostedCodeExecutionResultPart;
 import uno.anahata.asi.swing.agi.AgiPanel;
 import uno.anahata.asi.swing.agi.message.part.text.CodeBlockSegmentRenderer;
 
 /**
- * A specialized panel for rendering {@link ModelCodeExecutionResultPart} instances.
+ * A specialized panel for rendering {@link HostedCodeExecutionResultPart} instances.
  * <p>
  * It displays the logs and textual output from a hosted code execution 
  * in a terminal-like format.
@@ -23,7 +23,7 @@ import uno.anahata.asi.swing.agi.message.part.text.CodeBlockSegmentRenderer;
  * 
  * @author anahata
  */
-public class ModelCodeExecutionResultPartPanel extends AbstractPartPanel<ModelCodeExecutionResultPart> {
+public class ModelCodeExecutionResultPartPanel extends AbstractPartPanel<HostedCodeExecutionResultPart> {
 
     /** 
      * The internal renderer used to display the execution logs with terminal-style framing. 
@@ -36,7 +36,7 @@ public class ModelCodeExecutionResultPartPanel extends AbstractPartPanel<ModelCo
      * @param agiPanel The parent agi panel.
      * @param part The output part containing logs or stdout/stderr.
      */
-    public ModelCodeExecutionResultPartPanel(@NonNull AgiPanel agiPanel, @NonNull ModelCodeExecutionResultPart part) {
+    public ModelCodeExecutionResultPartPanel(@NonNull AgiPanel agiPanel, @NonNull HostedCodeExecutionResultPart part) {
         super(agiPanel, part);
     }
 
