@@ -1,8 +1,10 @@
 /* Licensed under the Anahata Software License (ASL) v 108. See the LICENSE file for details. Força Barça! */
-package uno.anahata.asi.agi.message;
+package uno.anahata.asi.agi.message.code;
 
 import lombok.Getter;
 import lombok.Setter;
+import uno.anahata.asi.agi.message.AbstractModelMessage;
+import uno.anahata.asi.agi.message.ModelTextPart;
 
 /**
  * A specialized part representing a request from the model to execute code 
@@ -17,7 +19,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class ModelCodeExecutionCallPart extends ModelTextPart {
+public class HostedCodeExecutionCallPart extends ModelTextPart {
     
     /**
      * The programming language of the code to be executed (e.g., "python").
@@ -32,7 +34,7 @@ public class ModelCodeExecutionCallPart extends ModelTextPart {
      * @param language The programming language of the code.
      * @param thoughtSignature The signature of the thought process associated with this call, if any.
      */
-    public ModelCodeExecutionCallPart(AbstractModelMessage message, String code, String language, byte[] thoughtSignature) {
+    public HostedCodeExecutionCallPart(AbstractModelMessage message, String code, String language, byte[] thoughtSignature) {
         super(message, code, thoughtSignature, false);
         this.language = language;
     }
@@ -46,5 +48,16 @@ public class ModelCodeExecutionCallPart extends ModelTextPart {
     @Override
     public String asText() {
         return String.format("[Hosted Code Call (%s)]\n%s", language != null ? language : "unknown", getText());
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Returns the default maximum depth to keep a hosted code execution call part in context.
+     * </p>
+     */
+    @Override
+    protected int getDefaultMaxDepth() {
+        return getAgiConfig().getDefaultModelCodeExecutionMaxDepth();
     }
 }

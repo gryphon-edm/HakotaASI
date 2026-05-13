@@ -10,12 +10,12 @@ import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import lombok.NonNull;
-import uno.anahata.asi.agi.message.ModelCodeExecutionCallPart;
+import uno.anahata.asi.agi.message.code.HostedCodeExecutionCallPart;
 import uno.anahata.asi.swing.agi.AgiPanel;
 import uno.anahata.asi.swing.agi.message.part.text.CodeBlockSegmentRenderer;
 
 /**
- * A specialized panel for rendering {@link ModelCodeExecutionCallPart} instances.
+ * A specialized panel for rendering {@link HostedCodeExecutionCallPart} instances.
  * <p>
  * It leverages the {@link CodeBlockSegmentRenderer} to provide high-fidelity 
  * code viewing (with syntax highlighting) and editing capabilities for model-generated 
@@ -24,7 +24,7 @@ import uno.anahata.asi.swing.agi.message.part.text.CodeBlockSegmentRenderer;
  * 
  * @author anahata
  */
-public class ModelCodeExecutionCallPartPanel extends AbstractPartPanel<ModelCodeExecutionCallPart> {
+public class ModelCodeExecutionCallPartPanel extends AbstractPartPanel<HostedCodeExecutionCallPart> {
 
     /** 
      * The internal renderer responsible for code highlighting and interactive editing. 
@@ -37,7 +37,7 @@ public class ModelCodeExecutionCallPartPanel extends AbstractPartPanel<ModelCode
      * @param agiPanel The parent agi panel providing context and theme.
      * @param part The specific code call part to render.
      */
-    public ModelCodeExecutionCallPartPanel(@NonNull AgiPanel agiPanel, @NonNull ModelCodeExecutionCallPart part) {
+    public ModelCodeExecutionCallPartPanel(@NonNull AgiPanel agiPanel, @NonNull HostedCodeExecutionCallPart part) {
         super(agiPanel, part);
     }
 
