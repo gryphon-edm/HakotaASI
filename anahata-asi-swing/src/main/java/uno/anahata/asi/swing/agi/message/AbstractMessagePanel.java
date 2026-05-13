@@ -76,6 +76,24 @@ public abstract class AbstractMessagePanel<T extends AbstractMessage> extends JX
     /** Cache of part panels to support incremental updates. */
     private final Map<AbstractPart, AbstractPartPanel> cachedPartPanels = new HashMap<>();
 
+    /** Flag to force the message and all its parts to be visible and expanded. */
+    private boolean forceExpanded = false;
+
+    /**
+     * Sets the forceExpanded flag and cascades its values to all partpanels.
+     * 
+     * @param forceExpanded - true if all parts should always show expanded
+     */
+    public void setForceExpanded(boolean forceExpanded) {
+        this.forceExpanded = forceExpanded;
+        for (AbstractPartPanel panel : cachedPartPanels.values()) {
+            panel.setForceExpanded(forceExpanded);
+        }
+        updateVisibility();
+        revalidate();
+        repaint();
+    }
+
     /**
      * Constructs a new AbstractMessagePanel.
      *
@@ -345,6 +363,9 @@ public abstract class AbstractMessagePanel<T extends AbstractMessage> extends JX
             }
 
             if (panel != null) {
+                if (forceExpanded) {
+                    panel.setForceExpanded(true);
+                }
                 if (componentIndex >= partsContainer.getComponentCount() || partsContainer.getComponent(componentIndex) != panel) {
                     partsContainer.add(panel, componentIndex);
                 }
@@ -388,7 +409,7 @@ public abstract class AbstractMessagePanel<T extends AbstractMessage> extends JX
      */
     protected void updateVisibility() {
         boolean isEffectivelyPruned = message.isEffectivelyPruned();
-        setVisible(!isEffectivelyPruned || agiConfig.isShowPruned());
+        setVisible(forceExpanded || !isEffectivelyPruned || agiConfig.isShowPruned());
     }
 
     /**
