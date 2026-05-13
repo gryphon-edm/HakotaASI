@@ -78,7 +78,7 @@ public class PartNode extends AbstractContextNode<AbstractPart> {
      */
     @Override
     protected void calculateLocalTokens() {
-        this.historyTokens = userObject.isEffectivelyPruned() ? 0 : userObject.getTokenCount();
+        this.historyTokens = userObject.isEffectivelyPruned() ? userObject.getMetadataTokenCount() : userObject.getEffectiveTokenCount();
     }
 
     /**
