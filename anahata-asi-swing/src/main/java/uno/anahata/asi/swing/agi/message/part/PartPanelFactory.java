@@ -12,9 +12,9 @@ import uno.anahata.asi.agi.message.ModelBlobPart;
 import uno.anahata.asi.agi.message.ModelTextPart;
 import uno.anahata.asi.agi.message.TextPart;
 import uno.anahata.asi.agi.tool.spi.AbstractToolCall;
-import uno.anahata.asi.agi.message.ModelCodeExecutionCallPart;
-import uno.anahata.asi.agi.message.ModelCodeExecutionResultPart;
-import uno.anahata.asi.agi.message.ModelSearchCallPart;
+import uno.anahata.asi.agi.message.code.HostedCodeExecutionCallPart;
+import uno.anahata.asi.agi.message.code.HostedCodeExecutionResultPart;
+import uno.anahata.asi.agi.message.web.WebSearchCallPart;
 import uno.anahata.asi.swing.agi.AgiPanel;
 import uno.anahata.asi.swing.agi.message.part.tool.ToolCallPanel;
 
@@ -40,11 +40,11 @@ public final class PartPanelFactory {
      * @return The created part panel, or null if the part type is unsupported.
      */
     public static AbstractPartPanel<?> createPartPanel(AgiPanel agiPanel, AbstractPart part) {
-        if (part instanceof ModelCodeExecutionCallPart codeCallPart) {
+        if (part instanceof HostedCodeExecutionCallPart codeCallPart) {
             return new ModelCodeExecutionCallPartPanel(agiPanel, codeCallPart);
-        } else if (part instanceof ModelCodeExecutionResultPart codeOutputPart) {
+        } else if (part instanceof HostedCodeExecutionResultPart codeOutputPart) {
             return new ModelCodeExecutionResultPartPanel(agiPanel, codeOutputPart);
-        } else if (part instanceof ModelSearchCallPart searchCallPart) {
+        } else if (part instanceof WebSearchCallPart searchCallPart) {
             return new ModelSearchCallPartPanel(agiPanel, searchCallPart);
         } else if (part instanceof ModelTextPart modelTextPart) {
             return new TextPartPanel(agiPanel, modelTextPart);
