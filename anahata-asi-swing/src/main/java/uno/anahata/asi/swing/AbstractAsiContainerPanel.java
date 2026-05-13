@@ -77,15 +77,23 @@ public abstract class AbstractAsiContainerPanel extends JPanel {
 
         JButton settingsBtn = new JButton("Preferences", new SettingsIcon(16));
         settingsBtn.setToolTipText("Configure global ASI settings and API keys");
-        settingsBtn.addActionListener(e -> showPreferences());
+        
+        JLabel warningLabel = new JLabel("<html><font color='yellow'><b>&#9888;</b></font></html>");
+        warningLabel.setToolTipText("Evolutionary leap detected. Previous settings were backed up.");
+        warningLabel.setVisible(asiContainer.getPreferences().isLoadFailed());
+        
+        settingsBtn.addActionListener(e -> {
+            if (asiContainer.getPreferences().isLoadFailed()) {
+                asiContainer.getPreferences().setLoadFailed(false);
+                asiContainer.savePreferences();
+                warningLabel.setVisible(false);
+            }
+            showPreferences();
+        });
         toolBar.add(settingsBtn);
 
-        if (asiContainer.getPreferences().isLoadFailed()) {
-            JLabel warningLabel = new JLabel("<html><font color='red'><b>&#9888; Check Preferences</b></font></html>");
-            warningLabel.setToolTipText("Evolutionary leap detected. Previous settings were backed up.");
-            toolBar.add(Box.createHorizontalStrut(5));
-            toolBar.add(warningLabel);
-        }
+        toolBar.add(Box.createHorizontalStrut(5));
+        toolBar.add(warningLabel);
 
         toolBar.add(Box.createHorizontalGlue());
 
