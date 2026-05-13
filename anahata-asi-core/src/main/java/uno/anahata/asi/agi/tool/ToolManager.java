@@ -413,7 +413,9 @@ public class ToolManager extends BasicPropertyChangeSource implements ContextPro
     @Override
     public List<String> getSystemInstructions() throws Exception {
         return Collections.singletonList("The ToolManager contains a list of all installed toolkits. Each Toolkit "
-                + "contains a list of tools (java methods). If a tool has a DENY_NEVER permission, don't call it.");
+                + "contains a list of tools (java methods). If a tool has a DENY_NEVER permission, don't call it. "
+                + "Any toolkit that extends AnahataToolkit (i.e. probably 100%) will also implement the ContextProvider interface."
+                + " If you disable a toolkit, you will also remove all the content contributed by the toolktis context provider from the RAG message and all (if any) child context providers of that toolkit recursively)");
     }
 
     /** {@inheritDoc} */
