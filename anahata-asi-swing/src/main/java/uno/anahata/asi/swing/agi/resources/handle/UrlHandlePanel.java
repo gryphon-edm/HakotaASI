@@ -41,10 +41,21 @@ public class UrlHandlePanel extends AbstractHandlePanel<UrlHandle> {
      */
     @Override
     public void refresh() {
-        super.refresh();
         if (handle != null) {
             urlField.setText(handle.getUrlString());
-            // Since getLastModified() triggers the HEAD request and populates the cache
+            cacheLabel.setText("Fetching metadata...");
+        }
+        super.refresh();
+    }
+
+    /** 
+     * {@inheritDoc} 
+     * <p>Implementation details: Updates the cache status label based on the 
+     * metadata availability in the underlying handle.</p>
+     */
+    @Override
+    protected void onRefreshComplete() {
+        if (handle != null) {
             cacheLabel.setText(handle.getLastModified() > 0 ? "Metadata Captured (HEAD)" : "Waiting for First Access");
         }
     }
