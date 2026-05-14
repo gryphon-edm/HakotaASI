@@ -97,7 +97,7 @@ public class AgiCard extends JPanel {
         JPanel header = new JPanel(new MigLayout("fillx, insets 0", "[grow][][]", "[]"));
         header.setOpaque(false);
         
-        nameLabel = new JLabel(agi.getDisplayName());
+        nameLabel = new JLabel("<html><div>" + agi.getDisplayName() + "</div></html>");
         nameLabel.setFont(nameLabel.getFont().deriveFont(Font.BOLD, 14f));
         header.add(nameLabel, "growx");
 
