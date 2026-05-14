@@ -8,6 +8,7 @@ import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Image;
+import java.awt.Insets;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -240,7 +241,7 @@ public class MermaidCodeBlockSegmentRenderer extends CodeBlockSegmentRenderer {
         copyImageButton = new JButton("Copy Image");
         copyImageButton.setToolTipText("Copy Diagram to OS Clipboard");
         copyImageButton.setFont(new Font("SansSerif", Font.PLAIN, 11));
-        copyImageButton.setMargin(new java.awt.Insets(1, 5, 1, 5));
+        copyImageButton.setMargin(new Insets(1, 5, 1, 5));
         copyImageButton.setFocusPainted(false);
         copyImageButton.setEnabled(currentImage != null);
         copyImageButton.addActionListener(e -> SwingUtils.copyImageToClipboard(currentImage));
