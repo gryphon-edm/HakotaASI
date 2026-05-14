@@ -32,13 +32,16 @@ import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.agi.context.ContextProvider;
 import uno.anahata.asi.agi.resource.Resource;
 import uno.anahata.asi.swing.agi.AgiPanel;
+import uno.anahata.asi.swing.agi.message.AbstractMessagePanel;
 import uno.anahata.asi.swing.agi.message.MessagePanelFactory;
+import uno.anahata.asi.swing.agi.message.part.AbstractPartPanel;
 import uno.anahata.asi.swing.agi.message.part.PartPanelFactory;
 import uno.anahata.asi.swing.agi.resources.ResourceNode;
 import uno.anahata.asi.swing.agi.resources.ResourcePanel;
 import uno.anahata.asi.swing.agi.resources.ResourceUI;
 import uno.anahata.asi.swing.agi.resources.ResourceUiRegistry;
 import uno.anahata.asi.swing.agi.resources.ResourcesNode;
+import uno.anahata.asi.swing.components.ScrollablePanel;
 import uno.anahata.asi.swing.icons.DeleteIcon;
 import uno.anahata.asi.swing.icons.RestartIcon;
 import uno.anahata.asi.swing.internal.EdtPropertyChangeListener;
@@ -48,9 +51,9 @@ import uno.anahata.asi.agi.tool.ToolManager;
  * A panel dedicated to displaying and managing the available AI context
  * (history, tools, providers, and resources) using a hierarchical JXTreeTable.
  * <p>
- * This panel provides a JNDI-style view of the entire AI context. It uses 
- * a split-pane layout with a tree table on the left and a detail 
- * area on the right that switches panels based on the selected node type.
+ * This panel provides a JNDI-style view of the entire AI context. It uses a
+ * split-pane layout with a tree table on the left and a detail area on the
+ * right that switches panels based on the selected node type.
  * </p>
  *
  * @author anahata
@@ -58,47 +61,86 @@ import uno.anahata.asi.agi.tool.ToolManager;
 @Slf4j
 public class ContextPanel extends JPanel {
 
-    /** The parent agi panel. */
+    /**
+     * The parent agi panel.
+     */
     private final AgiPanel agiPanel;
-    /** The active agi session. */
+    /**
+     * The active agi session.
+     */
     private Agi agi;
-    /** The tree table component for the context hierarchy. */
+    /**
+     * The tree table component for the context hierarchy.
+     */
     private final JXTreeTable treeTable;
-    /** The model for the tree table. */
+    /**
+     * The model for the tree table.
+     */
     private ContextTreeTableModel treeTableModel;
-    
-    /** Container for the detail panels, using CardLayout for switching. */
+
+    /**
+     * Container for the detail panels, using CardLayout for switching.
+     */
     private final JPanel detailContainer;
-    /** Layout for switching between detail panels. */
+    /**
+     * Layout for switching between detail panels.
+     */
     private final CardLayout detailLayout;
-    
-    /** Panel for displaying tool details. */
+
+    /**
+     * Panel for displaying tool details.
+     */
     private final ToolPanel toolPanel;
-    /** Panel for displaying toolkit details. */
+    /**
+     * Panel for displaying toolkit details.
+     */
     private final ToolkitPanel toolkitPanel;
-    /** Panel for displaying context provider details. */
+    /**
+     * Panel for displaying context provider details.
+     */
     private final ContextProviderPanel providerPanel;
-    /** Panel for displaying V2 resource details. */
+    /**
+     * Panel for displaying V2 resource details.
+     */
     private final ResourcePanel resourcePanel;
-    /** Container for dynamically created message or part panels. */
-    private final JPanel messagePartDetailPanel;
-    
-    /** Flag indicating a refresh is in progress, used to mute selection events and flicker. */
+    /**
+     * Container for dynamically created message or part panels.
+     */
+    private final ScrollablePanel messagePartDetailPanel;
+
+    /**
+     * The currently selected domain object to prevent redundant rendering.
+     */
+    private Object currentSelectedDomainObject;
+
+    /**
+     * Flag indicating a refresh is in progress, used to mute selection events
+     * and flicker.
+     */
     private boolean refreshing = false;
 
-    /** Registry for mapping domain types to custom UI configurers. */
+    /**
+     * Registry for mapping domain types to custom UI configurers.
+     */
     private final Map<Class<?>, BiConsumer<Object, JPanel>> customConfigRegistry = new HashMap<>();
 
-    /** Listener for history changes to trigger tree refreshes. */
+    /**
+     * Listener for history changes to trigger tree refreshes.
+     */
     private EdtPropertyChangeListener historyListener;
-    
-    /** Listener for resource changes to trigger tree refreshes. */
+
+    /**
+     * Listener for resource changes to trigger tree refreshes.
+     */
     private EdtPropertyChangeListener resourcesListener;
-    /** Flag to ensure initComponents is only called once. */
+    /**
+     * Flag to ensure initComponents is only called once.
+     */
     private boolean initialized = false;
 
     /**
      * Constructs a new ContextPanel.
+     *
      * @param agiPanel The parent agi panel.
      */
     public ContextPanel(@NonNull AgiPanel agiPanel) {
@@ -106,32 +148,34 @@ public class ContextPanel extends JPanel {
         this.agi = agiPanel.getAgi();
         this.treeTableModel = new ContextTreeTableModel(agiPanel);
         this.treeTable = new JXTreeTable();
-        
+
         this.detailLayout = new CardLayout();
         this.detailContainer = new JPanel(detailLayout);
-        
+
         this.toolPanel = new ToolPanel(this);
         this.toolkitPanel = new ToolkitPanel(this);
         this.providerPanel = new ContextProviderPanel(this);
         this.resourcePanel = new ResourcePanel(agiPanel);
-        this.messagePartDetailPanel = new JPanel(new BorderLayout());
-        
+        this.messagePartDetailPanel = new ScrollablePanel();
+        this.messagePartDetailPanel.setLayout(new javax.swing.BoxLayout(this.messagePartDetailPanel, javax.swing.BoxLayout.Y_AXIS));
+
         detailContainer.add(createScrollPane(toolPanel), "tool");
         detailContainer.add(createScrollPane(toolkitPanel), "toolkit");
         detailContainer.add(createScrollPane(providerPanel), "provider");
         // AUTHORITATIVE CONSISTENCY: Wrap the resource dashboard in a scrollpane to handle metadata overflow.
         detailContainer.add(createScrollPane(resourcePanel), "resource");
-        detailContainer.add(new JScrollPane(messagePartDetailPanel), "messagePart");
+        detailContainer.add(createScrollPane(messagePartDetailPanel), "messagePart");
         detailContainer.add(new JPanel(), "empty");
-        
+
         setLayout(new BorderLayout());
-        
+
         setupListeners();
         registerDefaultCustomConfigs();
     }
-    
+
     /**
      * Standardizes a component within a borderless scroll pane.
+     *
      * @param component The component to wrap.
      * @return The scroll pane.
      */
@@ -157,25 +201,29 @@ public class ContextPanel extends JPanel {
 
     /**
      * Registers a custom UI configurer for a specific domain object type.
-     * 
+     *
      * @param <T> The type of the domain object.
      * @param type The class of the domain object.
-     * @param configurer A consumer that populates a provided JPanel based on the object instance.
+     * @param configurer A consumer that populates a provided JPanel based on
+     * the object instance.
      */
     public <T> void registerCustomConfig(Class<T> type, BiConsumer<T, JPanel> configurer) {
         customConfigRegistry.put(type, (obj, panel) -> configurer.accept(type.cast(obj), panel));
     }
 
     /**
-     * Populates a panel with custom configuration UI for a given object, if registered.
-     * 
+     * Populates a panel with custom configuration UI for a given object, if
+     * registered.
+     *
      * @param obj The domain object (user object of the selected node).
      * @param panel The target panel to populate.
      */
     public void populateCustomConfig(Object obj, JPanel panel) {
         panel.removeAll();
-        if (obj == null) return;
-        
+        if (obj == null) {
+            return;
+        }
+
         // Check for exact class match or interfaces/superclasses
         for (Map.Entry<Class<?>, BiConsumer<Object, JPanel>> entry : customConfigRegistry.entrySet()) {
             if (entry.getKey().isInstance(obj)) {
@@ -196,13 +244,14 @@ public class ContextPanel extends JPanel {
         if (resourcesListener != null) {
             resourcesListener.unbind();
         }
-        
+
         this.historyListener = new EdtPropertyChangeListener(this, agi.getContextManager(), "history", evt -> refresh(false));
         this.resourcesListener = new EdtPropertyChangeListener(this, agi.getResourceManager(), "resources", evt -> refresh(false));
     }
 
     /**
      * Gets the parent agi panel.
+     *
      * @return The agi panel.
      */
     public AgiPanel getAgiPanel() {
@@ -211,6 +260,7 @@ public class ContextPanel extends JPanel {
 
     /**
      * Gets the active agi session.
+     *
      * @return The agi session.
      */
     public Agi getAgi() {
@@ -224,12 +274,12 @@ public class ContextPanel extends JPanel {
         // Configure Toolbar
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
-        
+
         JButton refreshButton = new JButton("Refresh Tokens", new RestartIcon(16));
         refreshButton.setToolTipText("Recalculate token counts for all context items (Snapshot)");
         refreshButton.addActionListener(e -> refreshTokens());
         toolBar.add(refreshButton);
-        
+
         add(toolBar, BorderLayout.NORTH);
 
         // Configure TreeTable
@@ -239,13 +289,13 @@ public class ContextPanel extends JPanel {
         treeTable.setRootVisible(false);
         treeTable.setShowsRootHandles(true);
         treeTable.setTreeCellRenderer(new ContextTreeCellRenderer());
-        
+
         // Disable auto-resize to respect preferred widths
         treeTable.setAutoResizeMode(JXTreeTable.AUTO_RESIZE_OFF);
-        
+
         // Ensure manual resizing is preserved by disabling auto-creation of columns on model changes
         treeTable.setAutoCreateColumnsFromModel(false);
-        
+
         applyColumnWidths();
 
         // Configure Split Pane
@@ -255,11 +305,19 @@ public class ContextPanel extends JPanel {
 
         // Add a TreeSelectionListener to update the detailPanel
         treeTable.getTreeSelectionModel().addTreeSelectionListener((TreeSelectionEvent e) -> {
-            if (refreshing) return;
+            if (refreshing) {
+                return;
+            }
             TreePath path = e.getNewLeadSelectionPath();
             Object node = (path != null) ? path.getLastPathComponent() : null;
-            
+
             if (node instanceof AbstractContextNode<?> cn) {
+                // Anti-Flicker check: Don't rebuild if it's the exact same domain object
+                if (cn.getUserObject() == currentSelectedDomainObject) {
+                    return;
+                }
+                currentSelectedDomainObject = cn.getUserObject();
+
                 if (cn instanceof ToolNode tn) {
                     toolPanel.setTool(tn.getUserObject());
                     detailLayout.show(detailContainer, "tool");
@@ -273,10 +331,18 @@ public class ContextPanel extends JPanel {
                     providerPanel.setContextProvider(pn.getUserObject());
                     detailLayout.show(detailContainer, "provider");
                 } else if (cn instanceof MessageNode mn) {
-                    updateMessagePartDetail(MessagePanelFactory.createMessagePanel(agiPanel, mn.getUserObject()));
+                    AbstractMessagePanel<?> panel = MessagePanelFactory.createMessagePanel(agiPanel, mn.getUserObject());
+                    if (panel != null) {
+                        panel.setForceExpanded(true);
+                    }
+                    updateMessagePartDetail(panel);
                     detailLayout.show(detailContainer, "messagePart");
                 } else if (cn instanceof PartNode pn) {
-                    updateMessagePartDetail(PartPanelFactory.createPartPanel(agiPanel, pn.getUserObject()));
+                    AbstractPartPanel<?> panel = PartPanelFactory.createPartPanel(agiPanel, pn.getUserObject());
+                    if (panel != null) {
+                        panel.setForceExpanded(true);
+                    }
+                    updateMessagePartDetail(panel);
                     detailLayout.show(detailContainer, "messagePart");
                 } else if (cn instanceof ResourceNode r2n) {
                     resourcePanel.setResource(r2n.getUserObject());
@@ -285,16 +351,18 @@ public class ContextPanel extends JPanel {
                     providerPanel.setContextProvider(r2m.getUserObject());
                     detailLayout.show(detailContainer, "provider");
                 } else {
+                    currentSelectedDomainObject = null;
                     detailLayout.show(detailContainer, "empty");
                 }
             } else {
+                currentSelectedDomainObject = null;
                 detailLayout.show(detailContainer, "empty");
             }
         });
-        
+
         // Setup Popup Menu and Double-Click
         setupInteractions();
-        
+
         SwingUtilities.invokeLater(() -> {
             splitPane.setDividerLocation(0.5);
             refresh(true);
@@ -306,33 +374,30 @@ public class ContextPanel extends JPanel {
      */
     private void setupInteractions() {
         JPopupMenu popup = new JPopupMenu();
-        
+
         JMenuItem openInEditorItem = new JMenuItem("Open in Editor");
         openInEditorItem.addActionListener(e -> {
-            int row = treeTable.getSelectedRow();
-            if (row != -1) {
+            for (int row : treeTable.getSelectedRows()) {
                 Object node = treeTable.getPathForRow(row).getLastPathComponent();
                 if (node instanceof ResourceNode r2n) {
                     openResource(r2n.getUserObject());
                 }
             }
         });
-        
+
         JMenuItem removeItem = new JMenuItem("Remove from Context", new DeleteIcon(16));
         removeItem.addActionListener(e -> {
-            int row = treeTable.getSelectedRow();
-            if (row != -1) {
+            for (int row : treeTable.getSelectedRows()) {
                 Object node = treeTable.getPathForRow(row).getLastPathComponent();
                 if (node instanceof ResourceNode r2n) {
                     agi.getResourceManager().unregister(r2n.getUserObject().getId());
                 }
             }
         });
-        
+
         JMenuItem toggleItem = new JMenuItem("Toggle Providing");
         toggleItem.addActionListener(e -> {
-            int row = treeTable.getSelectedRow();
-            if (row != -1) {
+            for (int row : treeTable.getSelectedRows()) {
                 Object node = treeTable.getPathForRow(row).getLastPathComponent();
                 if (node instanceof ProviderNode pn) {
                     pn.getUserObject().setProviding(!pn.getUserObject().isProviding());
@@ -341,8 +406,8 @@ public class ContextPanel extends JPanel {
                 } else if (node instanceof ResourceNode r2n) {
                     r2n.getUserObject().setProviding(!r2n.getUserObject().isProviding());
                 }
-                refresh(false);
             }
+            refresh(false);
         });
 
         popup.add(openInEditorItem);
@@ -363,40 +428,71 @@ public class ContextPanel extends JPanel {
                     }
                 }
             }
-            
+
             @Override
             public void mousePressed(MouseEvent e) {
                 showPopup(e);
             }
-            
+
             @Override
             public void mouseReleased(MouseEvent e) {
                 showPopup(e);
             }
-            
+
             private void showPopup(MouseEvent e) {
                 if (e.isPopupTrigger()) {
                     int row = treeTable.rowAtPoint(e.getPoint());
                     if (row != -1) {
-                        treeTable.setRowSelectionInterval(row, row);
-                        Object node = treeTable.getPathForRow(row).getLastPathComponent();
-                        
-                        boolean isResource = node instanceof ResourceNode;
-                        boolean isToolkit = node instanceof ToolkitNode;
-                        boolean isProvider = node instanceof ProviderNode;
-                        
+                        boolean isSelected = false;
+                        for (int r : treeTable.getSelectedRows()) {
+                            if (r == row) {
+                                isSelected = true;
+                                break;
+                            }
+                        }
+
+                        // Only change selection if right-clicked outside current selection
+                        if (!isSelected) {
+                            treeTable.setRowSelectionInterval(row, row);
+                        }
+
+                        // We use the item that was actually clicked under the mouse
+                        Object clickedNode = treeTable.getPathForRow(row).getLastPathComponent();
+
+                        boolean isResource = clickedNode instanceof ResourceNode;
+                        boolean isToolkit = clickedNode instanceof ToolkitNode;
+                        boolean isProvider = clickedNode instanceof ProviderNode;
+
                         openInEditorItem.setVisible(isResource);
                         removeItem.setVisible(isResource);
-                        
+
                         toggleItem.setVisible(isToolkit || isProvider || isResource);
+
+                        // We set the toggle text based on the specific item clicked
                         if (isToolkit) {
-                            ToolkitNode tkn = (ToolkitNode) node;
+                            ToolkitNode tkn = (ToolkitNode) clickedNode;
                             toggleItem.setText(tkn.getUserObject().isEnabled() ? "Disable Toolkit" : "Enable Toolkit");
                         } else if (isProvider || isResource) {
-                            ContextProvider cp = (ContextProvider) ((AbstractContextNode<?>)node).getUserObject();
+                            ContextProvider cp = (ContextProvider) ((AbstractContextNode<?>) clickedNode).getUserObject();
                             toggleItem.setText(cp.isProviding() ? "Stop Providing" : "Start Providing");
                         }
-                        
+
+                        // But if multiple are selected, make it plural
+                        if (treeTable.getSelectedRowCount() > 1) {
+                            if (isResource) {
+                                openInEditorItem.setText("Open Selected in Editor");
+                            }
+                            if (isResource) {
+                                removeItem.setText("Remove Selected from Context");
+                            }
+                            if (toggleItem.isVisible()) {
+                                toggleItem.setText("Toggle Selected Providing/Enabled");
+                            }
+                        } else {
+                            openInEditorItem.setText("Open in Editor");
+                            removeItem.setText("Remove from Context");
+                        }
+
                         popup.show(e.getComponent(), e.getX(), e.getY());
                     }
                 }
@@ -416,10 +512,10 @@ public class ContextPanel extends JPanel {
 
     /**
      * Authoritatively applies the standard column widths to the tree table.
-     * This method ensures the 'Name' column maintains its 400px width and 
-     * token columns are correctly sized.
+     * This method ensures the 'Name' column maintains its 400px width and token
+     * columns are correctly sized.
      * <p>
-     * It uses model-to-view conversion to ensure the correct columns are 
+     * It uses model-to-view conversion to ensure the correct columns are
      * targeted even if the user has reordered or hidden them.
      * </p>
      */
@@ -427,22 +523,23 @@ public class ContextPanel extends JPanel {
         if (treeTable.getColumnCount() == 0) {
             return;
         }
-        
+
         // 1. Name Column (400px) - Model Index 0
         applyColumnWidth(0, 400, 200);
-        
+
         // 2. Token Columns (Instructions, Declarations, History, RAG) - Model Indices 1-4
         for (int i = 1; i <= 4; i++) {
             applyColumnWidth(i, 80, 50);
         }
-        
+
         // 3. Status Column - Model Index 5
         applyColumnWidth(5, 120, 80);
     }
 
     /**
-     * Helper method to apply width to a specific column identified by its model index.
-     * 
+     * Helper method to apply width to a specific column identified by its model
+     * index.
+     *
      * @param modelIndex The index of the column in the model.
      * @param preferredWidth The desired preferred width.
      * @param minWidth The minimum width (optional, use 0 to skip).
@@ -460,12 +557,14 @@ public class ContextPanel extends JPanel {
 
     /**
      * Updates the message/part detail area with the given panel.
+     *
      * @param panel The panel to display.
      */
     private void updateMessagePartDetail(JPanel panel) {
         messagePartDetailPanel.removeAll();
         if (panel != null) {
-            messagePartDetailPanel.add(panel, BorderLayout.NORTH);
+            messagePartDetailPanel.add(panel);
+            messagePartDetailPanel.add(javax.swing.Box.createVerticalGlue());
         }
         messagePartDetailPanel.revalidate();
         messagePartDetailPanel.repaint();
@@ -481,25 +580,26 @@ public class ContextPanel extends JPanel {
     }
 
     /**
-     * Refreshes the data in the tree table while preserving expansion state 
-     * and column widths.
-     * 
-     * @param structural If true, the underlying model is rebuilt (e.g. on session switch).
+     * Refreshes the data in the tree table while preserving expansion state and
+     * column widths.
+     *
+     * @param structural If true, the underlying model is rebuilt (e.g. on
+     * session switch).
      */
     public final void refresh(boolean structural) {
         SwingUtilities.invokeLater(() -> {
             log.info("Refreshing ContextPanel tree (structural={}) for agi: {}", structural, agi.getShortId());
-            
+
             // 1. Capture current expansion and selection state
             Set<TreePath> expandedPaths = getExpandedPaths();
             TreePath selectedPath = treeTable.getTreeSelectionModel().getSelectionPath();
             this.refreshing = true;
-            
+
             // 2. Update Model
             if (structural) {
                 this.treeTableModel = new ContextTreeTableModel(agiPanel);
                 treeTable.setTreeTableModel(treeTableModel);
-                
+
                 // CRITICAL: Re-apply column settings after model change
                 treeTable.setAutoCreateColumnsFromModel(false);
                 applyColumnWidths();
@@ -507,7 +607,7 @@ public class ContextPanel extends JPanel {
                 // Non-structural refresh: JXTreeTable preserves columns if autoCreate is false
                 treeTableModel.refresh();
             }
-            
+
             // 3. Restore state (Nested invokeLater to ensure table has processed model event)
             SwingUtilities.invokeLater(() -> {
                 restoreExpandedPaths(expandedPaths);
@@ -515,15 +615,15 @@ public class ContextPanel extends JPanel {
                     treeTable.getTreeSelectionModel().setSelectionPath(selectedPath);
                 }
                 this.refreshing = false;
-                
+
                 // Select the first node if nothing is selected
                 if (treeTable.getSelectedRow() == -1 && treeTable.getRowCount() > 0) {
                     treeTable.setRowSelectionInterval(0, 0);
                 }
-                
+
                 treeTable.revalidate();
                 treeTable.repaint();
-                
+
                 // Automatically refresh tokens in the background after structural change
                 refreshTokens(null);
             });
@@ -532,6 +632,7 @@ public class ContextPanel extends JPanel {
 
     /**
      * Captures the current expansion state of the tree.
+     *
      * @return A set of expanded TreePaths.
      */
     private Set<TreePath> getExpandedPaths() {
@@ -546,6 +647,7 @@ public class ContextPanel extends JPanel {
 
     /**
      * Restores the expansion state of the tree.
+     *
      * @param expandedPaths The set of paths to expand.
      */
     private void restoreExpandedPaths(Set<TreePath> expandedPaths) {
@@ -553,10 +655,10 @@ public class ContextPanel extends JPanel {
             treeTable.expandPath(path);
         }
     }
-    
+
     /**
      * Triggers a background recalculation of token counts.
-     * 
+     *
      * @param onDone Optional callback to run after tokens are refreshed.
      */
     public void refreshTokens(Runnable onDone) {
@@ -583,15 +685,16 @@ public class ContextPanel extends JPanel {
     }
 
     /**
-     * Triggers a background recalculation of token counts (Convenience no-arg version).
+     * Triggers a background recalculation of token counts (Convenience no-arg
+     * version).
      */
     public void refreshTokens() {
         refreshTokens(null);
     }
 
     /**
-     * {@inheritDoc}
-     * Triggers an initial refresh when the component is added to the UI.
+     * {@inheritDoc} Triggers an initial refresh when the component is added to
+     * the UI.
      */
     @Override
     public void addNotify() {
