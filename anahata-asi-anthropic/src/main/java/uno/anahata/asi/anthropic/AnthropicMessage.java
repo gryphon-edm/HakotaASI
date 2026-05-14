@@ -38,6 +38,11 @@ public class AnthropicMessage extends AbstractModelMessage<AnthropicResponse> {
             String type = block.path("type").asText();
             if ("text".equals(type)) {
                 appendContent(block.path("text").asText());
+            } else if ("thinking".equals(type)) {
+                String thought = block.path("thinking").asText("");
+                String signatureStr = block.path("signature").asText(null);
+                byte[] signature = signatureStr != null ? signatureStr.getBytes() : null;
+                addTextPart(thought, signature, true);
             } else if ("tool_use".equals(type)) {
                 String id = block.path("id").asText();
                 String name = block.path("name").asText();
@@ -73,6 +78,11 @@ public class AnthropicMessage extends AbstractModelMessage<AnthropicResponse> {
                         appendContent(delta.path("text").asText());
                     } else if ("input_json_delta".equals(delta.path("type").asText())) {
                         toolArgBuffers.computeIfAbsent(index, k -> new StringBuilder()).append(delta.path("partial_json").asText());
+                    } else if ("thinking_delta".equals(delta.path("type").asText())) {
+                        appendThoughts(delta.path("thinking").asText());
+                    } else if ("signature_delta".equals(delta.path("type").asText())) {
+                        String sig = delta.path("signature").asText();
+                        setThoughtSignatureOnLastPart(sig.getBytes());
                     }
                 }
                 break;
@@ -110,10 +120,36 @@ public class AnthropicMessage extends AbstractModelMessage<AnthropicResponse> {
 
     public void appendContent(String text) {
         List<AbstractPart> parts = getParts();
-        if (!parts.isEmpty() && parts.get(parts.size() - 1) instanceof ModelTextPart mtp) {
+        if (!parts.isEmpty() && parts.get(parts.size() - 1) instanceof ModelTextPart mtp && !mtp.isThought()) {
             mtp.appendText(text);
         } else {
             addTextPart(text);
+        }
+    }
+
+    /**
+     * Appends text to the reasoning/thought part or creates a new one.
+     * 
+     * @param text The thought text to append.
+     */
+    public void appendThoughts(String text) {
+        List<AbstractPart> parts = getParts();
+        if (!parts.isEmpty() && parts.get(parts.size() - 1) instanceof ModelTextPart mtp && mtp.isThought()) {
+            mtp.appendText(text);
+        } else {
+            addTextPart(text, null, true);
+        }
+    }
+
+    /**
+     * Sets the thought signature on the last thought part.
+     * 
+     * @param sig The signature byte array.
+     */
+    public void setThoughtSignatureOnLastPart(byte[] sig) {
+        List<AbstractPart> parts = getParts();
+        if (!parts.isEmpty() && parts.get(parts.size() - 1) instanceof ModelTextPart mtp && mtp.isThought()) {
+            mtp.setThoughtSignature(sig);
         }
     }
 

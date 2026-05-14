@@ -164,10 +164,9 @@ public class AnthropicModel extends AbstractModel {
         log.info("Executing Anthropic request to messages endpoint");
         try {
             HttpRequest httpRequest = provider.createRequestBuilder("messages")
-                    .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(payload.toString()))
                     .build();
-            try (HttpClient client = provider.createHttpClient()) {
+            HttpClient client = provider.getHttpClient(); {
                 HttpResponse<String> httpResponse = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
                 if (httpResponse.statusCode() != 200) {
                     String errorBody = httpResponse.body();
@@ -200,12 +199,11 @@ public class AnthropicModel extends AbstractModel {
         log.info("Executing Anthropic streaming request");
         try {
             HttpRequest httpRequest = provider.createRequestBuilder("messages")
-                    .header("Content-Type", "application/json")
                     .header("Accept", "text/event-stream")
                     .POST(HttpRequest.BodyPublishers.ofString(payload.toString()))
                     .build();
                     
-            try (HttpClient client = provider.createHttpClient()) {
+            HttpClient client = provider.getHttpClient(); {
                 AnthropicMessage target = new AnthropicMessage(agi, modelId);
                 List<AnthropicMessage> targets = List.of(target);
                 AtomicBoolean started = new AtomicBoolean(false);
