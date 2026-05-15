@@ -373,7 +373,7 @@ public class HeaderPanel extends JPanel {
      */
     private void disposeSession() {
         int result = JOptionPane.showConfirmDialog(this, 
-            "Are you sure you want to dispose this session?\\nn"
+            "Are you sure you want to dispose this session?\n\n"
                     + "If you ever need it back, you can import it from the 'diposed' sessions folder ", 
             "Dispose Session", JOptionPane.YES_NO_OPTION);
 
