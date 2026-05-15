@@ -161,6 +161,18 @@ public class DefaultResourceUI implements ResourceUI {
 
     /** 
      * {@inheritDoc} 
+     */
+    @Override
+    public void openUri(String uriString) {
+        try {
+            Desktop.getDesktop().browse(java.net.URI.create(uriString));
+        } catch (Exception ex) {
+            log.error("Failed to open URI: " + uriString, ex);
+        }
+    }
+
+    /** 
+     * {@inheritDoc} 
      * <p>Implementation details: Standalone mode does not support project-level selection.</p>
      */
     @Override
