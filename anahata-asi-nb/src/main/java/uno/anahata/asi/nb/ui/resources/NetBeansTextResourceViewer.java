@@ -117,18 +117,40 @@ public class NetBeansTextResourceViewer extends AbstractTextResourceViewer {
             // 1. Authoritative MIME Sensing (Soberanía del Entorno)
             String mime = "text/plain";
             FileObject efmFo = null; // Efemeral FileObject for snippets
+            FileObject finalFo = null;
             
             if (resource.getHandle() instanceof NbHandle nbh) {
-                FileObject fo = nbh.getFileObject();
-                if (fo != null) {
-                    mime = fo.getMIMEType();
+                finalFo = nbh.getFileObject();
+                if (finalFo != null) {
+                    mime = finalFo.getMIMEType();
                 }
-            } else if (resource.getHandle() instanceof StringHandle) {
-                // Sonda de Memoria: le preguntamos a NetBeans qué kit usaría para este nombre
+            } else if (resource.getHandle() instanceof uno.anahata.asi.agi.resource.handle.PathHandle ph) {
+                finalFo = FileUtil.toFileObject(new java.io.File(ph.getPath()));
+                if (finalFo != null) {
+                    mime = finalFo.getMIMEType();
+                }
+            } else if (resource.getHandle() instanceof StringHandle sh) {
                 try {
                     FileSystem memFS = FileUtil.createMemoryFileSystem();
                     efmFo = memFS.getRoot().createData(resource.getName());
+                    finalFo = efmFo;
                     mime = efmFo.getMIMEType();
+                    
+                    if (sh.getContextPath() != null) {
+                        finalFo.setAttribute("anahata.contextPath", sh.getContextPath());
+                    }
+
+                    // Propagate custom attributes (e.g. anahata.customClasspath)
+                    if (sh.getAttributes() != null) {
+                        for (java.util.Map.Entry<String, Object> entry : sh.getAttributes().entrySet()) {
+                            finalFo.setAttribute(entry.getKey(), entry.getValue());
+                        }
+                    }
+
+                    // Need to write the content to the MemoryFileSystem file object so EditorCookie reads it!
+                    try (java.io.OutputStream os = finalFo.getOutputStream()) {
+                        os.write(sh.getContent().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    }
                 } catch (IOException ex) {
                     log.warn("Mime probe failed for snippet: {}. Defaulting to text/plain.", resource.getName());
                 }
@@ -137,6 +159,27 @@ public class NetBeansTextResourceViewer extends AbstractTextResourceViewer {
             // 2. High-Fidelity Pane Setup
             this.editor = new JEditorPane();            
             editor.setContentType(mime);
+            editor.setEditorKit(org.openide.text.CloneableEditorSupport.getEditorKit(mime));
+            
+            if (finalFo != null) {
+                try {
+                    DataObject dobj = DataObject.find(finalFo);
+                    org.openide.cookies.EditorCookie ec = dobj.getLookup().lookup(org.openide.cookies.EditorCookie.class);
+                    if (ec != null) {
+                        Document doc = ec.openDocument();
+                        editor.setDocument(doc);
+                    } else {
+                        log.warn("No EditorCookie for {}", resource.getName());
+                    }
+                } catch (Exception ex) {
+                    log.warn("Failed to find DataObject for: {}", resource.getName());
+                }
+            }
+            
+            if (editor.getDocument() == null) {
+                editor.setDocument(editor.getEditorKit().createDefaultDocument());
+            }
+
             editor.setOpaque(true);
             editor.setEditable(false);
             
@@ -144,26 +187,6 @@ public class NetBeansTextResourceViewer extends AbstractTextResourceViewer {
             editor.putClientProperty("scroll-past-end", Boolean.FALSE);
             editor.setMargin(new Insets(0, 0, 0, 0));
             
-            // 3. Document Identity Binding (Total Adoption)
-            Document doc = editor.getDocument();
-            doc.putProperty("mimeType", mime);
-            
-            FileObject finalFo = (efmFo != null) ? efmFo : 
-                                 (resource.getHandle() instanceof NbHandle nbh ? nbh.getFileObject() : null);
-            
-            if (finalFo != null) {
-                try {
-                    DataObject dobj = DataObject.find(finalFo);
-                    // This is the key for full high-fidelity: bind the document to an IDE DataObject
-                    doc.putProperty(Document.StreamDescriptionProperty, dobj);
-                } catch (Exception ex) {
-                    log.warn("Failed to find DataObject for: {}", resource.getName());
-                }
-            }
-
-            // 4. Early Parser Activation
-            Source.create(doc);
-
             // 5. TOTAL ADOPTION: Request the official NetBeans frame
             EditorUI eui = Utilities.getEditorUI(editor);
             if (eui != null) {
@@ -270,7 +293,18 @@ public class NetBeansTextResourceViewer extends AbstractTextResourceViewer {
             String newText = (content != null) ? content : "";
             if (!editor.getText().equals(newText)) {
                 int caret = editor.getCaretPosition();
-                editor.setText(newText);
+                try {
+                    Document doc = editor.getDocument();
+                    if (doc instanceof javax.swing.text.AbstractDocument) {
+                        ((javax.swing.text.AbstractDocument)doc).replace(0, doc.getLength(), newText, null);
+                    } else {
+                        doc.remove(0, doc.getLength());
+                        doc.insertString(0, newText, null);
+                    }
+                } catch (Exception ex) {
+                    log.error("Failed to update document cleanly, falling back to setText", ex);
+                    editor.setText(newText);
+                }
                 try {
                     editor.setCaretPosition(Math.min(caret, newText.length()));
                 } catch (Exception ex) {
