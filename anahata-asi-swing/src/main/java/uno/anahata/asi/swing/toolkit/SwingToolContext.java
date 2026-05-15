@@ -4,6 +4,8 @@ package uno.anahata.asi.swing.toolkit;
 import java.lang.reflect.InvocationTargetException;
 import uno.anahata.asi.agi.tool.ToolContext;
 import uno.anahata.asi.agi.tool.spi.java.JavaMethodToolResponse;
+import uno.anahata.asi.swing.AbstractSwingAsiContainer;
+import uno.anahata.asi.swing.agi.AgiPanel;
 import uno.anahata.asi.swing.internal.SwingUtils;
 
 /**
@@ -20,6 +22,17 @@ import uno.anahata.asi.swing.internal.SwingUtils;
  * @author anahata
  */
 public class SwingToolContext extends ToolContext {
+    
+    /**
+     * Convenience method to get the AgiPanel for this Agi from the java tool.
+     * 
+     * @return the AgiPanel for the current Agi.
+     */
+    public AgiPanel getAgiPanel() {
+        return ((AbstractSwingAsiContainer)getAsiContainer()).getAgiPanel(getAgi());
+    }
+    
+    
     /**
      * Executes a task on the EDT in a non-blocking manner while maintaining 
      * full context awareness.
