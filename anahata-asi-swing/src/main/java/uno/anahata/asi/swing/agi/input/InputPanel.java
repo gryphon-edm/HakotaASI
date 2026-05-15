@@ -264,25 +264,25 @@ public class InputPanel extends JPanel {
         actionButtonPanel.add(microphonePanel);
 
         attachButton = new JButton(new AttachIcon(16));
-        attachButton.setToolTipText("Add Managed Resources (V2)");
-        attachButton.addActionListener(e -> attachFiles());
+        attachButton.setToolTipText("Add local file as registered Resource");
+        attachButton.addActionListener(e -> registerFilesAsResources());
+        
+        addUrlButton = new JButton(new LinkIcon(16));
+        addUrlButton.setToolTipText("Add URL Resource as registered Resource");
+        addUrlButton.addActionListener(e -> addUrl());
 
         screenshotButton = new JButton(new ScreenshotIcon(16));
-        screenshotButton.setToolTipText("Attach Desktop Screenshot (History)");
+        screenshotButton.setToolTipText("Attach Desktop Screenshot to your message");
         screenshotButton.addActionListener(e -> attachScreenshot());
 
         captureFramesButton = new JButton(new FramesIcon(16));
-        captureFramesButton.setToolTipText("Attach Application Frames (History)");
+        captureFramesButton.setToolTipText("Attach Screenshot of this application to your message");
         captureFramesButton.addActionListener(e -> attachWindowCaptures());
 
-        addUrlButton = new JButton(new LinkIcon(16));
-        addUrlButton.setToolTipText("Add URL Resource (V2)");
-        addUrlButton.addActionListener(e -> addUrl());
-
         actionButtonPanel.add(attachButton);
+        actionButtonPanel.add(addUrlButton);
         actionButtonPanel.add(screenshotButton);
         actionButtonPanel.add(captureFramesButton);
-        actionButtonPanel.add(addUrlButton);
 
         notificationLabel = new JLabel("");
         notificationLabel.setForeground(new Color(0, 120, 0));
@@ -439,7 +439,7 @@ public class InputPanel extends JPanel {
      * Opens a file chooser dialog and registers selected files as managed resources.
      * This is the primary way for users to add persistent file context to the session.
      */
-    private void attachFiles() {
+    private void registerFilesAsResources() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setMultiSelectionEnabled(true);
         if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
