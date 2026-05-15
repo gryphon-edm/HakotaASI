@@ -42,6 +42,24 @@ As well as normal java project files (for the context panel resource viewer) - l
 8. **Missing Error Highlighting (Hints / Annotations)**:
    Semantic highlighting (types, variables) works via `SemanticHighlighter`, but error checking (red squiggles) is usually provided by `HintsTask` / `HintsInvoker` which are executed asynchronously. If errors are not showing up in our embedded viewer, it may be because `HintsTask` relies on a fully realized `CloneableEditor` or checks `OpenProjects` to decide whether to run. We will investigate this next.
 
+### Discoveries & Solutions (Part 3)
+
+11. **The EditorCookie Magic**:
+    The true native way to bind a `FileObject` to a NetBeans `JEditorPane` and achieve 100% IDE fidelity (including error squiggles, code folds, and classpath resolution) is by using the `EditorCookie`. Instead of manually setting the content type, creating a default document, and injecting properties via reflection, we simply:
+    1. Look up the `DataObject` for the `FileObject`.
+    2. Obtain the `EditorCookie` from its lookup.
+    3. Call `openDocument()` on the cookie.
+    4. Set this document to the `JEditorPane`, ensuring the `EditorKit` matches.
+    This guarantees that the NetBeans infrastructure fully adopts the editor component, treating it exactly like a natively opened file.
+    
+12. **Virtual Snippet Classpath Targeting**:
+    For memory-backed files (like those created via `createTextFile`), we write the content to an ephemeral `MemoryFileSystem` file. To provide the correct project classpath (so the parser understands project-specific imports), we introduce `StringHandle.setContextPath()`. 
+    When the virtual file is created, we inject this path as a custom attribute: `finalFo.setAttribute("anahata.contextPath", sh.getContextPath())`. 
+    Our global `AnahataClasspathProvider` intercepts the `findClassPath` call for the memory file, reads the attribute, looks up the owning `Project` via `FileOwnerQuery`, and delegates to the project's native `ClassPathProvider`.
+
+13. **What is the `SOURCE` Classpath?**:
+    The `ClassPath.SOURCE` represents the root directories containing source files (e.g., `src/main/java`). NetBeans uses this to locate other source files in the same project, enabling features like cross-referencing, "Go to Declaration" for uncompiled files, and global refactoring scoping.
+
 ### Relevant Sources Examined
 
 **NetBeans Classes:**
@@ -85,6 +103,10 @@ As well as normal java project files (for the context panel resource viewer) - l
 - `org.netbeans.modules.editor.lib2.highlighting.HighlightsLayerAccessor`
 - `org.netbeans.modules.editor.lib2.highlighting.DirectMergeContainer`
 - `org.netbeans.modules.editor.java.JavaKit`
+- `org.netbeans.api.editor.EditorRegistry`
+- `org.netbeans.modules.editor.lib2.highlighting.HighlightingSpiPackageAccessor`
+- `org.netbeans.spi.debugger.ui.EditorContextDispatcher$EditorRegistryListener`
+- `org.netbeans.modules.editor.lib2.actions.EditorRegistryWatcher`
 
 **Anahata ASI Classes:**
 - `uno.anahata.asi.nb.tools.java.classpath.AnahataClasspathProvider`
