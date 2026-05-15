@@ -28,6 +28,9 @@ public class ParameterRendererFactory {
     /** Static registry mapping value types to their specialized renderer classes. */
     private static final Map<Class<?>, Class<? extends ParameterRenderer<?>>> REGISTRY = new ConcurrentHashMap<>();
 
+    /** Static registry mapping string IDs to their specialized renderer classes. */
+    private static final Map<String, Class<? extends ParameterRenderer<?>>> ID_REGISTRY = new ConcurrentHashMap<>();
+
     /**
      * Registers a specialized renderer class for a specific parameter value type.
      * @param type The class of the value (e.g., FullTextFileCreate.class).
@@ -35,6 +38,19 @@ public class ParameterRendererFactory {
      */
     public static void register(Class<?> type, Class<? extends ParameterRenderer<?>> rendererClass) {
         REGISTRY.put(type, rendererClass);
+    }
+
+    /**
+     * Registers a specialized renderer class for a specific String ID.
+     * @param id The string ID (e.g., "java").
+     * @param rendererClass The class of the renderer.
+     */
+    public static void registerById(String id, Class<? extends ParameterRenderer<?>> rendererClass) {
+        if (id != null) {
+            ID_REGISTRY.put(id.toLowerCase(), rendererClass);
+        } else {
+            throw new IllegalArgumentException("Id cannot be null");
+        }
     }
 
     /**
@@ -58,6 +74,20 @@ public class ParameterRendererFactory {
      * @return A specialized or fallback renderer.
      */
     public static ParameterRenderer<?> create(AgiPanel agiPanel, AbstractToolCall<?, ?> call, String paramName, Object value, String rendererId) {
+        // 0. Check for String ID hits
+        if (rendererId != null && !rendererId.isEmpty()) {
+            Class<? extends ParameterRenderer<?>> rendererClass = ID_REGISTRY.get(rendererId.toLowerCase());
+            if (rendererClass != null) {
+                try {
+                    ParameterRenderer renderer = rendererClass.getDeclaredConstructor().newInstance();
+                    renderer.init(agiPanel, call, paramName, value);
+                    return renderer;
+                } catch (Exception e) {
+                    log.error("Failed to instantiate ID-based specialized renderer", e);
+                }
+            }
+        }
+
         // 1. Check for Specialized Registry Hits
         if (value != null) {
             Class<? extends ParameterRenderer<?>> rendererClass = REGISTRY.get(value.getClass());
