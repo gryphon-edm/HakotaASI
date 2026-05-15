@@ -15,7 +15,9 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.agi.message.AbstractModelMessage;
+import uno.anahata.asi.agi.message.AbstractPart;
 import uno.anahata.asi.agi.message.ModelBlobPart;
+import uno.anahata.asi.agi.message.ModelTextPart;
 import uno.anahata.asi.agi.message.code.HostedCodeExecutionCallPart;
 import uno.anahata.asi.agi.message.code.HostedCodeExecutionResultPart;
 import uno.anahata.asi.agi.message.web.WebSearchCallPart;
@@ -257,6 +259,83 @@ public class OpenAiModelMessage extends AbstractModelMessage<OpenAiResponse> {
         setGroundingMetadata(new GroundingMetadata(mergedQueries, mergedTexts, mergedSources, mergedHtml, mergedRawJson));
     }
 
+
+    /**
+     * Handles a Server-Sent Event (SSE) from the OpenAI Responses API stream.
+     * <p>Routes deltas for real-time text and reasoning generation, and defers
+     * complex items (function calls, web searches) to the completion of the item
+     * where the full JSON structure is guaranteed to be intact.</p>
+     * 
+     * @param eventNode The parsed JSON node of the stream event.
+     */
+    public void handleStreamEvent(JsonNode eventNode) {
+        String type = eventNode.path("type").asText();
+        
+        switch (type) {
+            case "response.output_text.delta":
+                appendContent(eventNode.path("delta").asText());
+                break;
+            case "response.reasoning_text.delta":
+                appendThoughts(eventNode.path("delta").asText());
+                break;
+            case "response.output_item.done":
+                JsonNode item = eventNode.path("item");
+                String itemType = item.path("type").asText();
+                if ("message".equals(itemType)) {
+                    // Text is already streamed via deltas, but we must harvest citations.
+                    JsonNode content = item.get("content");
+                    if (content != null && content.isArray()) {
+                        for (JsonNode partNode : content) {
+                            if ("output_text".equals(partNode.path("type").asText())) {
+                                JsonNode annotations = partNode.get("annotations");
+                                if (annotations != null && annotations.isArray()) {
+                                    processCitations(annotations);
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // For tools, searches, and code execution, process the completed item seamlessly.
+                    processItem(item);
+                }
+                break;
+            case "response.done":
+                JsonNode response = eventNode.path("response");
+                if (response != null && response.has("usage")) {
+                    JsonNode usage = response.get("usage");
+                    if (usage != null && !usage.isNull()) {
+                        setBilledTokenCount(usage.path("output_tokens").asInt(0));
+                    }
+                }
+                if (response != null && response.has("status")) {
+                    String status = response.path("status").asText();
+                    if ("completed".equals(status)) {
+                        setFinishReason(FinishReason.STOP);
+                    } else if ("incomplete".equals(status)) {
+                        setFinishReason(FinishReason.MAX_TOKENS);
+                    }
+                }
+                break;
+        }
+    }
+
+    public void appendContent(String text) {
+        List<AbstractPart> parts = getParts();
+        if (!parts.isEmpty() && parts.get(parts.size() - 1) instanceof ModelTextPart mtp && !mtp.isThought()) {
+            mtp.appendText(text);
+        } else {
+            addTextPart(text);
+        }
+    }
+
+    public void appendThoughts(String text) {
+        List<AbstractPart> parts = getParts();
+        if (!parts.isEmpty() && parts.get(parts.size() - 1) instanceof ModelTextPart mtp && mtp.isThought()) {
+            mtp.appendText(text);
+        } else {
+            addTextPart(text, null, true);
+        }
+    }
 
     @Override
     public String getFrom() {
