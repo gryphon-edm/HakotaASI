@@ -24,7 +24,9 @@ import uno.anahata.asi.swing.agi.message.part.tool.param.ParameterRendererFactor
 import uno.anahata.asi.swing.agi.resources.ResourceUiRegistry;
 import uno.anahata.asi.agi.tool.schema.SchemaProvider;
 import uno.anahata.asi.gemini.vertex.GeminiGoogleCloudExpressAIProvider;
+import uno.anahata.asi.nb.ui.render.JavaCodeParameterRenderer;
 import uno.anahata.asi.openai.OpenAiProvider;
+import uno.anahata.asi.swing.agi.AgiPanel;
 import uno.anahata.asi.toolkit.resources.text.FullTextResourceUpdate;
 import uno.anahata.asi.toolkit.resources.text.TextResourceReplacements;
 import uno.anahata.asi.toolkit.resources.text.lines.TextResourceLineEdits;
@@ -51,6 +53,7 @@ public class NetBeansAsiContainer extends AbstractSwingAsiContainer {
         ParameterRendererFactory.register(TextResourceLineEdits.class, TextResourceLineEditsRenderer.class);
         //ParameterRendererFactory.register(CodeRefinementBatchPolymorphic.class, CodeRefinementBatchRendererPolymorphic.class);
         ParameterRendererFactory.register(CodeRefinementBatch.class, CodeRefinementBatchRenderer.class);
+        ParameterRendererFactory.registerById("java", JavaCodeParameterRenderer.class);
         
         // 2. Register the ElementHandle module for global JSON support in the IDE
         SchemaProvider.OBJECT_MAPPER.registerModule(new ElementHandleModule());
@@ -137,7 +140,7 @@ public class NetBeansAsiContainer extends AbstractSwingAsiContainer {
     }
 
     @Override
-    public Object getUI(Agi agi) {
+    public AgiPanel getUI(Agi agi) {
         AgiTopComponent atc = findTopComponent(agi);
         return atc != null ? atc.getAgiPanel() : null;
     }
