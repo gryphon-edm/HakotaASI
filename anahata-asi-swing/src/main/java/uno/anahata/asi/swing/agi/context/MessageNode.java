@@ -94,11 +94,15 @@ public class MessageNode extends AbstractContextNode<AbstractMessage> {
      * {@inheritDoc}
      * <p>
      * Implementation details: Updates the status label based on whether the
-     * message has been effectively pruned from the context window.
+     * message is pinned, effectively pruned from the context window, or active.
      * </p>
      */
     @Override
     protected void updateStatus() {
-        this.status = userObject.isEffectivelyPruned() ? "Pruned" : "Active";
+        if (userObject.isAllPinned()) {
+            this.status = "Pinned";
+        } else {
+            this.status = userObject.isEffectivelyPruned() ? "Pruned" : "Active";
+        }
     }
 }
