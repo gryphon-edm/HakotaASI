@@ -14,8 +14,11 @@ import org.openide.loaders.DataObject;
 import org.openide.util.ContextAwareAction;
 import org.openide.util.Lookup;
 import org.openide.util.lookup.Lookups;
-import uno.anahata.asi.toolkit.resources.Resources;
+import uno.anahata.asi.agi.resource.Resource;
+import uno.anahata.asi.agi.resource.handle.PathHandle;
+import uno.anahata.asi.agi.resource.view.TextView;
 import uno.anahata.asi.agi.resource.view.TextViewportSettings;
+import uno.anahata.asi.toolkit.resources.Resources;
 import uno.anahata.asi.nb.tools.ide.context.OpenTopComponentsContextProvider;
 import uno.anahata.asi.nb.tools.ide.context.OutputTabsContextProvider;
 import uno.anahata.asi.agi.tool.AnahataToolkit;
@@ -103,7 +106,10 @@ public class IDE extends AnahataToolkit {
                 .includeLineNumbers(false)
                 .build();
         
-        resourcesToolkit.loadResources(Collections.singletonList(logFile.toURI().toString()), settings);
+        PathHandle handle = new PathHandle(logFile.getAbsolutePath());
+        Resource resource = new Resource(handle);
+        resource.setView(new TextView(resource, settings));
+        getAgi().getResourceManager().register(resource, "IDE Logs (Tailed)");
     }
 
     /**
