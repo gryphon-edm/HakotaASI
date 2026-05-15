@@ -190,6 +190,7 @@ public class FullTextFileCreateRenderer implements ParameterRenderer<FullTextFil
         // We use a StringHandle to support streaming and safe editing without disk side-effects
         // Cero Hardcoding: NetBeans will detect the kit from the extension (f.getName())
         this.ephemeralHandle = new StringHandle(f.getName(), value.getContent());
+        this.ephemeralHandle.setContextPath(value.getPath());
         Resource ephemeral = new Resource(ephemeralHandle);
         
         ResourceUI strategy = ResourceUiRegistry.getInstance().getResourceUI();
@@ -230,8 +231,10 @@ public class FullTextFileCreateRenderer implements ParameterRenderer<FullTextFil
 
         File f = new File(value.getPath());
         
-        // NAVIGATION FIX: Always show file name and path in the header
-        header.add(new JLabel(f.getName() + " (" + value.getPath() + ")"));
+        // NAVIGATION FIX: Show simple file name, path in tooltip
+        JLabel pathLabel = new JLabel(f.getName());
+        pathLabel.setToolTipText(value.getPath());
+        header.add(pathLabel);
         
         header.add(labelPanel, BorderLayout.WEST);
         
