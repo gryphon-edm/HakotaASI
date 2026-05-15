@@ -79,7 +79,7 @@ public class ParameterRendererFactory {
             Class<? extends ParameterRenderer<?>> rendererClass = ID_REGISTRY.get(rendererId.toLowerCase());
             if (rendererClass != null) {
                 try {
-                    ParameterRenderer renderer = rendererClass.getDeclaredConstructor().newInstance();
+                    ParameterRenderer<Object> renderer = (ParameterRenderer<Object>) rendererClass.getDeclaredConstructor().newInstance();
                     renderer.init(agiPanel, call, paramName, value);
                     return renderer;
                 } catch (Exception e) {
