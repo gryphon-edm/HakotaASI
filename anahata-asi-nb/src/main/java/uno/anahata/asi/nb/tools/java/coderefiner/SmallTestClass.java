@@ -60,4 +60,35 @@ public class SmallTestClass {
     public void methodC() {
         System.out.println("C");
     }
+
+    /**
+     * A test enum.
+     */
+    public enum TestEnum {
+        /** First doc */
+        FIRST,
+        /** Second doc */
+        SECOND,
+        /**
+         * The third constant.
+         */
+        THIRD;
+    }
+
+    @lombok.Getter
+    public enum TestEnum2 {
+        FIRST ("first"),
+        /** Second doc */
+        SECOND ("second"),
+        /**
+         * The third constant with args.
+         */
+        THIRD ("third");
+
+        /** First doc */
+        private TestEnum2(String displayValue) {
+        this.displayValue = displayValue;
+        }
+        String displayValue;
+    }
 }

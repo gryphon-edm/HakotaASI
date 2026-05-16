@@ -27,7 +27,8 @@ import uno.anahata.asi.toolkit.resources.text.LineComment;
  * @author anahata
  */
 @Slf4j
-public class CodeRefinementBatchRendererPolymorphic extends AbstractTextResourceWriteRenderer<CodeRefinementBatchPolymorphic> {
+@Deprecated
+public class DeprecatedCodeRefinementBatchRendererPolymorphic extends AbstractTextResourceWriteRenderer<CodeRefinementBatchPolymorphic> {
 
     @Override
     protected List<LineComment> getLineComments() {

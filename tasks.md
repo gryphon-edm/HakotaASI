@@ -3,11 +3,32 @@
 This file tracks the actionable tasks and tactical goals for the Anahata ASI (V2) project.
 
 ## 0. Zero Day Go Live: 
-- [ ] updateTextResource doesnt let you edit the right hand side of the diff
-- [ ] check ide logs work
 - [ ] make "cached data" in MediaView transient? possibly in text resources too?
-- [ ] Tool's turns to expire doesn't have a field in context details panel
+
+- [ ] JavaCodeParameterRenderer: 
+    - doesn't show the edit save cancel button
+    - shows error highlighting and codefolds only on the first tool call of the conversation, not on the second one
+    - shows error for the Anahata class saying "Class Anahata shoul dbe in a file called Anahata" 
+    - doesn't show any error highlighting or code folds in the subsequent tool calls
+    - check if creating a new MemoryFileSystem every time could lead to memory leaks
+
+- [] CreateTextFileRender 
+    -shows massive whitespace at the bottom since the last changes to the NetBeansTextResourceViewer pipeline and 
+    - it doesn't forward the scrolling up or down
+
+- [] ContextPanel -> 
+    - ResourcePanel shows the editors way below for Reformatter.java for example, may be related to resources that don't fit on the default viewport and the issue may occur after doing expand to fit viewport.
+
 - [ ] change all log.info to log.debug
+
+- [ ] enums in json schemas dont have description
+
+- [ ] tool calls that use ObjectToStringParameterRenderer for all params have very tall tool call panel height like maven.runGoals
+
+- [ ] AbstractTextResourceWriteRenderer fills logs with errors if resource not in context, which is a good point because if you update a file and take it out of context on the next turn, it can't do Resource.getName(). Check the null check i did on resource.
+
+- [ ] WrapLayout from unload resources chips doesnt calculate horizontal width correctly, causes the adjustingTabPane to push the the toolcallpanels width to the point that you don't see the run button
+
 
 
 ## 1. Have to do before Go Live: 
