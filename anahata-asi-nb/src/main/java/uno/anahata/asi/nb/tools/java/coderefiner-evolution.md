@@ -101,7 +101,18 @@ To achieve these insights, we loaded the following NetBeans compiler and AST int
 - `org.netbeans.modules.java.source.save.EstimatorFactory`
 - `org.netbeans.modules.java.source.parsing.JavacParser`
 - `org.netbeans.modules.java.source.parsing.FileObjects`
+- `org.netbeans.modules.java.source.save.DiffContext`
+- `org.netbeans.api.java.source.JavaSource`
 - `org.netbeans.api.java.source.ModificationResult`
+- `org.netbeans.api.java.source.ClasspathInfo`
+- `org.netbeans.api.java.source.Task`
+- `org.openide.filesystems.FileObject`
+- `org.openide.filesystems.FileUtil`
+- `org.openide.filesystems.FileSystem`
+- `org.netbeans.api.java.source.CodeStyle`
+- `org.netbeans.api.java.source.CompilationInfo`
+- `org.netbeans.api.java.source.CompilationController`
+- `uno.anahata.asi.nb.tools.java.JavaSourceUtils`
 
 ## Turn 288: Analysis of V3 Test Results and The Shift to V4
 
@@ -171,5 +182,17 @@ With these in context, we determined that **Yes, V4 officially bypasses all NetB
 However, to keep the output beautiful, we query `CodeStyle.getDefault(doc)` manually inside `CodeRefinementIntent.java`. We dynamically calculate `blankLinesBefore` and `blankLinesAfter` based on the user's IDE preferences and intelligently inject exact `\n` characters around our `INSERT` splices by counting the existing surrounding whitespace! 
 
 We also fixed the final math bug in `MOVE`/`DELETE` where the anchor `insertOffset` was lacking the same backward-scan for indentation that `INSERT` used, which caused shifted alignment when moving members.
+
+## Turn 323: Enum Constant Bounds Discovery
+While applying Javadocs to the AST components in `CodeRefinementIntent.java`, we discovered a critical edge case in the `Javac` AST mapping. 
+For Enum Constants without bodies or arguments (e.g., `INSERT,`), `SourcePositions.getEndPosition()` returns `-1`.
+Because the V4 text-splicing architecture relies heavily on precise character offsets, this `-1` propagated through the string slicing math and threw a `StringIndexOutOfBoundsException` (Range [1246, -1) out of bounds), rejecting the batch.
+
+**The Fix:** We implemented an active forward-scanner fallback in `CodeRefinementIntent.java`. If `endPos < 0` is detected, V4 scans forward from `startPos` until it encounters a logical terminator (`,`, `;`, `{`, `=`, `(`, or `)`). This guarantees robust bound calculation even for AST nodes lacking compiler-defined end positions.
+
+## Turn 328: Synthetic Initializer Blind Spot
+During Test 13 (Updating an Enum Constant Javadoc), we encountered another `StringIndexOutOfBoundsException` (Range [1360, -1)). 
+**Root Cause:** In the Javac AST, Enum Constants are represented as `VariableTree` nodes and are always assigned a synthetic `JCNewClass` initializer, even if they have no explicit arguments. While `SourcePositions` returns a valid start position (the start of the constant), it returns `-1` for the end position if there are no explicit arguments. Our `UPDATE` logic checked `if (initStart >= 0)` (which evaluated to true because the start position was valid) and blindly used the `-1` end position for substring math.
+**The Fix:** We updated `CodeRefinementIntent` to verify both `initStart >= 0 && initEnd >= 0` before assuming the initializer is explicitly declared in the source text. If it lacks a valid end position, it safely falls back to the standard variable extraction logic.
 
 Força Barça!

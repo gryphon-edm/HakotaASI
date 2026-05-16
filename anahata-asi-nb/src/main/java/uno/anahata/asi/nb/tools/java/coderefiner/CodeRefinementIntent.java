@@ -15,50 +15,94 @@ import com.sun.source.util.TreePath;
 import uno.anahata.asi.agi.tool.AgiToolException;
 import uno.anahata.asi.nb.tools.java.BatchCodeRefiner;
 
+/**
+ * Represents a single structural AST modification instruction in a flattened format.
+ * <p>
+ * This intent is processed by the {@link BatchCodeRefiner} to perform surgical, AST-guided text replacements on Java source files.
+ * </p>
+ */
 @Data
 @Slf4j
 @NoArgsConstructor
 @Schema(description = "Represents a single structural AST modification instruction in a flattened format.")
 public class CodeRefinementIntent implements Serializable {
 
+    /**
+     * Defines the types of structural modifications available for a CodeRefinementIntent.
+     */
     public enum Type {
+        /** Inserts a new member (method, field, or inner type). */
         @Schema(description = "Inserts a new member (method, field, or inner type).")
         INSERT,
+        /** Updates an existing member's signature or body. */
         @Schema(description = "Updates an existing member's signature or body.")
         UPDATE,
+        /** Deletes an existing member. */
         @Schema(description = "Deletes an existing member.")
         DELETE,
+        /** Moves an existing member to a new position within its class. */
         @Schema(description = "Moves an existing member to a new position within its class.")
         MOVE
     }
 
+    /**
+     * The type of structural modification to perform (INSERT, UPDATE, DELETE, MOVE).
+     */
     @Schema(description = "The operation type.", required = true)
     private Type type;
 
+    /**
+     * The fully qualified name of the target class container. Used for resolving the container during structural inserts.
+     */
     @Schema(description = "The FQN of the target class (e.g. 'com.foo.Bar'). Mandatory for 'INSERT' inside a class. Use '$' for nested types. Leave empty for file-level.")
     private String classFqn;
 
+    /**
+     * The absolute fully qualified name of the target member to perform the operation on.
+     */
     @Schema(description = "The ABSOLUTE FQN of the member to operation on (e.g. 'com.foo.Bar.myMethod(java.util.List)'). FQNs are preferred for parameters. Generic brackets '<...>' are not required and will be ignored during matching.")
     private String memberFqn;
 
+    /**
+     * The exact string declaration (signature) of the member.
+     */
     @Schema(description = "The member signature or header (everything to the LEFT of the first '{' or '=')' without javadoc. (e.g. '@Override public void setItems(List<String> items)'). Mandatory for 'INSERT', optional for 'UPDATE' (only if you want to change the declaration). Do not provide Javadocs here. Will cause the tool to fail or corrupt the java source file.")
     private String declaration;
 
+    /**
+     * The code body or initializer expression.
+     */
     @Schema(description = "For methods, The WHOLE body code, the logic inside the braces. For fields, the initializer expression (part after '=') or can be blank if there is no initializer expression. FOr use with 'INSERT' and 'UPDATE'. **Do not include the method signature or field declaration in this 'body' field. i.e. ths field cannot start with annotations like @Override or modifiers like 'public void '**")
     private String body;
 
+    /**
+     * The relative position constraint for insertion or moving.
+     */
     @Schema(description = "Position relative to the anchor member. **Mandatory for 'INSERT' and 'MOVE'**.")
     private RelativePosition position;
 
+    /**
+     * The simple name of the anchor member to position against.
+     */
     @Schema(description = "Anchor member name relative to class (e.g. 'myMethod()'). Mandatory for BEFORE/AFTER positions in 'INSERT' and 'MOVE'.")
     private String anchorMemberName;
 
+    /**
+     * A human-readable reason explaining the intent.
+     */
     @Schema(description = "The reason for this structural change. Will be displayed in the UI.")
     private String reason;
 
+    /**
+     * The structured Javadoc configuration to apply.
+     */
     @Schema(description = "Optional Javadoc to apply to the member. If updating a member and left null, the existing Javadoc is preserved.")
     private JavadocIntent javadoc;
 
+    /**
+     * Generates a formatted diagnostic string detailing the intent's configuration.
+     * @return a multi-line diagnostic string.
+     */
     public String toDiagnosticString() {
         StringBuilder sb = new StringBuilder();
         sb.append("\n-type             : ").append(type);
@@ -73,6 +117,12 @@ public class CodeRefinementIntent implements Serializable {
         return sb.toString();
     }
 
+    /**
+     * Abbreviates a string for compact logging.
+     * @param s the string to abbreviate.
+     * @param max the maximum allowed length.
+     * @return the abbreviated string.
+     */
     private String abbreviate(String s, int max) {
         if (s == null) return "null";
         if (s.length() <= max) return s;
@@ -80,6 +130,13 @@ public class CodeRefinementIntent implements Serializable {
         return s.substring(0, half) + "..." + s.substring(s.length() - half);
     }
 
+    /**
+     * Executes the V4 AST-Guided text replacement, calculating exact bounds via the NetBeans compiler API.
+     * @param cc the compilation controller.
+     * @param currentContent the raw text content of the file.
+     * @return the updated text content.
+     * @throws java.lang.Exception if parsing or string replacement fails.
+     */
     public String applyToText(org.netbeans.api.java.source.CompilationController cc, String currentContent) throws Exception {
         CompilationUnitTree cut = cc.getCompilationUnit();
         SourcePositions sp = cc.getTrees().getSourcePositions();
@@ -96,6 +153,18 @@ public class CodeRefinementIntent implements Serializable {
             long startPos = sp.getStartPosition(cut, member);
             long endPos = sp.getEndPosition(cut, member);
             
+            if (endPos < 0) {
+                int tempEnd = (int)startPos;
+                while (tempEnd < currentContent.length()) {
+                    char c = currentContent.charAt(tempEnd);
+                    if (c == ',' || c == ';' || c == '{' || c == '=' || c == '(' || c == ')') {
+                        break;
+                    }
+                    tempEnd++;
+                }
+                endPos = tempEnd;
+            }
+
             long docStart = startPos;
             for (org.netbeans.api.java.source.Comment comm : cc.getTreeUtilities().getComments(member, true)) {
                 if (comm.isDocComment() && comm.pos() < docStart) {
@@ -109,17 +178,24 @@ public class CodeRefinementIntent implements Serializable {
                 bodyStart = sp.getStartPosition(cut, mt.getBody());
                 bodyEnd = sp.getEndPosition(cut, mt.getBody());
             } else if (member instanceof VariableTree vt) {
-                if (vt.getInitializer() != null) {
-                    bodyStart = sp.getStartPosition(cut, vt.getInitializer());
-                    bodyEnd = sp.getEndPosition(cut, vt.getInitializer());
+                long initStart = vt.getInitializer() != null ? sp.getStartPosition(cut, vt.getInitializer()) : -1;
+                long initEnd = vt.getInitializer() != null ? sp.getEndPosition(cut, vt.getInitializer()) : -1;
+                if (initStart >= 0 && initEnd >= 0) {
+                    bodyStart = initStart;
+                    bodyEnd = initEnd;
                     String textToInit = currentContent.substring((int)startPos, (int)bodyStart);
                     int eq = textToInit.lastIndexOf('=');
                     if (eq != -1) {
                         bodyStart = startPos + eq + 1;
+                    } else {
+                        int paren = textToInit.indexOf('(');
+                        if (paren != -1) {
+                            bodyStart = startPos + paren;
+                        }
                     }
                 } else {
                     bodyStart = endPos;
-                    if (currentContent.charAt((int)endPos - 1) == ';') {
+                    if (endPos > 0 && currentContent.charAt((int)endPos - 1) == ';') {
                         bodyStart = endPos - 1;
                         bodyEnd = endPos - 1;
                     }
@@ -215,6 +291,18 @@ public class CodeRefinementIntent implements Serializable {
         if (type == Type.DELETE || type == Type.MOVE) {
             long startPos = sp.getStartPosition(cut, member);
             long endPos = sp.getEndPosition(cut, member);
+
+            if (endPos < 0) {
+                int tempEnd = (int)startPos;
+                while (tempEnd < currentContent.length()) {
+                    char c = currentContent.charAt(tempEnd);
+                    if (c == ',' || c == ';' || c == '{' || c == '=' || c == '(' || c == ')') {
+                        break;
+                    }
+                    tempEnd++;
+                }
+                endPos = tempEnd;
+            }
 
             long docStart = startPos;
             for (org.netbeans.api.java.source.Comment comm : cc.getTreeUtilities().getComments(member, true)) {
@@ -480,6 +568,10 @@ public class CodeRefinementIntent implements Serializable {
 
 
 
+    /**
+     * Generates a rich HTML representation of this intent for UI rendering.
+     * @return an HTML-formatted string.
+     */
     public String getHtmlDisplay() {
         String color = switch (type) {
             case INSERT -> "#4CAF50";
@@ -516,6 +608,10 @@ public class CodeRefinementIntent implements Serializable {
         return sb.toString();
     }
 
+    /**
+     * Calculates the expected fully qualified name of the member after this intent is applied.
+     * @return the resulting FQN.
+     */
     public String getResultingMemberFqn() {
         if (type == Type.DELETE) {
             return null;
@@ -530,6 +626,11 @@ public class CodeRefinementIntent implements Serializable {
         return memberFqn;
     }
 
+    /**
+     * Extracts the simple name from a fully qualified name.
+     * @param fqn the fully qualified name.
+     * @return the simple name.
+     */
     private String getSimpleName(String fqn) {
         if (fqn == null || fqn.isBlank()) {
             return "Unknown";
@@ -540,6 +641,11 @@ public class CodeRefinementIntent implements Serializable {
         return (lastDot == -1) ? namePart : namePart.substring(lastDot + 1);
     }
 
+    /**
+     * Parses a member declaration string to extract its simple name.
+     * @param decl the declaration string.
+     * @return the simple name.
+     */
     private String getSimpleNameFromDeclaration(String decl) {
         if (decl == null) return "Unknown";
         String clean = decl.trim();

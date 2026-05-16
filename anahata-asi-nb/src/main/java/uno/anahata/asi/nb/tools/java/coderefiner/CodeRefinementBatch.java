@@ -19,6 +19,12 @@ import uno.anahata.asi.toolkit.resources.text.AbstractTextResourceWrite;
 import uno.anahata.asi.toolkit.resources.text.LineComment;
 import uno.anahata.asi.nb.resources.handle.NbHandle;
 
+/**
+ * A robust, agent-friendly batch of structural AST modifications for a single Java file.
+ * <p>
+ * This class extends {@link AbstractTextResourceWrite} to inherit optimistic locking and path resolution, while providing the V4 AST-Guided text replacement engine.
+ * </p>
+ */
 @Data
 @Slf4j
 @NoArgsConstructor
@@ -26,25 +32,52 @@ import uno.anahata.asi.nb.resources.handle.NbHandle;
 @Schema(description = "A robust, agent-friendly batch of structural AST modifications for a single Java file.")
 public class CodeRefinementBatch extends AbstractTextResourceWrite {
 
+    /**
+     * The linear list of structural changes to apply.
+     */
     @Schema(description = "The linear list of structural changes to apply.", required = true)
     private List<CodeRefinementIntent> intents = new ArrayList<>();
 
+    /**
+     * Whether to optimize imports after applying all changes. Defaults to true.
+     */
     @Schema(description = "Whether to optimize imports after applying all changes. Defaults to true.")
     private boolean optimize = true;
 
+    /**
+     * Whether to save the file to disk after refinement. Defaults to true.
+     */
     @Schema(description = "Whether to save the file to disk after refinement. Defaults to true.")
     private boolean save = true;
 
+    /**
+     * List of FQNs to import.
+     */
     @Schema(description = "List of FQNs to import.")
     private List<String> importsToAdd = new ArrayList<>();
 
+    /**
+     * List of FQNs to remove from imports.
+     */
     @Schema(description = "List of FQNs to remove from imports.")
     private List<String> importsToRemove = new ArrayList<>();
 
+    /**
+     * Internal list of calculated line comments.
+     */
     @JsonIgnore
     @Schema(hidden = true)
     private List<LineComment> calculatedComments = new ArrayList<>();
 
+    /**
+     * Calculates the resulting text content by sequentially applying the V4 AST-Guided text replacements.
+     * <p>
+     * It resolves explicit imports via {@link org.netbeans.api.java.source.GeneratorUtilities} to bypass `CasualDiff` generics bugs.
+     * </p>
+     * @param agi the active Agi session.
+     * @return the updated text content.
+     * @throws java.lang.Exception if parsing or string replacement fails.
+     */
     @Override
     protected String doCalculateResultingContent(Agi agi) throws Exception {
         if (originalContent == null) {
@@ -151,6 +184,11 @@ public class CodeRefinementBatch extends AbstractTextResourceWrite {
         return currentContent;
     }
 
+    /**
+     * Validates the structural state and optimistic locking constraints before execution.
+     * @param agi the active Agi session.
+     * @throws java.lang.Exception if validation fails or no changes were detected.
+     */
     @Override
     public void validate(Agi agi) throws Exception {
         super.validate(agi);

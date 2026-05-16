@@ -188,6 +188,45 @@ public class CodeRefinementBatchTest {
         batch11.setImportsToAdd(List.of("java.util.LinkedList", "java.io.File"));
         runBatch.accept(batch11);
 
+        logToToolContext("Test 12: Insert Enum with Constants and Javadoc");
+        CodeRefinementIntent i12 = new CodeRefinementIntent();
+        i12.setType(CodeRefinementIntent.Type.INSERT);
+        i12.setClassFqn("uno.anahata.asi.nb.tools.java.coderefiner.SmallTestClass");
+        i12.setPosition(RelativePosition.END);
+        i12.setDeclaration("public enum TestEnum");
+        i12.setBody("/** First doc */\nFIRST,\n/** Second doc */\nSECOND,\nTHIRD;");
+        JavadocIntent j12 = new JavadocIntent();
+        j12.setDescription("A test enum.");
+        i12.setJavadoc(j12);
+        runBatch.accept(buildBatch.apply(List.of(i12)));
+
+        logToToolContext("Test 13: Update Enum Constant Javadoc");
+        CodeRefinementIntent i13 = new CodeRefinementIntent();
+        i13.setType(CodeRefinementIntent.Type.UPDATE);
+        i13.setMemberFqn("uno.anahata.asi.nb.tools.java.coderefiner.SmallTestClass$TestEnum.THIRD");
+        JavadocIntent j13 = new JavadocIntent();
+        j13.setDescription("The third constant.");
+        i13.setJavadoc(j13);
+        runBatch.accept(buildBatch.apply(List.of(i13)));
+
+        logToToolContext("Test 14: Insert Enum with args");
+        CodeRefinementIntent i14 = new CodeRefinementIntent();
+        i14.setType(CodeRefinementIntent.Type.INSERT);
+        i14.setClassFqn("uno.anahata.asi.nb.tools.java.coderefiner.SmallTestClass");
+        i14.setPosition(RelativePosition.END);
+        i14.setDeclaration("@lombok.Getter\npublic enum TestEnum2");
+        i14.setBody("FIRST (\"first\"),\n/** Second doc */\nSECOND (\"second\"),\nTHIRD (\"third\");\n\n/** First doc */\nprivate TestEnum2(String displayValue) {\nthis.displayValue = displayValue;\n}\nString displayValue;");
+        runBatch.accept(buildBatch.apply(List.of(i14)));
+
+        logToToolContext("Test 15: Update Enum Constant with args Javadoc");
+        CodeRefinementIntent i15 = new CodeRefinementIntent();
+        i15.setType(CodeRefinementIntent.Type.UPDATE);
+        i15.setMemberFqn("uno.anahata.asi.nb.tools.java.coderefiner.SmallTestClass$TestEnum2.THIRD");
+        JavadocIntent j15 = new JavadocIntent();
+        j15.setDescription("The third constant with args.");
+        i15.setJavadoc(j15);
+        runBatch.accept(buildBatch.apply(List.of(i15)));
+
         logToToolContext("All tests executed. Verifying AST...");
         
         String finalContent = new String(handle.getFileObject().asBytes(), "UTF-8");
@@ -207,6 +246,12 @@ public class CodeRefinementBatchTest {
         }
         if (!finalContent.contains("import java.util.LinkedList;")) {
             throw new Exception("Test 11 Failed: Imports missing!");
+        }
+        if (!finalContent.contains("* The third constant.") || !finalContent.contains("THIRD;")) {
+            throw new Exception("Test 13 Failed: Enum constant Javadoc missing or malformed!");
+        }
+        if (!finalContent.contains("* The third constant with args.") || !finalContent.contains("THIRD (\"third\");")) {
+            throw new Exception("Test 15 Failed: Enum constant with args Javadoc missing or malformed!");
         }
         
         logToToolContext("Validation SUCCESS. The AST is perfect.");

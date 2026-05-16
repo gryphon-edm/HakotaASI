@@ -48,7 +48,7 @@ import uno.anahata.asi.nb.tools.java.coderefiner.RelativePosition;
  * @author anahata
  */
 @Slf4j
-@AgiToolkit("Advanced structural Java refinement (Batch Mode). Too buggy don't use. Not ready, don't try to enable it.")
+@AgiToolkit("Advanced structural Java refinement (V4 AST-Guided Batch Mode).")
 public class BatchCodeRefiner extends AnahataToolkit {
 
     @Override
@@ -60,22 +60,21 @@ public class BatchCodeRefiner extends AnahataToolkit {
     public List<String> getSystemInstructions() throws Exception {
         return Collections.singletonList(JavaSourceUtils.CANONICAL_FQN_STANDARD
                 + "\n"
-                + "### BatchCodeRefiner Toolkit Instructions\n"
-                + "0. **Do not use unless you are a reasoning model like Gemini 3.1 Pro or more capable**\n"
+                + "### BatchCodeRefiner Toolkit Instructions (V4 AST-Guided)\n"
                 + "1. **Context Locked**: You MUST have the resource in your RAG message (context) to propose a refinement.\n"
                 + "2. **Batch Intents**: You can combine multiple structural changes (INSERT, UPDATE, DELETE, MOVE) in one call.\n"
                 + "3. **Optimistic Locking**: Always use the `lastModified` timestamp from the RAG message. \n"
                 + "\tNote: You can't update the same file twice in the same turn otherwise the first one will change the lastModified and the second one will fail with an optimistic locking exception but you can do as many inserts and updates as you want in a single tool call\n"
-                + "4. **Field Initializers**: Put the expression (code after '=') in the `body` field or leave the body empty for fields if you don't want any initialzier expression.\n"
-                + "4.1 **Inline Comments**: Natively supported! You can include inline comments directly in the `body` string.\n"
-                + "5. **Javadocs**: Use the structured `javadoc` property (JavadocIntent) in the intent to inject Javadocs on the fly! If omitted during UPDATE, existing Javadoc is preserved.\n"
-                + "6. **No imports**: Do not use this tookit to add imports, use CodeRefiner..\n"
-                + "7. **No records**: Do not use this tookit to inser or update records, there is a bug in netbeans when adding or updating records using the AST apis, use the Resources toolkit for records.\n"
-                + "8. **No training knowledge**: Do not use your training knoweldge, this toolkit is unique to Anahata you have to pay very close attention to the tool definition and the paramters schema.\n"
+                + "4. **Field Initializers**: Put the expression (code after '=') in the `body` field or leave the body empty for fields if you don't want any initializer expression. For Enum Constants, put the constant name in `declaration` and constructor arguments (if any) in `body`.\n"
+                + "5. **Auto-Indentation & Formatting**: Natively supported! V4 computes the exact indentation of the target scope. You do not need to manually pad your `body` with leading spaces. Blank lines and `//` comments within your `body` string are preserved with 100% fidelity.\n"
+                + "6. **Javadocs**: Use the structured `javadoc` property (JavadocIntent) to inject Javadocs on the fly. To update ONLY the Javadoc of an existing member, provide the `memberFqn` and the new `javadoc`, leaving `declaration` and `body` null. If `javadoc` is omitted during an UPDATE, the existing Javadoc is preserved.\n"
+                + "7. **Imports**: FQNs provided in `importsToAdd` and `importsToRemove` are safely evaluated and added/removed from the compilation unit.\n"
+                + "8. **Records and Modern Java**: Fully supported. Because V4 uses AST-guided text replacement, all modern Java constructs (Records, Switch Expressions, etc.) are safely refactored without breaking the IDE's formatter.\n"
+                + "9. **No training knowledge**: Do not use your training knowledge, this toolkit is unique to Anahata you have to pay very close attention to the tool definition and the parameters schema.\n"
         );
     }
 
-    @AgiTool("The definitive structural Java refiner. Applies a batch of member lvel modifications to a java file. RelativePosition is mandatory for all INSERT and MOVE. When updating a member, you can update both the declaration and the body in the same UPDATE intent or you can just do the body or just the declaration. Never include the declaration of a field or a method in the 'body' attribute, the member declaration (signature) can only be in the 'declaration' field only. The 'body' can only contain either whats inside the {} or whatever is to the right of the '='. If you update the declaration of a method, you must include the full delcaration with all annotations and all throws clauses. Provides a fully integrated `javadoc` object property so you can document members synchronously with code changes! Inline comments inside the `body` string are also natively preserved!Does not support java records due to a bug in netbeans. It's not a find-and-replace tool, use the Resources toolkit for that. You can't use this tool to add imports, just use the fqn of any types not in the imports list with optimize=true to let netbeans import them automatically or use CodeRefiner.addImports to surgically add imports. For fields, declaration is what goes to the left of the '=', body is the initializer expression to the right of the '=', leave 'body' empty if you just want to insert a field without initializer expression. You cannot add javadocs to the declaration.")
+    @AgiTool("The definitive structural Java refiner. Applies a batch of member-level modifications to a java file. RelativePosition is mandatory for all INSERT and MOVE. When updating a member, you can update both the declaration and the body in the same UPDATE intent or you can just do the body or just the declaration. Never include the declaration of a field or a method in the 'body' attribute, the member declaration (signature) can only be in the 'declaration' field only. The 'body' can only contain either whats inside the {} or whatever is to the right of the '='. If you update the declaration of a method, you must include the full declaration with all annotations and all throws clauses. Provides a fully integrated `javadoc` object property so you can document members synchronously with code changes! Inline comments inside the `body` string are natively preserved! It is not a find-and-replace tool, use the Resources toolkit for that. You CAN use this tool to add or remove imports via the importsToAdd and importsToRemove arrays. For fields, declaration is what goes to the left of the '=', body is the initializer expression to the right of the '=', leave 'body' empty if you just want to insert a field without initializer expression. For Enum Constants, put the constant name in `declaration` and constructor arguments in `body`. Do not put javadoc strings inside the `declaration` field, use the structured `javadoc` parameter instead.")
     public String refine(
             @AgiToolParam("The robust refinement batch.") CodeRefinementBatch batch
     ) throws Exception {
