@@ -56,7 +56,7 @@ public class MoveMemberIntent extends CodeRefinementIntentPolymorphic {
             return new ArrayList<>(((ClassTree) p).getMembers());
         });
 
-        int idx = BatchCodeRefiner.findMemberIndex(wc, members, memberTree);
+        int idx = CodeRefinementBatchPolymorphic.findMemberIndex(wc, members, memberTree);
         if (idx != -1) {
             members.remove(idx);
         }

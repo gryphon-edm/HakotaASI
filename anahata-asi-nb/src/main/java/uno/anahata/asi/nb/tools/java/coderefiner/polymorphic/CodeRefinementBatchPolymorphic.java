@@ -2,6 +2,11 @@
 package uno.anahata.asi.nb.tools.java.coderefiner.polymorphic;
 
 import com.sun.source.tree.*;
+import static com.sun.source.tree.Tree.Kind.ANNOTATION_TYPE;
+import static com.sun.source.tree.Tree.Kind.ENUM;
+import static com.sun.source.tree.Tree.Kind.INTERFACE;
+import static com.sun.source.tree.Tree.Kind.RECORD;
+import com.sun.source.util.SourcePositions;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.*;
 import lombok.Data;
@@ -12,7 +17,6 @@ import org.netbeans.api.java.source.*;
 import org.openide.filesystems.FileObject;
 import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.agi.tool.AgiToolException;
-import static uno.anahata.asi.nb.tools.java.BatchCodeRefiner.rebuildClassTree;
 import uno.anahata.asi.toolkit.resources.text.AbstractTextResourceWrite;
 
 /**
@@ -127,4 +131,50 @@ public class CodeRefinementBatchPolymorphic extends AbstractTextResourceWrite {
         }
         //alidateIdenticalContent(agi);
     }
+    
+     public static int findMemberIndex(org.netbeans.api.java.source.CompilationInfo info, List<? extends Tree> members, Tree target) {
+        if (info == null || members == null || target == null) {
+            return -1;
+        }
+        SourcePositions sp = info.getTrees().getSourcePositions();
+        CompilationUnitTree cut = info.getCompilationUnit();
+        long targetStart = sp.getStartPosition(cut, target);
+        for (int i = 0; i < members.size(); i++) {
+            if (sp.getStartPosition(cut, members.get(i)) == targetStart) {
+                return i;
+            }
+        }
+        return -1;
+    }
+     
+     public static ClassTree rebuildClassTree(TreeMaker make, ClassTree ct, List<Tree> members) {
+        return switch (ct.getKind()) {
+            case INTERFACE ->
+                make.Interface(ct.getModifiers(), ct.getSimpleName(), ct.getTypeParameters(), (List<ExpressionTree>) (List<?>) ct.getImplementsClause(), (List<ExpressionTree>) (List<?>) ct.getPermitsClause(), members);
+            case ENUM ->
+                make.Enum(ct.getModifiers(), ct.getSimpleName(), (List<ExpressionTree>) (List<?>) ct.getImplementsClause(), members);
+            case ANNOTATION_TYPE ->
+                make.AnnotationType(ct.getModifiers(), ct.getSimpleName(), members);
+            case RECORD ->
+                // NOTE: NetBeans TreeMaker lacks make.Record. Using Class with bit 61 is the current workaround.
+                make.Class(ct.getModifiers(), ct.getSimpleName(), ct.getTypeParameters(), null, (List<ExpressionTree>) (List<?>) ct.getImplementsClause(), (List<ExpressionTree>) (List<?>) ct.getPermitsClause(), members);
+            default ->
+                make.Class(ct.getModifiers(), ct.getSimpleName(), ct.getTypeParameters(), ct.getExtendsClause(), (List<ExpressionTree>) (List<?>) ct.getImplementsClause(), (List<ExpressionTree>) (List<?>) ct.getPermitsClause(), members);
+        };
+    }
+     
+        /**
+     * Clones a tree node into the current WorkingCopy context.
+     */
+    public static Tree cloneTree(TreeMaker make, Tree tree) {
+        if (tree instanceof ClassTree ct) {
+            return rebuildClassTree(make, ct, new ArrayList<>(ct.getMembers()));
+        } else if (tree instanceof MethodTree mt) {
+            return make.Method(mt.getModifiers(), mt.getName(), mt.getReturnType(), mt.getTypeParameters(), mt.getParameters(), mt.getThrows(), mt.getBody(), (AnnotationTree) mt.getDefaultValue());
+        } else if (tree instanceof VariableTree vt) {
+            return make.Variable(vt.getModifiers(), vt.getName(), vt.getType(), vt.getInitializer());
+        }
+        return tree;
+    }
+
 }

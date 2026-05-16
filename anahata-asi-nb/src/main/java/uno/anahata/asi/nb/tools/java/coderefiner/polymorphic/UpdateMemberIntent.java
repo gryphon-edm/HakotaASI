@@ -70,7 +70,7 @@ public class UpdateMemberIntent extends CodeRefinementIntentPolymorphic {
         if (declaration != null || body != null) {
             Tree newTree;
             if (declaration == null) {
-                newTree = BatchCodeRefiner.cloneTree(make, oldTree);
+                newTree = CodeRefinementBatchPolymorphic.cloneTree(make, oldTree);
                 if (body != null) {
                     if (newTree instanceof MethodTree mt) {
                         String wrappedBody = body.trim().startsWith("{") ? body : "{" + body + "\n}";
@@ -113,7 +113,7 @@ public class UpdateMemberIntent extends CodeRefinementIntentPolymorphic {
                 }
             });
 
-            int idx = BatchCodeRefiner.findMemberIndex(wc, members, latestOldTree);
+            int idx = CodeRefinementBatchPolymorphic.findMemberIndex(wc, members, latestOldTree);
             if (idx != -1) {
                 members.set(idx, make.asReplacementOf(newTree, members.get(idx)));
             }

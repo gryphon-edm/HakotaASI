@@ -52,7 +52,7 @@ public class DeleteMemberIntent extends CodeRefinementIntentPolymorphic {
             }
         });
 
-        int idx = BatchCodeRefiner.findMemberIndex(wc, members, memberTree);
+        int idx = CodeRefinementBatchPolymorphic.findMemberIndex(wc, members, memberTree);
         if (idx != -1) {
             members.remove(idx);
         }
