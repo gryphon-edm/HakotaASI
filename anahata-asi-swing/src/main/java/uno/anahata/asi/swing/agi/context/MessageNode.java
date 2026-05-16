@@ -100,7 +100,9 @@ public class MessageNode extends AbstractContextNode<AbstractMessage> {
     @Override
     protected void updateStatus() {
         if (userObject.isAllPinned()) {
-            this.status = "Pinned";
+            this.status = "All Pinned";
+        } else if (userObject.isAnyPinned()) {
+            this.status = "Some Pinned";    
         } else {
             this.status = userObject.isEffectivelyPruned() ? "Pruned" : "Active";
         }
