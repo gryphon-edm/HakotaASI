@@ -37,6 +37,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.AbstractAsiContainer;
 import uno.anahata.asi.agi.Agi;
+import uno.anahata.asi.agi.AgiConfig;
 import uno.anahata.asi.internal.TextUtils;
 import uno.anahata.asi.agi.message.RagMessage;
 import uno.anahata.asi.agi.resource.handle.PathHandle;
@@ -104,6 +105,7 @@ public class Java extends AnahataToolkit {
         registerParentFirstClass(getClass());
         registerParentFirstClass(ToolContext.class);
         registerParentFirstClass(Agi.class);
+        registerParentFirstClass(AgiConfig.class);
         registerParentFirstClass(ToolManager.class);
         registerParentFirstClass(AbstractToolkit.class);
         registerParentFirstClass(JavaObjectToolkit.class);
@@ -165,7 +167,7 @@ public class Java extends AnahataToolkit {
 
         sb.append("\n Multi-threading and Thread Safety:\n");
         //sb.append("The `log()`, `error()`, and `addAttachment()` methods rely on a thread-local context and will fail if called from a subthread or the EDT (Event Dispatch Thread).\n");
-        sb.append("- To access the context from another thread, capture it in a final variable: `final ToolContext ctx = getToolContext();` and use `ctx.log(...)`, `ctx.error(...)`, etc.\n");
+        sb.append("- To access the context from another thread, capture it in a final variable: `final ToolContext ctx = getToolContext();` and use `ctx.log(...)`, `ctx.error(...)`, `ctx.addAttachment(...)`, etc.\n");
 
         sb.append("\nAbout the attribute maps:"
                 + "\n- The Turn attribute map is for sharing data across tool calls within the same turn. (what in Servlet terms you could call 'request scoped'). Gets serialized."
@@ -173,7 +175,7 @@ public class Java extends AnahataToolkit {
                 + "\n The ASI Container map is shared across sessions (agis) in the current AsiContainer (a given JVM could be running multiple ASI Containers). Currently it does not get serialized."
                 + "\n The Application Map is a static field shared across all sessions (agis) of all ASI Containers running in this jvm\n");
 
-        sb.append("\nAbout attachments: at the time of this release only pdf, text and image attachments are supported, there seems to be an issue attaching audio files to a tools response, however you can always load audio files as managed resources.\n");
+        sb.append("\nAbout attachments: be careful attaching attachments as the supported mime types vary on a model basis .\n");
 
         sb.append("\n Example:\n");
         sb.append("```java\n");
