@@ -9,6 +9,7 @@ import uno.anahata.asi.swing.agi.tool.SwingAgiTool;
 import uno.anahata.asi.toolkit.java.Java;
 import uno.anahata.asi.agi.tool.AgiToolkit;
 import uno.anahata.asi.swing.AbstractSwingAsiContainer;
+import uno.anahata.asi.swing.agi.AgiPanel;
 import uno.anahata.asi.swing.agi.SwingAgiConfig;
 
 /**
@@ -33,6 +34,7 @@ public class SwingJava extends Java {
         registerParentFirstClass(SwingAgiConfig.class);
         registerParentFirstClass(SwingAgiTool.class);
         registerParentFirstClass(AbstractSwingAsiContainer.class);
+        registerParentFirstClass(AgiPanel.class);
     }
     
     /** 

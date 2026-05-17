@@ -38,6 +38,7 @@ import uno.anahata.asi.agi.tool.AgiToolParam;
 import uno.anahata.asi.agi.tool.AgiTool;
 import uno.anahata.asi.nb.NetBeansAsiContainer;
 import uno.anahata.asi.nb.resources.handle.NbHandle;
+import uno.anahata.asi.swing.agi.AgiPanel;
 import uno.anahata.asi.toolkit.java.classpath.VeryPrettyClassPathPrinter;
 
 /**
@@ -76,8 +77,9 @@ public class NbJava extends SwingJava {
     public void postActivate() {
         super.postActivate();
         //we should really only be doing this if we are in dev / reload mode
-        setDefaultClasspath(NetBeansModuleUtils.getNetBeansClasspath());
-        log.info("NbJava rebind() completed. default classPath:" + getDefaultClasspath());
+        //setDefaultClasspath(NetBeansModuleUtils.getNetBeansClasspath());
+        log.info("NbJava postActive() completed. default classPath:" + getDefaultClasspath());
+        log.info("NbJava postActive() completed. parentFirstClasses:" + getParentFirstClassess());
     }
 
     /**
