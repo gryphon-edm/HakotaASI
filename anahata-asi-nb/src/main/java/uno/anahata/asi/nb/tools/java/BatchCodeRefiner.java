@@ -67,7 +67,7 @@ public class BatchCodeRefiner extends AnahataToolkit {
                 + "\tNote: You can't update the same file twice in the same turn otherwise the first one will change the lastModified and the second one will fail with an optimistic locking exception but you can do as many inserts and updates as you want in a single tool call\n"
                 + "4. **Field Initializers**: Put the expression (code after '=') in the `body` field or leave the body empty for fields if you don't want any initializer expression. For Enum Constants, put the constant name in `declaration` and constructor arguments (if any) in `body`.\n"
                 + "5. **Auto-Indentation & Formatting**: Natively supported! V4 computes the exact indentation of the target scope. You do not need to manually pad your `body` with leading spaces. Blank lines and `//` comments within your `body` string are preserved with 100% fidelity.\n"
-                + "6. **Javadocs**: Use the structured `javadoc` property (JavadocIntent) to inject Javadocs on the fly. To update ONLY the Javadoc of an existing member, provide the `memberFqn` and the new `javadoc`, leaving `declaration` and `body` null. If `javadoc` is omitted during an UPDATE, the existing Javadoc is preserved.\n"
+                + "6. **Javadocs**: Use the structured `javadoc` property (JavadocIntent) to inject Javadocs on the fly. To update ONLY the Javadoc of an existing member, provide the `memberFqn` and the new `javadoc`, leaving `declaration` and `body` null. **WARNING**: If you provide a `javadoc` object during an `UPDATE`, it completely replaces the existing Javadoc. You MUST provide all `@param`, `@return`, and `@throws` fields in the JSON if you want them preserved. If `javadoc` is omitted during an UPDATE, the existing Javadoc is preserved.\n"
                 + "7. **Imports**: FQNs provided in `importsToAdd` and `importsToRemove` are safely evaluated and added/removed from the compilation unit.\n"
                 + "8. **Records and Modern Java**: Fully supported. Because V4 uses AST-guided text replacement, all modern Java constructs (Records, Switch Expressions, etc.) are safely refactored without breaking the IDE's formatter.\n"
                 + "9. **No training knowledge**: Do not use your training knowledge, this toolkit is unique to Anahata you have to pay very close attention to the tool definition and the parameters schema.\n"
@@ -98,10 +98,16 @@ public class BatchCodeRefiner extends AnahataToolkit {
         return batch.getUnifiedDiff(getAgi());
     }
 
+    /**
+     * Locates a member tree within a working copy by its canonical FQN.
+     */
     public static Tree findMemberInWorkingCopy(org.netbeans.api.java.source.CompilationInfo info, String memberFqn) {
         return JavaSourceUtils.findTree(info, memberFqn);
     }
 
+    /**
+     * Finds the index of a member within a list of trees by its signature.
+     */
     public static int findMemberIndex(org.netbeans.api.java.source.CompilationInfo info, List<? extends Tree> members, String memberName) {
         String target = memberName.replaceAll("<[^>]*>", "").replaceAll("\\s+", "");
 
@@ -169,6 +175,9 @@ public class BatchCodeRefiner extends AnahataToolkit {
         return -1;
     }
 
+    /**
+     * Parses a raw Java string into a detached AST Tree node, capturing inline comments.
+     */
     public static Tree parseMember(WorkingCopy wc, String declaration, String body, ClasspathInfo cpInfo) throws Exception {
         if (declaration == null || declaration.isBlank()) {
             throw new AgiToolException("Member declaration cannot be null or empty.");
@@ -225,6 +234,9 @@ public class BatchCodeRefiner extends AnahataToolkit {
         return result[0];
     }
 
+    /**
+     * Calculates the insertion index for a new member based on a relative position and an anchor.
+     */
     public static int getInsertIndex(org.netbeans.api.java.source.CompilationInfo wc, List<? extends Tree> members, RelativePosition position, String anchor) throws AgiToolException {
         if ((position == RelativePosition.BEFORE || position == RelativePosition.AFTER) && (anchor == null || anchor.isBlank())) {
             throw new AgiToolException("anchorMemberName is mandatory for relative position " + position);
@@ -244,6 +256,9 @@ public class BatchCodeRefiner extends AnahataToolkit {
         };
     }
     
+    /**
+     * Extracts the raw signature from a canonical FQN to be used for matching.
+     */
     public static String getMemberSignature(String memberFqn) {
         if (memberFqn == null || memberFqn.isBlank()) {
             return memberFqn;
@@ -254,6 +269,9 @@ public class BatchCodeRefiner extends AnahataToolkit {
         return memberFqn.substring(lastSeparator + 1);
     }
 
+    /**
+     * Throws a highly descriptive AgiToolException with available candidates when a member is not found.
+     */
     public static void throwMemberNotFound(org.netbeans.api.java.source.CompilationInfo info, String memberFqn) {
         int paren = memberFqn.indexOf("(");
         String namePart = paren != -1 ? memberFqn.substring(0, paren) : memberFqn;
@@ -281,6 +299,9 @@ public class BatchCodeRefiner extends AnahataToolkit {
         throw new AgiToolException(sb.toString());
     }
 
+    /**
+     * Rebuilds a ClassTree node with a new list of members.
+     */
     public static ClassTree rebuildClassTree(TreeMaker make, ClassTree ct, List<Tree> members) {
         return switch (ct.getKind()) {
             case INTERFACE -> make.Interface(ct.getModifiers(), ct.getSimpleName(), ct.getTypeParameters(), ct.getImplementsClause(), ct.getPermitsClause(), members);
