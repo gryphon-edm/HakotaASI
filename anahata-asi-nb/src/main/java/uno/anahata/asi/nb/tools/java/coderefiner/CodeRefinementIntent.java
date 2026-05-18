@@ -622,7 +622,7 @@ public class CodeRefinementIntent implements Serializable {
 
     /**
      * Calculates the expected fully qualified name of the member after this intent is applied.
-     * @return the resulting FQN.
+     * @return the resulting FQN, or null if deleted.
      */
     public String getResultingMemberFqn() {
         if (type == Type.DELETE) {
