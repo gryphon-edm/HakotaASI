@@ -20,55 +20,23 @@
             <version>${project.version}</version>
         </dependency>
         
-        <dependency>
-            <groupId>uno.anahata</groupId>
-            <artifactId>anahata-asi-gemini</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <!--
-        <dependency>
-            <groupId>uno.anahata</groupId>
-            <artifactId>anahata-asi-openai-java</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        -->
-        
-        <dependency>
-            <groupId>uno.anahata</groupId>
-            <artifactId>anahata-asi-huggingface</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        
-        <dependency>
-            <groupId>uno.anahata</groupId>
-            <artifactId>anahata-asi-openai</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        
-        <dependency>
-            <groupId>uno.anahata</groupId>
-            <artifactId>anahata-asi-openai-compatible</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        
-        <dependency>
-            <groupId>uno.anahata</groupId>
-            <artifactId>anahata-asi-modal</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        
+        <!-- FlatLaf and themes -->
         <dependency>
             <groupId>com.formdev</groupId>
             <artifactId>flatlaf</artifactId>
         </dependency>
+        
         <dependency>
             <groupId>com.formdev</groupId>
             <artifactId>flatlaf-intellij-themes</artifactId>
         </dependency>
+        
+        <!-- Slf4j API and impl-->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
+        
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-jdk14</artifactId>
