@@ -27,7 +27,14 @@ import uno.anahata.asi.agi.tool.spi.AbstractToolParameter;
 @RequiredArgsConstructor
 public class GeminiFunctionDeclarationAdapter {
 
+    /**
+     * The Anahata tool instance to be converted.
+     */
     private final AbstractTool<?, ?> anahataTool;
+    /**
+     * Flag indicating whether to use native Google {@code Schema} objects 
+     * or raw JSON Schema maps for the declaration.
+     */
     private final boolean useNativeSchemas;
 
     /**
@@ -51,6 +58,12 @@ public class GeminiFunctionDeclarationAdapter {
         }
     }
 
+    /**
+     * Internal implementation that builds the declaration using 
+     * native Google {@code Schema} objects.
+     * @param builder The target builder.
+     * @return The finalized FunctionDeclaration.
+     */
     private FunctionDeclaration toGoogleNative(FunctionDeclaration.Builder builder) {
         Schema.Builder paramsBuilder = Schema.builder()
             .type(com.google.genai.types.Type.Known.OBJECT);
@@ -79,6 +92,15 @@ public class GeminiFunctionDeclarationAdapter {
         return builder.build();
     }
 
+    /**
+     * Internal implementation that builds the declaration using raw 
+     * JSON Schema maps.
+     * <p>Implementation details: Manually parses the tool's parameter schemas 
+     * into maps and merges descriptions to ensure the model sees the high-fidelity 
+     * Anahata documentation.</p>
+     * @param builder The target builder.
+     * @return The finalized FunctionDeclaration.
+     */
     private FunctionDeclaration toGoogleJson(FunctionDeclaration.Builder builder) {
         // 1. Build the parameters JSON Schema object
         Map<String, Object> parametersSchema = new LinkedHashMap<>();
