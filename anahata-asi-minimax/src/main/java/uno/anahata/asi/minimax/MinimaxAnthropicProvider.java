@@ -17,10 +17,10 @@ import uno.anahata.asi.anthropic.AnthropicProvider;
 public class MinimaxAnthropicProvider extends AnthropicProvider {
 
     /**
-     * Constructs a new MinimaxAnthropicProvider.
-     * <p>
-     * Initializes the provider with the MiniMax-specific base URL and configuration endpoints.
-     * </p>
+     * {@inheritDoc}
+     * <p>Implementation details: Configures the base Anthropic provider to point to 
+     * MiniMax's endpoint ({@code https://api.minimax.io/anthropic/v1}) and sets 
+     * the appropriate documentation URI for API key acquisition.</p>
      */
     public MinimaxAnthropicProvider() {
         super("Minimax", "MiniMax (Antropic)", "https://api.minimax.io/anthropic/v1", "2023-06-01", "https://platform.minimax.io/user-center/basic-information/interface-key");
@@ -29,9 +29,9 @@ public class MinimaxAnthropicProvider extends AnthropicProvider {
 
     /**
      * {@inheritDoc}
-     * <p>
-     * Provides the specific API key format hint for MiniMax.
-     * </p>
+     * <p>Implementation details: Provides the MiniMax-specific key format including 
+     * the {@code sk-api-} prefix and suggested backup key labeling.</p>
+     * @return A multi-line string containing configuration instructions and examples.
      */
     @Override
     public String getApiKeyHint() {

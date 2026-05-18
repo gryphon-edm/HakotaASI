@@ -38,9 +38,19 @@ import uno.anahata.asi.agi.tool.ToolResponseAttachment;
 @Slf4j
 @RequiredArgsConstructor
 public class GeminiPartAdapter {
+    /**
+     * The Anahata part instance to be converted.
+     */
     private final AbstractPart anahataPart;
+    /**
+     * Whether to include the cryptographic thought signature in the converted part.
+     */
     private final boolean includeThoughtSignature;
 
+    /**
+     * Constructs a new part adapter with default settings (thought signature included).
+     * @param anahataPart The part to adapt.
+     */
     public GeminiPartAdapter(AbstractPart anahataPart) {
         this(anahataPart, true);
     }
@@ -162,6 +172,11 @@ public class GeminiPartAdapter {
         return Part.builder().functionResponse(frb.build()).build();
     }
     
+    /**
+     * Converts an Anahata attachment into a native Google FunctionResponsePart.
+     * @param attachment The rich attachment.
+     * @return The native attachment part.
+     */
     private static FunctionResponsePart toGoogleAttachmentPart(ToolResponseAttachment attachment) {
         return FunctionResponsePart.fromBytes(attachment.getData(), attachment.getMimeType());
     }

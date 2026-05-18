@@ -14,16 +14,31 @@ import uno.anahata.asi.openai.compatible.OpenAiCompatibleReasoningStyle;
  */
 public class ModalModel extends OpenAiCompatibleModel {
 
+    /**
+     * Constructs a new Modal model instance from discrete ID and display name.
+     * @param provider    The owning Modal provider.
+     * @param modelId     The stable model ID.
+     * @param displayName The user-facing name.
+     */
     public ModalModel(OpenAiCompatibleProvider provider, String modelId, String displayName) {
         super(provider, modelId, displayName);
         configure();
     }
 
+    /**
+     * Constructs a new Modal model instance from an OpenAI-compatible JSON discovery node.
+     * @param provider The owning Modal provider.
+     * @param node     The JSON metadata for the model.
+     */
     public ModalModel(OpenAiCompatibleProvider provider, com.fasterxml.jackson.databind.JsonNode node) {
         super(provider, node);
         configure();
     }
 
+    /**
+     * Internal configuration pipeline that applies Modal-specific overrides 
+     * for context window limits and reasoning field detection.
+     */
     private void configure() {
         // Modal GLM-5 has a specific context limit around 200K
         setMaxInputTokens(202752);

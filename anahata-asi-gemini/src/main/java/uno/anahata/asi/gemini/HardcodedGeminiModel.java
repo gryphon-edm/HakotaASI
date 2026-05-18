@@ -19,29 +19,32 @@ import lombok.Setter;
 public class HardcodedGeminiModel extends GeminiModel {
 
     /**
-     * The human-readable name for this model.
+     * The human-readable name for this model. Used when the API cannot 
+     * provide metadata (e.g. Vertex Express).
      */
     private String displayName;
     /**
-     * The version string.
+     * The version string for the hardcoded model manifest.
      */
     private String version;
     /**
-     * The maximum number of input tokens.
+     * The maximum number of input tokens supported by this specific 
+     * hardcoded manifest.
      */
     private int maxInputTokens;
     /**
-     * The maximum number of output tokens.
+     * The maximum number of output tokens supported by this specific 
+     * hardcoded manifest.
      */
     private int maxOutputTokens;
     /**
-     * The list of API actions supported by this model.
+     * The list of API actions (e.g. 'generateContent') supported by 
+     * this specific hardcoded manifest.
      */
     private List<String> supportedActions = new ArrayList<>();
 
     /**
-     * Creates a new hardcoded model instance.
-     *
+     * Constructs a new hardcoded model instance.
      * @param provider The owning Gemini provider.
      * @param modelId  The unique model identifier.
      */

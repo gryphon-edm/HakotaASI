@@ -100,8 +100,8 @@ public class GeminiModelMessage extends AbstractModelMessage<GeminiResponse> {
 
     /**
      * Converts a Google GenAI Part to an Anahata AbstractPart within the context of this message.
-     * This method encapsulates the logic previously in PartAdapter and FunctionCallAdapter.
-     *
+     * <p>Implementation details: This method encapsulates the logic previously in PartAdapter 
+     * and FunctionCallAdapter, handling text, thoughts, tool calls, and multimodal data.</p>
      * @param googlePart The Google part to convert.
      * @return The corresponding Anahata AbstractPart, or null if unsupported.
      */
@@ -157,7 +157,6 @@ public class GeminiModelMessage extends AbstractModelMessage<GeminiResponse> {
 
     /**
      * Converts a Google GenAI FunctionCall to an Anahata AbstractToolCall.
-     *
      * @param googleFc The FunctionCall received from the Google API.
      * @return A new AbstractToolCall.
      */
@@ -172,7 +171,6 @@ public class GeminiModelMessage extends AbstractModelMessage<GeminiResponse> {
     
     /**
      * Converts Google's GroundingMetadata to Anahata's domain model.
-     * 
      * @param gm The Google GroundingMetadata object.
      * @return The Anahata GroundingMetadata object.
      */
@@ -210,7 +208,6 @@ public class GeminiModelMessage extends AbstractModelMessage<GeminiResponse> {
 
     /**
      * Maps a Google GenAI FinishReason to the Anahata FinishReason enum.
-     * 
      * @param fr The Google FinishReason object.
      * @return The corresponding Anahata FinishReason.
      */

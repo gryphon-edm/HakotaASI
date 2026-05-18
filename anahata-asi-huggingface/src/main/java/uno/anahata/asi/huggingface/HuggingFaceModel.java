@@ -13,21 +13,52 @@ import uno.anahata.asi.openai.compatible.OpenAiCompatibleModel;
 @Setter
 public class HuggingFaceModel extends OpenAiCompatibleModel {
 
+    /**
+     * The raw JSON from the model's 'config.json', containing architectural 
+     * details and token limits.
+     */
     private JsonNode hubConfig;
+    /**
+     * The raw JSON from the model's 'tokenizer_config.json', used to 
+     * discover chat templates and tool support markers.
+     */
     private JsonNode tokenizerConfig;
+    /**
+     * The raw JSON from the model's 'generation_config.json', used to 
+     * extract default sampling parameters like temperature and top-p.
+     */
     private JsonNode generationConfig;
     
+    /**
+     * Flag derived from the chat template or config indicating if the model 
+     * supports tool calling.
+     */
     private boolean supportsFunctionCalling = false;
 
+    /**
+     * Constructs a new Hugging Face model instance.
+     * @param provider    The owning HF provider.
+     * @param modelId     The full repo ID.
+     * @param displayName The display name.
+     */
     public HuggingFaceModel(HuggingFaceProvider provider, String modelId, String displayName) {
         super(provider, modelId, displayName);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>Implementation details: Returns the value discovered during the Hub 
+     * inspection phase.</p>
+     */
     @Override
     public boolean isSupportsFunctionCalling() {
         return supportsFunctionCalling;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>Implementation details: Prioritizes 'max_position_embeddings' from config.json.</p>
+     */
     @Override
     public int getMaxInputTokens() {
         if (hubConfig != null && hubConfig.has("max_position_embeddings")) {
@@ -36,6 +67,10 @@ public class HuggingFaceModel extends OpenAiCompatibleModel {
         return super.getMaxInputTokens();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>Implementation details: Prioritizes 'max_new_tokens' from generation_config.json.</p>
+     */
     @Override
     public int getMaxOutputTokens() {
         if (generationConfig != null && generationConfig.has("max_new_tokens")) {
@@ -44,6 +79,11 @@ public class HuggingFaceModel extends OpenAiCompatibleModel {
         return super.getMaxOutputTokens();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>Implementation details: Prioritizes the 'temperature' value from 
+     * generation_config.json if available.</p>
+     */
     @Override
     public Float getDefaultTemperature() {
         if (generationConfig != null && generationConfig.has("temperature")) {
@@ -52,6 +92,11 @@ public class HuggingFaceModel extends OpenAiCompatibleModel {
         return super.getDefaultTemperature();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>Implementation details: Prioritizes the 'top_k' value from 
+     * generation_config.json if available.</p>
+     */
     @Override
     public Integer getDefaultTopK() {
         if (generationConfig != null && generationConfig.has("top_k")) {
@@ -60,6 +105,11 @@ public class HuggingFaceModel extends OpenAiCompatibleModel {
         return super.getDefaultTopK();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>Implementation details: Prioritizes the 'top_p' value from 
+     * generation_config.json if available.</p>
+     */
     @Override
     public Float getDefaultTopP() {
         if (generationConfig != null && generationConfig.has("top_p")) {
@@ -68,6 +118,10 @@ public class HuggingFaceModel extends OpenAiCompatibleModel {
         return super.getDefaultTopP();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>Implementation details: Extracts the model version from the Hub metadata if available.</p>
+     */
     @Override
     public String getVersion() {
         if (hubConfig != null && hubConfig.has("version")) {
@@ -76,6 +130,10 @@ public class HuggingFaceModel extends OpenAiCompatibleModel {
         return "";
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>Implementation details: Prefixes the description with the architecture type (e.g. [llama]).</p>
+     */
     @Override
     public String getDescription() {
         if (hubConfig != null && hubConfig.has("model_type")) {
@@ -84,6 +142,11 @@ public class HuggingFaceModel extends OpenAiCompatibleModel {
         return super.getDescription();
     }
     
+    /**
+     * {@inheritDoc}
+     * <p>Implementation details: Builds a rich HTML view combining architecture, 
+     * tokenizer class, and deep-inspected sampling parameters.</p>
+     */
     @Override
     public String getRawDescription() {
         StringBuilder sb = new StringBuilder("<html>");

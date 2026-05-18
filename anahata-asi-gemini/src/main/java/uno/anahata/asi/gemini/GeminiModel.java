@@ -58,8 +58,18 @@ import uno.anahata.asi.agi.provider.RetryableApiException;
 @Slf4j
 public class GeminiModel extends AbstractModel {
 
+    /**
+     * The owning provider instance.
+     */
     private final GeminiAiProvider provider;
+    /**
+     * The unique model identifier (e.g. 'models/gemini-1.5-flash').
+     */
     private final String modelId;
+    /**
+     * The transient native model metadata. transient to avoid 
+     * serialization of SDK types.
+     */
     private transient Model genaiModel;
 
     public GeminiModel(GeminiAiProvider provider, Model genaiModel) {
@@ -68,6 +78,10 @@ public class GeminiModel extends AbstractModel {
         this.modelId = genaiModel.name().orElseThrow(() -> new IllegalArgumentException("Model name is required"));
     }
 
+    /**
+     * Lazily restores or returns the native GenAI model metadata.
+     * @return The active Model instance.
+     */
     private synchronized Model getGenaiModel() {
         if (genaiModel == null) {
             log.info("Restoring transient Gemini model: {}", modelId);
@@ -80,21 +94,33 @@ public class GeminiModel extends AbstractModel {
         return genaiModel;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public AbstractAiProvider getProvider() {
         return provider;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getModelId() {
         return modelId;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getDisplayName() {
         return getGenaiModel().displayName().orElse("");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getDescription() {
         String desc = getGenaiModel().description().orElse("");
@@ -105,26 +131,43 @@ public class GeminiModel extends AbstractModel {
         return desc;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getVersion() {
         return getGenaiModel().version().orElse("");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getMaxInputTokens() {
         return getGenaiModel().inputTokenLimit().orElse(0);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getMaxOutputTokens() {
         return getGenaiModel().outputTokenLimit().orElse(8192);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<String> getSupportedActions() {
         return getGenaiModel().supportedActions().orElse(Collections.emptyList());
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>Implementation details: Escapes special HTML characters in the model metadata 
+     * to ensure safe rendering in the NetBeans HTML view.</p>
+     */
     @Override
     public String getRawDescription() {
         Model m = getGenaiModel();
@@ -146,6 +189,11 @@ public class GeminiModel extends AbstractModel {
                 + "</pre></div></html>";
     }
 
+    /**
+     * Escapes special HTML characters in a string.
+     * @param text The text to escape.
+     * @return The escaped text.
+     */
     private String escapeHtml(String text) {
         return text.replace("&", "&amp;")
                 .replace("<", "&lt;")
@@ -155,6 +203,9 @@ public class GeminiModel extends AbstractModel {
                 .replace("/", "&#x2F;");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isSupportsFunctionCalling() {
         // Currently we have no way of knowing if a model supports tool calling or not 
@@ -162,26 +213,41 @@ public class GeminiModel extends AbstractModel {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isSupportsContentGeneration() {
         return getSupportedActions().contains("generateContent");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isSupportsBatchEmbeddings() {
         return getSupportedActions().contains("batchEmbedContents");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isSupportsEmbeddings() {
         return getSupportedActions().contains("embedContent");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isSupportsCachedContent() {
         return getSupportedActions().contains("createCachedContent");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<String> getSupportedResponseModalities() {
         List<String> modalities = new ArrayList<>();
@@ -191,6 +257,9 @@ public class GeminiModel extends AbstractModel {
         return modalities;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<ServerTool> getAvailableServerTools() {
         List<ServerTool> tools = new ArrayList<>();
@@ -204,6 +273,9 @@ public class GeminiModel extends AbstractModel {
         return tools;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<ServerTool> getDefaultServerTools() {
         return getAvailableServerTools().stream()
@@ -211,25 +283,45 @@ public class GeminiModel extends AbstractModel {
                 .collect(Collectors.toList()); 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Float getDefaultTemperature() {
         return getGenaiModel().temperature().orElse(null);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Integer getDefaultTopK() {
         return getGenaiModel().topK().orElse(null);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Float getDefaultTopP() {
         return getGenaiModel().topP().orElse(null);
     }
 
+    /**
+     * Internal container for parameters used to invoke the Gemini API.
+     * @param history The list of content blocks to send.
+     * @param historyJson The JSON representation of the history.
+     * @param config The generation configuration.
+     */
     private record GeminiGenerateContentParameters(List<Content> history, String historyJson, GenerateContentConfig config) {
 
     }
 
+    /**
+     * Synthesizes the history and configuration into SDK-ready parameters.
+     * @param request The source Anahata request.
+     * @return The prepared parameters.
+     */
     private GeminiGenerateContentParameters prepareGenerateContentParameters(GenerationRequest request) {
         RequestConfig config = request.config();
         List<AbstractMessage> history = request.history();
@@ -266,6 +358,9 @@ public class GeminiModel extends AbstractModel {
         return new GeminiGenerateContentParameters(googleHistory, historyJson, gcc);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Response generateContent(GenerationRequest request) {
         Client client = provider.getClient();
@@ -305,13 +400,16 @@ public class GeminiModel extends AbstractModel {
 
     /**
      * Serious intelligence to detect whether it is retriable or not.
-     *
-     * @param e the may be retriable.
+     * @param e the exception to check.
+     * @return true if the error is considered transient/retryable.
      */
     private boolean isRetryable(Exception e) {
         return e.toString().contains("429") || e.toString().contains("503") || e.toString().contains("500") || e.toString().contains("499") || e.toString().contains("403");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void generateContentStream(GenerationRequest request, StreamObserver<Response<? extends AbstractModelMessage>> observer) {
         Client client = provider.getClient();
@@ -398,7 +496,6 @@ public class GeminiModel extends AbstractModel {
 
     /**
      * Checks if the given exception or any of its causes is an interruption.
-     *
      * @param e The exception to check.
      * @return true if it's an interruption, false otherwise.
      */
@@ -416,7 +513,6 @@ public class GeminiModel extends AbstractModel {
     /**
      * Processes a single streaming chunk by appending its deltas to the
      * corresponding target messages.
-     *
      * @param chunk The raw chunk from the Gemini API.
      * @param targets The persistent ModelMessage objects being updated.
      */
@@ -474,7 +570,6 @@ public class GeminiModel extends AbstractModel {
 
     /**
      * Unified handler for response metadata (finish reason, grounding).
-     *
      * @param c The candidate object.
      * @param response The full response or chunk.
      * @param target The target Anahata message.
@@ -501,12 +596,18 @@ public class GeminiModel extends AbstractModel {
         });
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getToolDeclarationJson(AbstractTool<?, ?> tool, RequestConfig config) {
         FunctionDeclaration fd = new GeminiFunctionDeclarationAdapter(tool, config.isUseNativeSchemas()).toGoogle();
         return fd != null ? fd.toJson() : "{}";
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         return getDisplayName().isEmpty() ? modelId : getDisplayName();

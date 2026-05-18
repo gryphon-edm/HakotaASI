@@ -24,17 +24,33 @@ import uno.anahata.asi.openai.compatible.OpenAiCompatibleReasoningStyle;
 @Slf4j
 public class HuggingFaceProvider extends OpenAiCompatibleProvider {
 
+    /**
+     * The base URL for the Hugging Face Hub metadata API.
+     */
     private static final String HF_HUB_BASE = "https://huggingface.co/";
+    /**
+     * A specialized HTTP client for fetching model configuration files from the Hub.
+     * Uses a short timeout and follows redirects to the Hub's CDN.
+     */
     private static final HttpClient HUB_CLIENT = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.ALWAYS)
             .connectTimeout(Duration.ofSeconds(5))
             .build();
 
+    /**
+     * Constructs a new Hugging Face provider with the stable UUID 'HuggingFace' 
+     * and pre-configured endpoint and acquisition URIs.
+     */
     public HuggingFaceProvider() {
         super("HuggingFace", "Hugging Face", "https://router.huggingface.co/v1",
                 "HuggingFace", "https://huggingface.co/settings/tokens");
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>Implementation details: Orchestrates a parallel "Deep Inspection" phase using the 
+     * container's shared executor to fetch model metadata from the Hugging Face Hub.</p>
+     */
     @Override
     public List<? extends AbstractModel> listModels() {
         // 1. Get the basic IDs from the router (OpenAI-compatible)
@@ -63,6 +79,11 @@ public class HuggingFaceProvider extends OpenAiCompatibleProvider {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>Implementation details: Adds specific handling for Hugging Face credit-related 
+     * errors (HTTP 402).</p>
+     */
     @Override
     public boolean isRetryable(int statusCode, String responseBody) {
         if (statusCode == 402 && responseBody != null && responseBody.contains("credits")) {
@@ -71,6 +92,12 @@ public class HuggingFaceProvider extends OpenAiCompatibleProvider {
         return super.isRetryable(statusCode, responseBody);
     }
 
+    /**
+     * Performs the deep inspection of a specific model by fetching its configuration 
+     * files from the Hub.
+     * @param modelId The Hugging Face repo ID.
+     * @return A populated HuggingFaceModel instance.
+     */
     private HuggingFaceModel inspectModel(String modelId) {
         log.info("Inspecting HF model " + modelId);
         HuggingFaceModel model = new HuggingFaceModel(this, modelId, modelId);
@@ -134,6 +161,12 @@ public class HuggingFaceProvider extends OpenAiCompatibleProvider {
         return model;
     }
 
+    /**
+     * Helper to fetch a JSON file from the Hugging Face Hub's main branch.
+     * @param modelId  The repo ID.
+     * @param filename The config filename (e.g. 'config.json').
+     * @return A CompletableFuture resolving to the parsed JSON or null.
+     */
     private CompletableFuture<JsonNode> fetchHubJson(String modelId, String filename) {
         String url = HF_HUB_BASE + modelId + "/resolve/main/" + filename;
         log.info("Fetching: " + url);

@@ -21,7 +21,14 @@ import uno.anahata.asi.agi.tool.schema.SchemaProvider;
 @Slf4j
 public class GeminiSchemaAdapter {
 
+    /**
+     * Internal mapping of Java primitive and wrapper types to native 
+     * Google GenAI schema types.
+     */
     private static final Map<Class<?>, Type.Known> PRIMITIVE_MAP = new HashMap<>();
+    /**
+     * A reusable schema instance representing the {@code void} type.
+     */
     private static final Schema VOID_SCHEMA = Schema.builder().build();
 
     static {
@@ -38,10 +45,25 @@ public class GeminiSchemaAdapter {
         PRIMITIVE_MAP.put(boolean.class, Type.Known.BOOLEAN);
     }
 
+    /**
+     * Resolves a Java {@link java.lang.reflect.Type} into a native Google 
+     * GenAI {@link Schema} object.
+     * @param type The Java type to resolve.
+     * @return The corresponding Schema.
+     * @throws Exception if schema generation fails.
+     */
     public static Schema getGeminiSchema(java.lang.reflect.Type type) throws Exception {
         return getGeminiSchema(type, false);
     }
     
+    /**
+     * Resolves a Java {@link java.lang.reflect.Type} into a native Google 
+     * GenAI {@link Schema} object, with optional inclusion of the JSON Schema ID.
+     * @param type               The Java type to resolve.
+     * @param includeJsonSchemaId Whether to include the {@code $id} field.
+     * @return The corresponding Schema.
+     * @throws Exception if schema generation fails.
+     */
     public static Schema getGeminiSchema(java.lang.reflect.Type type, boolean includeJsonSchemaId) throws Exception {
         if (type == null || type.equals(void.class) || type.equals(Void.class)) {
             return VOID_SCHEMA;
@@ -51,6 +73,14 @@ public class GeminiSchemaAdapter {
         return getGeminiSchema(inlinedSchema);
     }
     
+    /**
+     * Converts a raw JSON Schema string into a native Google GenAI {@link Schema}.
+     * <p>Implementation details: Parses the JSON string into a map and performs 
+     * a recursive walk to build the nested Google Schema hierarchy, including 
+     * support for {@code oneOf} and {@code anyOf} polymorphic structures.</p>
+     * @param jsonSchema The raw JSON Schema string.
+     * @return The corresponding Schema, or null if empty/void.
+     */
     public static Schema getGeminiSchema(String jsonSchema) {
         if (jsonSchema == null || jsonSchema.trim().isEmpty() || jsonSchema.trim().equals("{}")) {
             return null; // Return null for void/empty schemas
@@ -59,10 +89,22 @@ public class GeminiSchemaAdapter {
         return buildSchemaFromMap(schemaMap);
     }
     
+    /**
+     * Resolves a Java {@link Class} into a native Google GenAI {@link Schema}.
+     * @param clazz The class to resolve.
+     * @return The corresponding Schema.
+     * @throws Exception if schema generation fails.
+     */
     public static Schema getGeminiSchema(Class<?> clazz) throws Exception {
         return getGeminiSchema((java.lang.reflect.Type) clazz, false);
     }
 
+    /**
+     * Recursively constructs a native Google GenAI {@link Schema} from a 
+     * standard JSON Schema map.
+     * @param map The source schema map.
+     * @return The finalized native Schema.
+     */
     private static Schema buildSchemaFromMap(Map<String, Object> map) {
         if (map == null || map.isEmpty()) return null;
 

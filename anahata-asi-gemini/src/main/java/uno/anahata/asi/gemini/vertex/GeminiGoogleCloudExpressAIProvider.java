@@ -32,6 +32,10 @@ import uno.anahata.asi.gemini.HardcodedGeminiModel;
 public class GeminiGoogleCloudExpressAIProvider extends GeminiAiProvider {
 
 
+    /**
+     * Constructs a new Gemini Express provider with the stable UUID 
+     * 'GeminiGCExpress' and specialized Google Cloud acquisition URI.
+     */
     public GeminiGoogleCloudExpressAIProvider() {
         super("GeminiGCExpress", "Google Cloud Express Mode", true);
         setTokenizerType(TokenizerType.GEMINI);
@@ -66,6 +70,16 @@ public class GeminiGoogleCloudExpressAIProvider extends GeminiAiProvider {
         return manifest;
     }
 
+    /**
+     * Internal factory method to create a HardcodedGeminiModel with 
+     * pre-defined capabilities.
+     * @param id          The model identifier.
+     * @param name        The display name.
+     * @param version     The version string.
+     * @param inputLimit  The context window limit.
+     * @param outputLimit The single-turn output limit.
+     * @return A configured HardcodedGeminiModel.
+     */
     private HardcodedGeminiModel createModel(String id, String name, String version, int inputLimit, int outputLimit) {
         HardcodedGeminiModel m = new HardcodedGeminiModel(this, id);
         m.setDisplayName(name);

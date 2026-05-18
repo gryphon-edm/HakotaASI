@@ -32,16 +32,19 @@ import uno.anahata.asi.agi.tool.spi.AbstractToolResponse;
 @RequiredArgsConstructor
 public class GeminiContentAdapter {
 
+    /**
+     * The Anahata message instance to be converted.
+     */
     private final AbstractMessage anahataMessage;
     
     /**
-     * Whether to include pruned Items in the payload.
+     * Whether to include parts marked as effectively pruned in the output payload.
      */
     private final boolean includePruned;
     
     /**
-     * The provider of the model for which we are preparing the payload, 
-     * If it is not the same, the thought signature will not be replayed back.
+     * The UUID of the provider for which the payload is being prepared. 
+     * Used to ensure thought signatures are only replayed to the originating provider.
      */
     private final String targetProviderUuid;
 
@@ -69,13 +72,20 @@ public class GeminiContentAdapter {
     }
 
     /**
-     * Tests wether metadata injection should be in place
-     * @return
+     * Determines if in-band metadata (headers) should be injected into the 
+     * parts based on session configuration and message state.
+     * @return True if injection is enabled and allowed for this message.
      */
     private boolean shouldInjectInbandMetadata() {
         return anahataMessage.getAgi().getRequestConfig().isInjectInbandMetadata() && anahataMessage.shouldCreateMetadata();
     }
 
+    /**
+     * Converts a user-role message into a native Google Content object.
+     * <p>Implementation details: Injects a turn-level metadata header and then 
+     * processes individual parts with interleaved part-level metadata.</p>
+     * @return The user content or null if empty.
+     */
     private Content toGoogleUser() {
         Content.Builder builder = Content.builder().role("user");
         List<Part> googleParts = new ArrayList<>();
@@ -99,9 +109,11 @@ public class GeminiContentAdapter {
     }
 
     /**
-     * Synthesizes the model message into potentially two API messages: 1. A
-     * 'model' role content containing text and tool calls. 2. A 'tool' role
-     * content containing tool responses (if executed).
+     * Synthesizes a model-role message into multiple API messages.
+     * <p>Implementation details: Produces a 'model' role message containing the 
+     * model's generated content (text/calls) and an optional 'tool' role message 
+     * containing the execution results of any triggered tools.</p>
+     * @return A list of synthesized Content objects.
      */
     private List<Content> toGoogleModel() {
         List<Content> synthesized = new ArrayList<>();
@@ -156,8 +168,10 @@ public class GeminiContentAdapter {
     }
 
     /**
-     * Adds an Anahata part to the Google GenAI list, automatically injecting
-     * metadata headers and handling pruned placeholder hints.
+     * Adds a single Anahata part to the Google parts list, handling 
+     * metadata injection and pruned content replacement.
+     * @param googleParts The target list for native parts.
+     * @param part        The Anahata part to process.
      */
     private void addPartWithMetadata(List<Part> googleParts, AbstractPart part) {
         boolean isEffectivelyPruned = part.isEffectivelyPruned();
@@ -199,12 +213,22 @@ public class GeminiContentAdapter {
         }
     }
 
+    /**
+     * Creates a builder for a metadata part containing the specified text.
+     * @param text The metadata header text.
+     * @return A Part.Builder.
+     */
     private Part.Builder createMetadataPartBuilder(String text) {
         return Part.builder()
                 .text(text);
         //.thought(true);
     }
 
+    /**
+     * Creates a native metadata part.
+     * @param text The metadata header text.
+     * @return A native Part.
+     */
     private Part createMetadataPart(String text) {
         return createMetadataPartBuilder(text).build();
     }

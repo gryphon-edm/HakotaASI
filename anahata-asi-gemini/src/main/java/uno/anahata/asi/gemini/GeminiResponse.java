@@ -26,16 +26,40 @@ import uno.anahata.asi.agi.message.ResponseUsageMetadata;
 @Getter
 public class GeminiResponse extends Response<GeminiModelMessage> {
 
-    /** The original, native response object from the Google GenAI API. */
+    /**
+     * The original, native response object from the Google GenAI API. transient to avoid 
+     * serialization of SDK types.
+     */
     private final transient GenerateContentResponse genaiResponse;
 
     // --- Final fields to hold the converted data ---
+    /**
+     * The list of converted model messages.
+     */
     private final List<GeminiModelMessage> candidates;
+    /**
+     * The converted usage metadata.
+     */
     private final ResponseUsageMetadata usageMetadata;
+    /**
+     * Optional feedback from the safety filters.
+     */
     private final Optional<String> promptFeedback;
+    /**
+     * The raw JSON of the request configuration.
+     */
     private final String rawRequestConfigJson;
+    /**
+     * The raw JSON of the conversation history sent in the request.
+     */
     private final String rawHistoryJson;
+    /**
+     * The raw JSON of the entire response.
+     */
     private final String rawJson;    
+    /**
+     * The model version used for this specific generation.
+     */
     private final String modelVersion;
 
     /**
@@ -82,7 +106,6 @@ public class GeminiResponse extends Response<GeminiModelMessage> {
 
     /**
      * Converts the native GenAI usage metadata to the V2 core model.
-     *
      * @param genaiUsage The native usage metadata.
      * @return The V2 {@code ResponseUsageMetadata}.
      */
@@ -98,6 +121,9 @@ public class GeminiResponse extends Response<GeminiModelMessage> {
             .build();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getTotalTokenCount() {
         return usageMetadata.getTotalTokenCount();

@@ -43,6 +43,13 @@ public class ModalProvider extends OpenAiCompatibleProvider {
         );
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>Implementation details: Specialized for Modal's GLM-5 endpoint, ensuring 
+     * the model is configured with the correct reasoning style and field names.</p>
+     * @param node The raw JSON node from the models list API.
+     * @return A new ModalModel instance.
+     */
     @Override
     protected OpenAiCompatibleModel createModel(JsonNode node) {
         return new ModalModel(this, node);

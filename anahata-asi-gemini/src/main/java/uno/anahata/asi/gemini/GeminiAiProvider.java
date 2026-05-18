@@ -28,8 +28,15 @@ import uno.anahata.asi.agi.provider.TokenizerType;
 @Slf4j
 public class GeminiAiProvider extends AbstractAiProvider {
 
+    /**
+     * The native Google GenAI client instance. transient to prevent serialization.
+     */
     private transient Client client;
 
+    /**
+     * Whether this provider is configured to use Google Cloud Vertex AI 
+     * instead of the standard AI Studio endpoint.
+     */
     @Setter
     private boolean vertex = false;
 
@@ -81,9 +88,7 @@ public class GeminiAiProvider extends AbstractAiProvider {
     }
 
     /**
-     * Returns the api key being used by the current genai Client
-     *
-     * @return the api key in use
+     * {@inheritDoc}
      */
     @Override
     public String getCurrentApiKey() {
