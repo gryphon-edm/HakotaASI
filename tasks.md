@@ -5,17 +5,6 @@ This file tracks the actionable tasks and tactical goals for the Anahata ASI (V2
 ## 0. Zero Day Go Live: 
 - [ ] make "cached data" in MediaView transient? possibly in text resources too?
 
-- [ ] JavaCodeParameterRenderer: 
-    - doesn't show the edit save cancel button
-    - shows error highlighting and codefolds only on the first tool call of the conversation, not on the second one
-    - shows error for the Anahata class saying "Class Anahata shoul dbe in a file called Anahata" 
-    - doesn't show any error highlighting or code folds in the subsequent tool calls
-    - check if creating a new MemoryFileSystem every time could lead to memory leaks
-
-- [] CreateTextFileRender 
-    -shows massive whitespace at the bottom since the last changes to the NetBeansTextResourceViewer pipeline and 
-    - it doesn't forward the scrolling up or down
-
 - [] ContextPanel -> 
     - ResourcePanel shows the editors way below for Reformatter.java for example, may be related to resources that don't fit on the default viewport and the issue may occur after doing expand to fit viewport.
 
