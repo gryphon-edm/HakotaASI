@@ -16,9 +16,11 @@ import org.apache.commons.lang3.SystemUtils;
 public class ChromeUtils {
 
     /**
-     * Gets the default user data directory for Chrome based on the current OS.
-     * 
-     * @return The absolute path to the Chrome user data directory.
+     * Resolves the absolute path to the standard Chrome user data 
+     * directory for the current operating system. 
+     * <p>Supports Windows (AppData), macOS (Application Support), and 
+     * Linux (various {@code .config} locations).</p>
+     * @return The absolute path to the directory.
      */
     public static String getDefaultChromeUserDataDir() {
         String home = System.getProperty("user.home");
@@ -57,13 +59,11 @@ public class ChromeUtils {
     }
     
     /**
-     * Attempts to find the ChromeDriver executable in common locations.
-     * <p>
-     * It checks the user's {@code ~/bin} directory first, then searches the 
-     * system {@code PATH}.
-     * </p>
-     * 
-     * @return The absolute path to the executable, or {@code null} if not found.
+     * Attempts to find a valid {@code chromedriver} executable on the 
+     * local machine. 
+     * <p>Prioritizes {@code ~/bin} (user-local installs) and then searches 
+     * the system {@code PATH}.</p>
+     * @return The absolute path to the driver, or {@code null} if not found.
      */
     public static String findChromeDriver() {
         String name = getChromeDriverExecutableName();
