@@ -25,18 +25,17 @@ import uno.anahata.asi.internal.JacksonUtils;
 @Setter
 public class AnthropicProvider extends AbstractAiProvider {
 
-    private String baseUrl;
     private String anthropicVersion;
     private transient HttpClient httpClient;
 
     public AnthropicProvider() {
-        this("Anthropic", "Anthropic (Claude)", "https://api.anthropic.com/v1", "2023-06-01", "https://console.anthropic.com/settings/keys");
+        this("Anthropic", "Anthropic", "https://api.anthropic.com/v1", "2023-06-01", "https://console.anthropic.com/settings/keys");
     }
 
     public AnthropicProvider(String uuid, String displayName, String baseUrl, String anthropicVersion, String keysAcquisitionUri) {
         super(uuid);
         setDisplayName(displayName);
-        this.baseUrl = baseUrl;
+        setBaseUrl(baseUrl);
         this.anthropicVersion = anthropicVersion;
         setTokenizerType(TokenizerType.CL100K_BASE); // Change when Claude tokenizer is available
         setKeysAcquisitionUri(keysAcquisitionUri);
@@ -52,7 +51,8 @@ public class AnthropicProvider extends AbstractAiProvider {
     }
 
     public HttpRequest.Builder createRequestBuilder(String endpoint) {
-        String fullUrl = baseUrl.endsWith("/") ? baseUrl + endpoint : baseUrl + "/" + endpoint;
+        String url = getBaseUrl();
+        String fullUrl = url.endsWith("/") ? url + endpoint : url + "/" + endpoint;
         HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(fullUrl))
                 .header("content-type", "application/json")
@@ -68,9 +68,18 @@ public class AnthropicProvider extends AbstractAiProvider {
         return builder;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation details: Fetches available models from the Anthropic-compatible
+     * endpoint. Note that official Anthropic models are typically static, but this
+     * discovery allows for dynamic compatibility with Anthropic-compatible proxies
+     * (like MiniMax or local routers).
+     * </p>
+     */
     @Override
     public List<? extends AbstractModel> listModels() {
-        log.info("Fetching Anthropic-compatible models from {}", baseUrl);
+        log.info("Fetching Anthropic-compatible models from {}", getBaseUrl());
         try {
             String apiKey = getCurrentApiKey();
             if (apiKey != null) {
@@ -85,7 +94,8 @@ public class AnthropicProvider extends AbstractAiProvider {
                         for (com.fasterxml.jackson.databind.JsonNode modelNode : data) {
                             String id = modelNode.path("id").asText();
                             String name = modelNode.path("display_name").asText(id);
-                            models.add(new AnthropicModel(this, id, name));
+                            String version = modelNode.path("created_at").asText("");
+                            models.add(new AnthropicModel(this, id, name, version));
                         }
                         return models;
                     }
@@ -97,14 +107,7 @@ public class AnthropicProvider extends AbstractAiProvider {
             log.error("Error listing Anthropic models", e);
         }
         
-        // Fallback for Anthropic if the models endpoint fails or isn't available
-        if ("Anthropic".equals(getUuid())) {
-            List<AnthropicModel> models = new ArrayList<>();
-            models.add(new AnthropicModel(this, "claude-3-5-sonnet-latest", "Claude 3.5 Sonnet"));
-            models.add(new AnthropicModel(this, "claude-3-5-haiku-latest", "Claude 3.5 Haiku"));
-            models.add(new AnthropicModel(this, "claude-3-opus-latest", "Claude 3 Opus"));
-            return models;
-        }
+        
         
         return List.of();
     }
