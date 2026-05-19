@@ -25,10 +25,17 @@ import uno.anahata.asi.nb.module.NetBeansModuleUtils;
 @Slf4j
 public class AnahataClasspathProvider implements ClassPathProvider {
 
+    /**
+     * The cached classpath of the Anahata plugin, initialized lazily.
+     */
     private ClassPath anahataPluginCp;
 
     /**
      * Lazily initializes and returns the ClassPath representing the Anahata plugin's environment.
+     * <p>
+     * Implementation details: Extracts the NetBeans runtime classpath from {@link NetBeansModuleUtils} 
+     * and converts physical files to archive-aware URLs via {@link FileUtil#urlForArchiveOrDir}.
+     * </p>
      * @return the anahata plugin classpath.
      */
     private synchronized ClassPath getPluginClassPath() {
