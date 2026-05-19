@@ -238,11 +238,20 @@ public class OpenAiModel extends AbstractModel {
     private PreparedPayload preparePayload(GenerationRequest request, boolean stream) {
         ObjectNode root = API_MAPPER.createObjectNode();
         root.put("model", modelId);
-        root.put("store", false); // Stateless ASI mode
+        
+        // 0. Deduce statefulness and reasoning transmission capabilities
+        boolean isVerifiedOrg = provider.isVerifiedOrganization();
+        root.put("store", isVerifiedOrg); 
+        
         if (stream) root.put("stream", true);
 
         ArrayNode include = root.putArray("include");
-        include.add("reasoning.encrypted_content");
+        
+        if (!isVerifiedOrg) {
+            // ZDR / Stateless requirement: must explicitly request encrypted hashes 
+            // from the API because the model's 'thoughts' cannot be stored by OpenAI.
+            include.add("reasoning.encrypted_content");
+        }
 
         // 1. Identity / Behavioral Params
         ThinkingLevel level = request.config().getThinkingLevel();
@@ -265,7 +274,10 @@ public class OpenAiModel extends AbstractModel {
                 ObjectNode reasoning = root.putObject("reasoning");
                 reasoning.put("effort", effort);
                 if (request.config().getAgi().getConfig().isIncludeThoughts()) {
-                    reasoning.put("generate_summary", "auto");
+                    if (isVerifiedOrg) {
+                        // Verified orgs can request plain text reasoning summaries
+                        reasoning.put("summary", "auto");
+                    }
                 }
             }
         }
@@ -350,9 +362,7 @@ public class OpenAiModel extends AbstractModel {
         System.out.println("--- History JSON (User & Model) ---");
         System.out.println(prepared.historyJson());
 
-        HttpRequest httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create("https://api.openai.com/v1/responses"))
-                .header("Authorization", "Bearer " + apiKey)
+        HttpRequest httpRequest = provider.createRequestBuilder("responses")
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(prepared.fullPayload()))
                 .build();
@@ -388,9 +398,7 @@ public class OpenAiModel extends AbstractModel {
         
         log.info("Executing OpenAI streaming request to Responses API");
         try {
-            HttpRequest httpRequest = HttpRequest.newBuilder()
-                    .uri(URI.create("https://api.openai.com/v1/responses"))
-                    .header("Authorization", "Bearer " + provider.getCurrentKey())
+            HttpRequest httpRequest = provider.createRequestBuilder("responses")
                     .header("Content-Type", "application/json")
                     .header("Accept", "text/event-stream")
                     .POST(HttpRequest.BodyPublishers.ofString(prepared.fullPayload()))
@@ -398,6 +406,7 @@ public class OpenAiModel extends AbstractModel {
                     
             java.net.http.HttpClient client = provider.getHttpClient(); {
                 OpenAiModelMessage targetMessage = new OpenAiModelMessage(agi, getModelId());
+                targetMessage.setStreaming(true);
                 List<OpenAiModelMessage> targets = List.of(targetMessage);
                 java.util.concurrent.atomic.AtomicBoolean started = new java.util.concurrent.atomic.AtomicBoolean(false);
                 
@@ -421,6 +430,7 @@ public class OpenAiModel extends AbstractModel {
                     
                     while (it.hasNext()) {
                         String line = it.next();
+                        log.info("Got line " + line);
                         if (line == null || line.isBlank()) continue;
                         
                         if (line.startsWith("data: ")) {

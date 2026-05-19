@@ -54,6 +54,17 @@ public class OpenAiModelMessage extends AbstractModelMessage<OpenAiResponse> {
     private String phase;
 
     /**
+     * Tracks the association between tool calls and their parent reasoning chains.
+     * This is required for OpenAI's strict referential integrity.
+     */
+    private final Map<AbstractToolCall<?, ?>, ModelTextPart> toolThoughts = new java.util.LinkedHashMap<>();
+
+    /**
+     * Transient tracker for the most recently parsed reasoning item.
+     */
+    private transient ModelTextPart lastParsedThought;
+
+    /**
      * Constructs a new OpenAiModelMessage bound to a specific session and model.
      * @param agi The parent AGI session.
      * @param modelId The ID of the model that generated this message.
@@ -140,8 +151,10 @@ public class OpenAiModelMessage extends AbstractModelMessage<OpenAiResponse> {
                  List<AbstractPart> parts = getParts();
                  for (int i = parts.size() - 1; i >= 0; i--) {
                      if (parts.get(i) instanceof ModelTextPart mtp && mtp.isThought()) {
-                         existingThought = mtp;
-                         break;
+                         if (mtp.getProviderId() == null || mtp.getProviderId().equals(id)) {
+                             existingThought = mtp;
+                             break;
+                         }
                      }
                  }
             }
@@ -153,23 +166,25 @@ public class OpenAiModelMessage extends AbstractModelMessage<OpenAiResponse> {
                 } else if (encrypted != null) {
                     existingThought.setThoughtSignature(encrypted.getBytes());
                 }
-                if (encrypted != null || signature == null) {
-                    String label = summaryText.length() > 0 ? summaryText.toString().trim() : ENCRYPTED_REASONING_PLACEHOLDER;
-                    existingThought.setText(label);
-                }
-            } else {
                 if (encrypted != null) {
-                    String label = summaryText.length() > 0 ? summaryText.toString().trim() : ENCRYPTED_REASONING_PLACEHOLDER;
-                    TextPart tp = addTextPart(label, encrypted.getBytes(), true);
-                    tp.setProviderId(id);
-                } else if (thoughtsText.length() > 0) {
-                    TextPart tp = addTextPart(thoughtsText.toString(), signature, true);
-                    tp.setProviderId(id);
-                } else if (signature != null) {
-                    String label = summaryText.length() > 0 ? summaryText.toString().trim() : ENCRYPTED_REASONING_PLACEHOLDER;
-                    TextPart tp = addTextPart(label, signature, true);
-                    tp.setProviderId(id);
+                    existingThought.setText(ENCRYPTED_REASONING_PLACEHOLDER);
+                } else if (summaryText.length() > 0) {
+                    existingThought.setText(summaryText.toString().trim());
                 }
+                lastParsedThought = existingThought;
+            } else {
+                String label = "";
+                if (encrypted != null) {
+                    label = ENCRYPTED_REASONING_PLACEHOLDER;
+                } else if (summaryText.length() > 0) {
+                    label = summaryText.toString().trim();
+                } else if (thoughtsText.length() > 0) {
+                    label = thoughtsText.toString().trim();
+                }
+                byte[] sigToUse = encrypted != null ? encrypted.getBytes() : signature;
+                TextPart tp = addTextPart(label, sigToUse, true);
+                tp.setProviderId(id);
+                lastParsedThought = (ModelTextPart) tp;
             }
         } else if ("function_call".equals(type)) {
             String callId = item.path("call_id").asText();
@@ -182,6 +197,9 @@ public class OpenAiModelMessage extends AbstractModelMessage<OpenAiResponse> {
             AbstractToolCall<?, ?> tc = getAgi().getToolManager().createToolCall(this, callId, fullToolName, args);
             if (tc != null) {
                 tc.setProviderId(id);
+                if (lastParsedThought != null) {
+                    toolThoughts.put(tc, lastParsedThought);
+                }
             }
         } else if ("web_search_call".equals(type)) {
              JsonNode action = item.get("action");
@@ -335,6 +353,7 @@ public class OpenAiModelMessage extends AbstractModelMessage<OpenAiResponse> {
                 appendContent(eventNode.path("delta").asText());
                 break;
             case "response.reasoning_text.delta":
+            case "response.reasoning_summary_text.delta":
                 appendThoughts(eventNode.path("delta").asText());
                 break;
             case "response.output_item.done":

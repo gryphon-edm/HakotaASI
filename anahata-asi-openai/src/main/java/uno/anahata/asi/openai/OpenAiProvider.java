@@ -11,6 +11,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.agi.provider.AbstractAiProvider;
 import uno.anahata.asi.agi.provider.AbstractModel;
@@ -34,6 +35,19 @@ public class OpenAiProvider extends AbstractAiProvider {
      * Internal Jackson mapper for OpenAI API JSON processing.
      */
     private static final ObjectMapper API_MAPPER = new ObjectMapper();
+
+    /**
+     * Flag indicating if the configured API key belongs to a verified OpenAI 
+     * organization.
+     * <p>
+     * Verified organizations are permitted to use {@code store: true} and 
+     * receive plain-text reasoning summaries in their responses without throwing 
+     * a 400 parameter error on subsequent turns.
+     * </p>
+     */
+    @Setter
+    private boolean verifiedOrganization = false;
+
     /**
      * The HTTP client used for all communication with the OpenAI API.
      * <p>Marked as transient to prevent serialization of the networking stack.</p>
@@ -60,10 +74,37 @@ public class OpenAiProvider extends AbstractAiProvider {
      * standard tokenizer settings.
      */
     public OpenAiProvider() {
-        super("OpenAI");
+        this("OpenAI");
+    }
+
+    public OpenAiProvider(String uuid) {
+        super(uuid);
+        setBaseUrl("https://api.openai.com/v1/");
         setDisplayName("OpenAI (Responses)");
         setTokenizerType(TokenizerType.CL100K_BASE);
         setKeysAcquisitionUri("https://platform.openai.com/api-keys");
+    }
+
+    public HttpRequest.Builder createRequestBuilder(String endpoint) {
+        String url = getBaseUrl();
+        if (url == null) {
+            throw new IllegalStateException("Base URL not set for provider: " + getDisplayName());
+        }
+
+        String fullUrl = url.endsWith("/") ? url + endpoint : url + "/" + endpoint;
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(fullUrl))
+                .timeout(Duration.ofSeconds(120));
+
+        if (super.isApiKeyRequired()) {
+            String apiKey = getCurrentApiKey();
+            if (apiKey != null && !apiKey.isBlank()) {
+                builder.header("Authorization", "Bearer " + apiKey);
+            } else {
+                log.warn("Provider {} says api key is required but no api key was found", getDisplayName());
+            }
+        }
+        return builder;
     }
 
     /**

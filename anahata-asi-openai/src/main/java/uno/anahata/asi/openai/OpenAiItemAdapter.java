@@ -94,17 +94,19 @@ public class OpenAiItemAdapter {
 
         // Map to track and reuse Code Interpreter items (Call -> JSON Node)
         Map<HostedCodeExecutionCallPart, ObjectNode> ciNodes = new java.util.LinkedHashMap<>();
+        java.util.Set<String> addedReasoningIds = new java.util.HashSet<>();
 
         for (AbstractPart part : modelMsg.getParts(includePruned)) {
             String partProviderId = sameModel ? part.getProviderId() : null;
 
             // 1. OpenAI-Specific Reasoning Item (Encrypted or Unencrypted)
-            if (sameModel && part instanceof ModelTextPart mtp && mtp.isThought() 
-                    && mtp.getThoughtSignature() != null) {
+            if (sameModel && part instanceof ModelTextPart mtp && mtp.isThought()) {
                 
                 flushMessageItem(items, currentMessageItem);
                 currentMessageItem = null;
-                items.add(createReasoningNode(part, mtp, sameModel));
+                ObjectNode rNode = createReasoningNode(part, mtp, sameModel);
+                items.add(rNode);
+                addedReasoningIds.add(rNode.path("id").asText());
                 continue; // Skip: already handled as a top-level reasoning item
             }
 
@@ -122,6 +124,19 @@ public class OpenAiItemAdapter {
             if (part instanceof AbstractToolCall<?, ?> tc) {
                 flushMessageItem(items, currentMessageItem);
                 currentMessageItem = null;
+                
+                if (sameModel && modelMsg instanceof OpenAiModelMessage oam) {
+                    ModelTextPart thought = oam.getToolThoughts().get(tc);
+                    if (thought != null && thought.getProviderId() != null) {
+                        String rsId = thought.getProviderId();
+                        if (rsId.startsWith("rs_") && !addedReasoningIds.contains(rsId)) {
+                            ObjectNode rNode = createReasoningNode(thought, thought, sameModel);
+                            items.add(rNode);
+                            addedReasoningIds.add(rsId);
+                        }
+                    }
+                }
+
                 items.add(createFunctionCallNode(tc, sameModel));
             } else if (part instanceof WebSearchCallPart mscp) {
                 flushMessageItem(items, currentMessageItem);
@@ -267,17 +282,24 @@ public class OpenAiItemAdapter {
         String id = (sameModel && part.getProviderId() != null) ? part.getProviderId() : "rs_" + part.getSequentialId();
         reasoningItem.put("id", id);
         
-        reasoningItem.putArray("summary");
-        ArrayNode contentArray = reasoningItem.putArray("content");
-        
         String text = mtp.getText();
-        if (text == null || text.equals(OpenAiModelMessage.ENCRYPTED_REASONING_PLACEHOLDER) || text.startsWith("(Encrypted ")) {
-            reasoningItem.put("encrypted_content", new String(mtp.getThoughtSignature()));
+        byte[] sig = mtp.getThoughtSignature();
+
+        if (sig == null) {
+            ArrayNode summaryArray = reasoningItem.putArray("summary");
+            ObjectNode summaryNode = summaryArray.addObject();
+            summaryNode.put("type", "summary_text");
+            summaryNode.put("text", text != null ? text : "");
+        } else if (text == null || text.equals(OpenAiModelMessage.ENCRYPTED_REASONING_PLACEHOLDER) || text.startsWith("(Encrypted ")) {
+            reasoningItem.putArray("summary");
+            reasoningItem.put("encrypted_content", new String(sig));
         } else {
+            reasoningItem.putArray("summary");
+            ArrayNode contentArray = reasoningItem.putArray("content");
             ObjectNode thinkingBlock = contentArray.addObject();
             thinkingBlock.put("type", "thinking");
             thinkingBlock.put("thinking", text);
-            thinkingBlock.put("signature", new String(mtp.getThoughtSignature()));
+            thinkingBlock.put("signature", new String(sig));
         }
         
         return reasoningItem;
