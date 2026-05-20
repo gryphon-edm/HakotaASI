@@ -1,5 +1,7 @@
 package uno.anahata.asi.nb;
 
+import java.lang.Long;
+
 public class CodeRefinerTestSubject<T extends java.lang.Number & java.io.Serializable, R> {
     private java.util.Map<java.lang.String, java.util.List<T>> complexMap;
     

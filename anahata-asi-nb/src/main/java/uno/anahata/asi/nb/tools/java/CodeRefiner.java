@@ -4,9 +4,7 @@ package uno.anahata.asi.nb.tools.java;
 import com.sun.source.tree.*;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
-import java.io.OutputStream;
 import java.util.*;
-import java.util.stream.Collectors;
 import javax.lang.model.element.*;
 import javax.lang.model.type.TypeKind;
 import javax.swing.text.Document;
@@ -18,10 +16,8 @@ import org.netbeans.modules.editor.java.Utilities;
 import org.netbeans.modules.java.editor.base.imports.UnusedImports;
 import org.openide.cookies.EditorCookie;
 import org.openide.filesystems.FileObject;
-import org.openide.filesystems.FileUtil;
 import org.openide.loaders.DataObject;
 import uno.anahata.asi.agi.tool.*;
-import uno.anahata.asi.nb.tools.java.coderefiner.RelativePosition;
 import org.netbeans.api.java.source.TreePathHandle;
 
 /**
@@ -155,8 +151,6 @@ public class CodeRefiner extends AnahataToolkit {
         }
         return "Reformated: " + fo.getNameExt();
     }
-
-
 
     /**
      * Internal implementation of the import optimization logic.
@@ -295,44 +289,5 @@ public class CodeRefiner extends AnahataToolkit {
         return "Added annotation " + annotation + " to " + memberFqn;
     }
 
-    /**
-     * Sets or updates the Javadoc of a class, method, or field.
-     *
-     * @param filePath the absolute path of the Java file
-     * @param memberFqn the ABSOLUTE FQN of the member
-     * @param javadoc the Javadoc intent
-     * @param save whether to save
-     * @return a success message
-     * @throws Exception if it fails
-     */
-    /*
-    @AgiTool("Sets or updates the Javadoc of a class, method, or field.")
-    public String setJavadoc(
-            @AgiToolParam(value = "The absolute path of the Java file.", rendererId = "path") String filePath,
-            @AgiToolParam("The ABSOLUTE FQN of the member.") String memberFqn,
-            @AgiToolParam("The structured Javadoc definition.") uno.anahata.asi.nb.tools.java.coderefiner.JavadocIntent javadoc,
-            @AgiToolParam("Whether to save.") boolean save) throws Exception {
-
-        uno.anahata.asi.nb.tools.java.coderefiner.CodeRefinementBatch batch = new uno.anahata.asi.nb.tools.java.coderefiner.CodeRefinementBatch();
-        String uri = new java.io.File(filePath).toURI().toString();
-        String uuid = getAgi().getResourceManager().getUuidByUri(uri);
-        if (uuid == null) {
-            throw new AgiToolException("File is not in the context window. Please load it first.");
-        }
-        batch.setResourceUuid(uuid);
-        batch.setLastModified(getAgi().getResourceManager().get(uuid).getLastLoadTimestamp());
-        batch.setSave(save);
-        batch.setOptimize(true);
-        
-        uno.anahata.asi.nb.tools.java.coderefiner.CodeRefinementIntent intent = new uno.anahata.asi.nb.tools.java.coderefiner.CodeRefinementIntent();
-        intent.setType(uno.anahata.asi.nb.tools.java.coderefiner.CodeRefinementIntent.Type.UPDATE);
-        intent.setMemberFqn(memberFqn);
-        intent.setJavadoc(javadoc);
-        batch.setIntents(Collections.singletonList(intent));
-        
-        BatchCodeRefiner refiner = getToolkit(BatchCodeRefiner.class);
-        return refiner.refine(batch);
-    }
-*/
-
+    
 }
