@@ -2,6 +2,7 @@
 package uno.anahata.asi.nb.tools.java;
 
 import com.sun.source.tree.*;
+import com.sun.source.util.SourcePositions;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
 import java.util.*;
@@ -45,7 +46,6 @@ public class CodeRefiner extends AnahataToolkit {
                 + "- **reformat**: Applies IDE formatting rules to the file (requires the file to be open in the editor).");
     }
 
-    
     /**
      * Adds one or more imports to a file structurally.
      *
@@ -97,7 +97,7 @@ public class CodeRefiner extends AnahataToolkit {
      * @return a success message
      * @throws Exception if optimization fails
      */
-    @AgiTool("Optimizes imports (converts FQNs to simple names, removes unused).")
+    @AgiTool("Optimizes imports (converts FQNs to simple names, removes unused and adds missing if not ambiguous).")
     public String optimizeImports(
             @AgiToolParam(value = "The absolute path of the Java file.", rendererId = "path") String filePath,
             @AgiToolParam(value = "Whether to remove unused imports.", required = false) Boolean removeUnused,
@@ -105,8 +105,7 @@ public class CodeRefiner extends AnahataToolkit {
 
         final boolean doRemove = removeUnused == null || removeUnused;
         FileObject fo = JavaSourceUtils.getFileObject(filePath);
-        JavaSource js = JavaSource.forFileObject(fo);
-        optimizeImportsInternal(js, doRemove);
+        optimizeImportsInternal(fo, doRemove);
         if (save) {
             JavaSourceUtils.handleSave(fo);
         }
@@ -159,29 +158,57 @@ public class CodeRefiner extends AnahataToolkit {
      * @param removeUnused whether to remove unused imports
      * @throws Exception if optimization fails
      */
-    private void optimizeImportsInternal(JavaSource js, boolean removeUnused) throws Exception {
-        js.runModificationTask(wc -> {
+    private void optimizeImportsInternal(FileObject fo, boolean removeUnused) throws Exception {
+        JavaSource js1 = JavaSource.forFileObject(fo);
+        js1.runModificationTask(wc -> {
             wc.toPhase(JavaSource.Phase.RESOLVED);
             ReferencesCount rc = ReferencesCount.get(wc.getClasspathInfo());
-            
-            // Bypass GeneratorUtilities.importFQNs which rewrites the entire CompilationUnit
-            // and triggers CasualDiff NPEs on generic typings like <T, R>.
-            // Instead, we only remove unused imports and report unresolved types.
-            if (removeUnused) {
-                removeUnusedImportsInternal(wc);
-            }
+            CompilationUnitTree originalCut = wc.getCompilationUnit();
+
+            final Set<TypeElement> importsToAdd = new LinkedHashSet<>();
+
             new TreePathScanner<Void, WorkingCopy>() {
                 @Override
-                public Void visitIdentifier(IdentifierTree node, WorkingCopy wc) {
+                public Void visitPackage(PackageTree node, WorkingCopy wcSub) {
+                    return null;
+                }
+
+                @Override
+                public Void visitImport(ImportTree node, WorkingCopy wcSub) {
+                    return null;
+                }
+
+                @Override
+                public Void visitMemberSelect(MemberSelectTree node, WorkingCopy wcSub) {
+                    SourcePositions sp = wcSub.getTrees().getSourcePositions();
+                    if (sp.getStartPosition(originalCut, node) == -1) {
+                        return super.visitMemberSelect(node, wcSub);
+                    }
                     TreePath path = getCurrentPath();
                     if (path != null) {
-                        Element e = wc.getTrees().getElement(path);
+                        Element e = wcSub.getTrees().getElement(path);
+                        if (e instanceof TypeElement te) {
+                            String fqn = te.getQualifiedName().toString();
+                            if (node.toString().contains(".")) {
+                                if (!fqn.startsWith("java.lang.")) {
+                                    importsToAdd.add(te);
+                                }
+                            }
+                        }
+                    }
+                    return super.visitMemberSelect(node, wcSub);
+                }
+
+                @Override
+                public Void visitIdentifier(IdentifierTree node, WorkingCopy wcSub) {
+                    TreePath path = getCurrentPath();
+                    if (path != null) {
+                        Element e = wcSub.getTrees().getElement(path);
                         if (e == null || (e.asType() != null && e.asType().getKind() == TypeKind.ERROR)) {
                             String name = node.getName().toString();
                             if (Character.isUpperCase(name.charAt(0))) {
-                                CodeRefiner.this.log("Unresolved type: " + name);
                                 try {
-                                    ClassIndex index = wc.getClasspathInfo().getClassIndex();
+                                    ClassIndex index = wcSub.getClasspathInfo().getClassIndex();
                                     Set<ClassIndex.SearchScope> scopes = EnumSet.allOf(ClassIndex.SearchScope.class);
                                     Set<ElementHandle<TypeElement>> handles = index.getDeclaredTypes(name, ClassIndex.NameKind.SIMPLE_NAME, scopes);
                                     if (!handles.isEmpty()) {
@@ -197,13 +224,28 @@ public class CodeRefiner extends AnahataToolkit {
                                         }
                                         List<Candidate> candidates = new ArrayList<>();
                                         for (ElementHandle<TypeElement> handle : handles) {
-                                            TypeElement te = handle.resolve(wc);
-                                            int score = te != null ? Utilities.getImportanceLevel(wc, rc, te) : Utilities.getImportanceLevel(handle.getQualifiedName());
+                                            TypeElement te = handle.resolve(wcSub);
+                                            int score = te != null ? Utilities.getImportanceLevel(wcSub, rc, te) : Utilities.getImportanceLevel(handle.getQualifiedName());
                                             candidates.add(new Candidate(handle.getQualifiedName(), score));
                                         }
-                                        candidates.sort(Comparator.comparingInt(c -> c.score));
-                                        CodeRefiner.this.log("Found " + candidates.size() + " candidates for " + name + " (NetBeans Importance sort):");
-                                        candidates.forEach(c -> CodeRefiner.this.log(" - " + c.fqn));
+
+                                        candidates.sort((c1, c2) -> Integer.compare(c2.score, c1.score));
+
+                                        if (candidates.size() == 1) {
+                                            String bestFqn = candidates.get(0).fqn;
+                                            CodeRefiner.this.log("Auto-resolving single candidate import for '" + name + "': " + bestFqn);
+                                            TypeElement te = wcSub.getElements().getTypeElement(bestFqn);
+                                            if (te != null) {
+                                                importsToAdd.add(te);
+                                            }
+                                        } else if (candidates.size() > 1) {
+                                            StringBuilder sb = new StringBuilder();
+                                            sb.append("Ambiguous candidates found for '").append(name).append("'. Skipping auto-import:\n");
+                                            for (Candidate cand : candidates) {
+                                                sb.append("  - ").append(cand.fqn).append(" (Importance Score: ").append(cand.score).append(")\n");
+                                            }
+                                            CodeRefiner.this.log(sb.toString());
+                                        }
                                     }
                                 } catch (Exception ex) {
                                     log.error("OptimizeImports: Index search failed for " + name, ex);
@@ -211,33 +253,99 @@ public class CodeRefiner extends AnahataToolkit {
                             }
                         }
                     }
-                    return super.visitIdentifier(node, wc);
+                    return super.visitIdentifier(node, wcSub);
                 }
-            }.scan(new TreePath(wc.getCompilationUnit()), wc);
-        }).commit();
-    }
+            }.scan(new TreePath(originalCut), wc);
 
-    /**
-     * Surgically removes unused imports using the java editor base imports API.
-     *
-     * @param copy the working copy
-     */
-    private static void removeUnusedImportsInternal(WorkingCopy copy) {
-        try {
-            List<TreePathHandle> unused = UnusedImports.computeUnusedImports(copy);
-            if (!unused.isEmpty()) {
-                CompilationUnitTree cut = copy.getCompilationUnit();
-                for (TreePathHandle handle : unused) {
-                    TreePath path = handle.resolve(copy);
-                    if (path != null && path.getLeaf() instanceof ImportTree it) {
-                        cut = copy.getTreeMaker().removeCompUnitImport(cut, it);
+            CompilationUnitTree evolvingCut = originalCut;
+            if (removeUnused) {
+                try {
+                    List<TreePathHandle> unused = UnusedImports.computeUnusedImports(wc);
+                    if (!unused.isEmpty()) {
+                        for (TreePathHandle handle : unused) {
+                            TreePath path = handle.resolve(wc);
+                            if (path != null && path.getLeaf() instanceof ImportTree it) {
+                                evolvingCut = wc.getTreeMaker().removeCompUnitImport(evolvingCut, it);
+                            }
+                        }
                     }
+                } catch (Exception e) {
+                    log.error("Failed to remove unused imports", e);
                 }
-                copy.rewrite(copy.getCompilationUnit(), cut);
             }
-        } catch (Exception e) {
-            log.error("Failed to remove unused imports using UnusedImports utility", e);
-        }
+
+            if (!importsToAdd.isEmpty()) {
+                evolvingCut = GeneratorUtilities.get(wc).addImports(evolvingCut, importsToAdd);
+            }
+
+            if (originalCut != evolvingCut) {
+                wc.rewrite(originalCut, evolvingCut);
+            }
+        }).commit();
+
+        JavaSourceUtils.handleSave(fo);
+        fo.refresh();
+
+        // CRITICAL BUG FIX: Force a synchronous re-parse of the file so that NetBeans
+        // updates its internally cached character offsets for the next transaction.
+        // Without this, the second transaction is executed with stale offsets, causing
+        // the FQN shortening rewrite to corrupt/duplicate the file.
+        js1.runUserActionTask(cc -> {
+            cc.toPhase(JavaSource.Phase.RESOLVED);
+        }, true);
+
+        JavaSource js2 = JavaSource.forFileObject(fo);
+        js2.runModificationTask(wc -> {
+            wc.toPhase(JavaSource.Phase.RESOLVED);
+            CompilationUnitTree cut = wc.getCompilationUnit();
+            TreeMaker make = wc.getTreeMaker();
+
+            new TreePathScanner<Void, WorkingCopy>() {
+                @Override
+                public Void visitPackage(PackageTree node, WorkingCopy wcSub) {
+                    return null;
+                }
+
+                @Override
+                public Void visitImport(ImportTree node, WorkingCopy wcSub) {
+                    return null;
+                }
+
+                @Override
+                public Void visitMemberSelect(MemberSelectTree node, WorkingCopy wcSub) {
+                    SourcePositions sp = wcSub.getTrees().getSourcePositions();
+                    if (sp.getStartPosition(cut, node) == -1) {
+                        return super.visitMemberSelect(node, wcSub);
+                    }
+                    TreePath path = getCurrentPath();
+                    if (path != null) {
+                        Element e = wcSub.getTrees().getElement(path);
+                        if (e instanceof TypeElement te) {
+                            String fqn = te.getQualifiedName().toString();
+                            String simpleName = te.getSimpleName().toString();
+                            if (node.toString().contains(".")) {
+                                boolean isImported = false;
+                                if (fqn.startsWith("java.lang.")) {
+                                    isImported = true;
+                                } else {
+                                    for (ImportTree imp : cut.getImports()) {
+                                        String impStr = imp.getQualifiedIdentifier().toString();
+                                        if (impStr.equals(fqn) || (imp.isStatic() && impStr.endsWith("." + simpleName))) {
+                                            isImported = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (isImported) {
+                                    wcSub.rewrite(node, make.Identifier(simpleName));
+                                }
+                            }
+                        }
+                    }
+                    return super.visitMemberSelect(node, wcSub);
+                }
+            }.scan(new TreePath(cut), wc);
+        }).commit();
     }
 
     /**
@@ -265,7 +373,7 @@ public class CodeRefiner extends AnahataToolkit {
             if (tree == null) {
                 throw new AgiToolException("Member not found: " + memberFqn);
             }
-            
+
             TreeMaker make = wc.getTreeMaker();
             ModifiersTree oldMods = null;
             if (tree instanceof MethodTree mt) {
@@ -275,7 +383,7 @@ public class CodeRefiner extends AnahataToolkit {
             } else if (tree instanceof ClassTree ct) {
                 oldMods = ct.getModifiers();
             }
-            
+
             if (oldMods != null) {
                 String annName = annotation.startsWith("@") ? annotation.substring(1) : annotation;
                 AnnotationTree annTree = make.Annotation(make.Identifier(annName), Collections.emptyList());
@@ -289,5 +397,4 @@ public class CodeRefiner extends AnahataToolkit {
         return "Added annotation " + annotation + " to " + memberFqn;
     }
 
-    
 }
