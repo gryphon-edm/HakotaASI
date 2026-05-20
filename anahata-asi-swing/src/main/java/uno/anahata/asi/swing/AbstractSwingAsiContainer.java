@@ -6,6 +6,7 @@ package uno.anahata.asi.swing;
 import java.awt.Component;
 import java.io.File;
 import java.nio.file.Path;
+import java.util.List;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import lombok.Getter;
@@ -13,13 +14,15 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.AbstractAsiContainer;
 import uno.anahata.asi.agi.Agi;
+import uno.anahata.asi.agi.provider.AbstractAiProvider;
 import uno.anahata.asi.anthropic.AnthropicProvider;
 import uno.anahata.asi.gemini.GeminiAiProvider;
-import uno.anahata.asi.gemini.vertex.GeminiGoogleCloudExpressAIProvider;
+import uno.anahata.asi.gemini.GeminiGoogleCloudExpressAIProvider;
 import uno.anahata.asi.huggingface.HuggingFaceProvider;
 import uno.anahata.asi.minimax.MinimaxAnthropicProvider;
 import uno.anahata.asi.modal.ModalProvider;
-import uno.anahata.asi.openai.OpenAiProvider;
+import uno.anahata.asi.openai.OpenAiResponsesProvider;
+import uno.anahata.asi.openai.compatible.OpenAiChatCompletionsProvider;
 import uno.anahata.asi.swing.agi.AgiPanel;
 import uno.anahata.asi.swing.agi.message.part.tool.param.FullTextFileCreateRenderer;
 import uno.anahata.asi.swing.agi.message.part.tool.param.ParameterRendererFactory;
@@ -57,6 +60,20 @@ public abstract class AbstractSwingAsiContainer extends AbstractAsiContainer {
         ParameterRendererFactory.registerById("resource", ResourceUUIDParameterRenderer.class);
         ParameterRendererFactory.registerById("path", PathParameterRenderer.class);
     }
+    
+    /**
+     * List of all known AI Providers.
+     */
+    public static final List<Class<? extends AbstractAiProvider>> AVAILABLE_PROVIDER_CLASSES = List.of(OpenAiChatCompletionsProvider.class,
+        uno.anahata.asi.openai.OpenAiResponsesProvider.class,
+        uno.anahata.asi.anthropic.AnthropicProvider.class,
+        uno.anahata.asi.minimax.MinimaxAnthropicProvider.class,
+        uno.anahata.asi.gemini.GeminiAiProvider.class,
+        uno.anahata.asi.gemini.GeminiGoogleCloudExpressAIProvider.class,
+        uno.anahata.asi.huggingface.HuggingFaceProvider.class,
+        uno.anahata.asi.modal.ModalProvider.class
+    );
+
 
     /**
      * The single-instance Preferences dashboard frame for this container.
@@ -85,7 +102,7 @@ public abstract class AbstractSwingAsiContainer extends AbstractAsiContainer {
 
         if (getProvider("OpenAI") == null) {
             log.info("Registering OpenAI");
-            registerProvider(new OpenAiProvider());
+            registerProvider(new OpenAiResponsesProvider());
         }
         
         if (getProvider("Anthropic") == null) {
