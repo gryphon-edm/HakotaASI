@@ -440,8 +440,7 @@ public class OpenAiItemAdapter {
             contentArray.addObject()
                     .put("type", "input_image")
                     .put("image_url", "data:" + mimeType + ";base64," + b64);
-        }
-        if (mimeType.startsWith("audio/")) {
+        } else if (mimeType.startsWith("audio/")) {
             // OpenAI Responses API: Audio data is sent base64 encoded with a specified format
             // Note: 'input_audio' is currently not supported in the Responses API, 
             contentArray.addObject()
