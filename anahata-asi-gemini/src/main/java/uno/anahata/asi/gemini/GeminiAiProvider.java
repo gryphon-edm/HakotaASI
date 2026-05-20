@@ -99,7 +99,7 @@ public class GeminiAiProvider extends AbstractAiProvider {
      * {@inheritDoc}
      */
     @Override
-    public String getCurrentApiKey() {
+    public String getCurrentKey() {
         return getClient().apiKey();
     }
 

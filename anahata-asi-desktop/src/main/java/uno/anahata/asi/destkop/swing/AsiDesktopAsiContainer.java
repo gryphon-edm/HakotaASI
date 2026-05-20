@@ -56,13 +56,13 @@ public class AsiDesktopAsiContainer extends AbstractSwingAsiContainer {
     public AsiDesktopAsiContainer(String hostApplicationId) {
         super(hostApplicationId);
         
-        
+        /*
         
         if (getProvider("Anahata") == null) {
             log.info("Registering Anahata");
             registerProvider(new OpenAiChatCompletionsProvider(
                     "Anahata", "Anahata (no SSL)", "http://a.anahata.uno:1234/v1", "Anahata", "https://discord.com/invite/gwGWWxPUXE"));
-        }
+        }*/
         
                 /*
         /*

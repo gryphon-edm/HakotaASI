@@ -103,7 +103,7 @@ public abstract class AbstractAiProvider extends BasicPropertyChangeSource {
     /**
      * The API key currently in use by this provider. Captured during key rotation.
      */
-    private transient String currentApiKey;
+    private transient String currentKey;
 
     /**
      * The internal cache of loaded API keys, reloaded from disk on change. */
@@ -268,10 +268,10 @@ public abstract class AbstractAiProvider extends BasicPropertyChangeSource {
      * @return The active API key, or {@code null} if the pool is empty.
      */
     public synchronized String getCurrentKey() {
-        if (currentApiKey == null) {
+        if (currentKey == null) {
             getNextKey();
         }
-        return currentApiKey;
+        return currentKey;
     }
 
     /**
@@ -305,7 +305,7 @@ public abstract class AbstractAiProvider extends BasicPropertyChangeSource {
         // Round-robin key selection
         int nextIdx = round.getAndIncrement() % keyPool.size();
         String key = keyPool.get(nextIdx);
-        this.currentApiKey = key;
+        this.currentKey = key;
         log.info("Hocus Pocus.... Using API key from pool (index {}). Key ends with: {}", nextIdx, key.substring(key.length() - 5));
         return key;
     }

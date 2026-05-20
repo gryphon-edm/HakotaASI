@@ -98,7 +98,7 @@ public class OpenAiResponsesProvider extends AbstractAiProvider {
                 .timeout(Duration.ofSeconds(120));
 
         if (super.isApiKeyRequired()) {
-            String apiKey = getCurrentApiKey();
+            String apiKey = getCurrentKey();
             if (apiKey != null && !apiKey.isBlank()) {
                 builder.header("Authorization", "Bearer " + apiKey);
             } else {

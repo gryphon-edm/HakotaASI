@@ -44,6 +44,7 @@ public class HuggingFaceProvider extends OpenAiChatCompletionsProvider {
     public HuggingFaceProvider() {
         super("HuggingFace", "Hugging Face", "https://router.huggingface.co/v1",
                 "HuggingFace", "https://huggingface.co/settings/tokens");
+        setDescription("Hugging Face Serverless Inference API client for open-source models.");
     }
 
     /**
@@ -176,7 +177,7 @@ public class HuggingFaceProvider extends OpenAiChatCompletionsProvider {
                 .timeout(Duration.ofSeconds(3))
                 .GET();
 
-        String apiKey = getCurrentApiKey();
+        String apiKey = getCurrentKey();
         if (apiKey != null && !apiKey.isBlank()) {
             builder.header("Authorization", "Bearer " + apiKey);
         }

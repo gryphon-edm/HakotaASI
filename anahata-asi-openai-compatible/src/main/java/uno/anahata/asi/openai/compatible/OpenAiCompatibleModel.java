@@ -270,7 +270,7 @@ public class OpenAiCompatibleModel extends AbstractModel {
                     String errorBody = httpResponse.body();
                     if (provider.isRetryable(httpResponse.statusCode(), errorBody)) {
                         provider.hokusPocus();
-                        throw new RetryableApiException(provider.getCurrentApiKey(), "API error (" + httpResponse.statusCode() + "): " + errorBody, null);
+                        throw new RetryableApiException(provider.getCurrentKey(), "API error (" + httpResponse.statusCode() + "): " + errorBody, null);
                     }
                     throw new RuntimeException("API error (" + httpResponse.statusCode() + "): " + errorBody);
                 }
@@ -323,7 +323,7 @@ public class OpenAiCompatibleModel extends AbstractModel {
                     if (provider.isRetryable(response.statusCode(), errorMsg)) {
                         log.info("Retryable streaming error detected ({}). Rotating key and retrying...", response.statusCode());
                         provider.hokusPocus();
-                        observer.onError(new RetryableApiException(provider.getCurrentApiKey(), "OpenAI Stream Error (" + response.statusCode() + "): " + errorMsg, null));
+                        observer.onError(new RetryableApiException(provider.getCurrentKey(), "OpenAI Stream Error (" + response.statusCode() + "): " + errorMsg, null));
                     } else {
                         observer.onError(new RuntimeException("OpenAIModel Stream Error (" + response.statusCode() + "): " + errorMsg));
                     }

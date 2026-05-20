@@ -257,7 +257,7 @@ public class AnthropicModel extends AbstractModel {
                     String errorBody = httpResponse.body();
                     if (provider.isRetryable(httpResponse.statusCode(), errorBody)) {
                         provider.hokusPocus();
-                        throw new RetryableApiException(provider.getCurrentApiKey(), "API error (" + httpResponse.statusCode() + "): " + errorBody, null);
+                        throw new RetryableApiException(provider.getCurrentKey(), "API error (" + httpResponse.statusCode() + "): " + errorBody, null);
                     }
                     throw new RuntimeException("API error (" + httpResponse.statusCode() + "): " + errorBody);
                 }
@@ -301,7 +301,7 @@ public class AnthropicModel extends AbstractModel {
                     }
                     if (provider.isRetryable(response.statusCode(), errorMsg)) {
                         provider.hokusPocus();
-                        observer.onError(new RetryableApiException(provider.getCurrentApiKey(), "Stream Error (" + response.statusCode() + "): " + errorMsg, null));
+                        observer.onError(new RetryableApiException(provider.getCurrentKey(), "Stream Error (" + response.statusCode() + "): " + errorMsg, null));
                     } else {
                         observer.onError(new RuntimeException("Stream Error (" + response.statusCode() + "): " + errorMsg));
                     }

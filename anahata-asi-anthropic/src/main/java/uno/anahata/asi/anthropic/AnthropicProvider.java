@@ -74,7 +74,7 @@ public class AnthropicProvider extends AbstractAiProvider {
                 .header("content-type", "application/json")
                 .timeout(Duration.ofSeconds(120));
                 
-        String apiKey = getCurrentApiKey();
+        String apiKey = getCurrentKey();
         if (apiKey != null && !apiKey.isBlank()) {
             builder.header("x-api-key", apiKey);
         }
@@ -97,7 +97,7 @@ public class AnthropicProvider extends AbstractAiProvider {
     public List<? extends AbstractModel> listModels() {
         log.info("Fetching Anthropic-compatible models from {}", getBaseUrl());
         try {
-            String apiKey = getCurrentApiKey();
+            String apiKey = getCurrentKey();
             if (apiKey != null) {
                 HttpRequest request = createRequestBuilder("models").GET().build();
                 java.net.http.HttpResponse<String> response = getHttpClient().send(request, java.net.http.HttpResponse.BodyHandlers.ofString());

@@ -130,7 +130,7 @@ public class OpenAiChatCompletionsProvider extends AbstractAiProvider {
                 .timeout(Duration.ofSeconds(120));
 
         if (super.isApiKeyRequired()) {
-            String apiKey = getCurrentApiKey();
+            String apiKey = getCurrentKey();
             if (apiKey != null && !apiKey.isBlank()) {
                 builder.header("Authorization", "Bearer " + apiKey);
             } else {
@@ -140,18 +140,6 @@ public class OpenAiChatCompletionsProvider extends AbstractAiProvider {
 
         getCustomHeaders().forEach(builder::header);
         return builder;
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Implementation details: Retrieves the next available API key from the
-     * provider's key rotation pool.
-     * </p>
-     */
-    @Override
-    public String getCurrentApiKey() {
-        return getNextKey();
     }
 
     /**
