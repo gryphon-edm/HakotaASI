@@ -53,7 +53,7 @@ public class BatchCodeRefiner extends AnahataToolkit {
 
     @Override
     public void initialize() {
-        getToolkit().setEnabled(false);
+        getToolkit().setEnabled(true);
     }
 
     @Override
