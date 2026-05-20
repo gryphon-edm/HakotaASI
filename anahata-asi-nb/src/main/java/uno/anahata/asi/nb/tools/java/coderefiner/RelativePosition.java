@@ -15,9 +15,9 @@ public enum RelativePosition {
     @Schema(description = "Insert at the very end of the class or file.")
     END, 
     
-    @Schema(description = "Insert immediately before the specified anchor member.")
+    @Schema(description = "Insert immediately before the specified anchor member. Anchor member becomes mandatory")
     BEFORE, 
     
-    @Schema(description = "Insert immediately after the specified anchor member.")
+    @Schema(description = "Insert immediately after the specified anchor member. Anchor member becomes mandatory")
     AFTER
 }
