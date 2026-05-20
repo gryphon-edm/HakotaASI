@@ -13,11 +13,11 @@
  * Key Components:
  * </p>
  * <ul>
- *   <li><b>Container Orchestration</b>: {@link uno.anahata.asi.standalone.swing.AsiDesktopAsiContainer} 
+ *   <li><b>Container Orchestration</b>: {@link AsiDesktopAsiContainer} 
  *       specializes the session lifecycle for a tabbed desktop environment.</li>
- *   <li><b>UI Assembly</b>: {@link uno.anahata.asi.standalone.swing.AsiDesktopMainPanel} 
+ *   <li><b>UI Assembly</b>: {@link AsiDesktopMainPanel} 
  *       provides the primary layout, combining session cards with conversation tabs.</li>
- *   <li><b>Session Configuration</b>: {@link uno.anahata.asi.standalone.swing.AsiDesktopAgiConfig} 
+ *   <li><b>Session Configuration</b>: {@link AsiDesktopAgiConfig} 
  *       pre-configures the desktop environment with default providers (e.g., Gemini).</li>
  * </ul>
  * 

@@ -167,7 +167,7 @@ public class OpenAiChatCompletionsProvider extends AbstractAiProvider {
      * {@inheritDoc}
      * <p>
      * Implementation details: Performs a GET request to the {@code /models}
-     * endpoint of the configured {@link #getBaseUrl()}. Parses the standard OpenAI
+     * endpoint of the configured {@code getBaseUrl()}. Parses the standard OpenAI
      * list-response and wraps each ID in an {@link OpenAiCompatibleModel} instance.
      * </p>
      */

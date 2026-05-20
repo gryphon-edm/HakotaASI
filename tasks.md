@@ -4,10 +4,7 @@ This file tracks the actionable tasks and tactical goals for the Anahata ASI (V2
 
 ## 0. Zero Day Go Live: 
 
-- [ ] Investigate the NPE this was causing in CodeRefiner.optimizeImportsInternal
-      CompilationUnitTree oldCut = wc.getCompilationUnit();
-            CompilationUnitTree newCut = GeneratorUtilities.get(wc).importFQNs(oldCut);
-            wc.rewrite(oldCut, newCut);
+- [ ] Test CodeRefiner.optimizeImports more and if it is good, then integrate it in BCR
 
 - [ ] make "cached data" in MediaView transient? possibly in text resources too?
 

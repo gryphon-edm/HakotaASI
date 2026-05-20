@@ -112,7 +112,7 @@ public class OpenAiResponsesProvider extends AbstractAiProvider {
      * {@inheritDoc}
      * <p>
      * Implementation details: Executes a GET request to the {@code /models} 
-     * endpoint of the configured {@link #getBaseUrl()}. Discovered models are 
+     * endpoint of the configured {@code getBaseUrl()}. Discovered models are 
      * filtered to include only those supported by the Responses API (gpt-4o and 
      * successor generations).
      * </p>

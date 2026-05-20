@@ -9,7 +9,7 @@ import uno.anahata.asi.gemini.GeminiAiProvider;
 import uno.anahata.asi.swing.agi.SwingAgiConfig;
 
 /**
- * The default {@link uno.anahata.ai.config.AgiConfig} implementation for the 
+ * The default {@link uno.anahata.asi.agi.AgiConfig} implementation for the 
  * standalone Swing application. It pre-registers the {@link GeminiAiProvider}.
  * 
  * @author anahata

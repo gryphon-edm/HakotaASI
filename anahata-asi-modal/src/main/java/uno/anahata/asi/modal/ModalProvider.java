@@ -11,7 +11,7 @@ import uno.anahata.asi.openai.compatible.OpenAiChatCompletionsProvider;
  * <p>Modal provides high-performance inference for GLM-5 models with native
  * reasoning support. The API returns reasoning content in a dedicated
  * {@code reasoning_content} field, which is automatically detected by the
- * {@link uno.anahata.asi.openai.OpenAiModel} autodetection logic.</p>
+ * {@link uno.anahata.asi.openai.compatible.OpenAiCompatibleModel} autodetection logic.</p>
  * 
  * <p><b>Key Features:</b></p>
  * <ul>
