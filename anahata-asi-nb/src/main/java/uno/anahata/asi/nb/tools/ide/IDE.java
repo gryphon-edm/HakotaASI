@@ -73,6 +73,7 @@ public class IDE extends AnahataToolkit {
                 + "The content of the resources in the RAG message does not include unsaved changes. "
                 + "The LIVE resources in the RAG message get refreshed from disk on every turn and reflect the state of the files on disk, not on the editr. "
                 + "The resources toolkit does not write your suggestions to the swing Document, it writes them straight to disk. "
+                + "The resources toolkit does not import fqns automatically, if you are using findAndReplaceInTextResource the Resources toolkit to code java, add the necessary imports with another replacement on that same tool call."
                 + "The 'Open Editor Files' context provider from the Editor's toolkit or the TopComponents context provider will tell you what files are open in the id and/ whether they have unsaved changes or not. "
                 + "If you need to get the unsaved contents, use the java tool");
     }
