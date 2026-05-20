@@ -161,11 +161,12 @@ public class OpenAiResponsesProvider extends AbstractAiProvider {
     }
 
     /**
-     * {@inheritDoc}
-     * <p>
      * Determines if an HTTP status code or response body indicates a transient 
      * failure that should trigger a retry or rotation.
-     * </p>
+     * 
+     * @param statusCode The HTTP status code returned by the server.
+     * @param responseBody The raw response body string.
+     * @return true if the request can be retried, false otherwise.
      */
     public boolean isRetryable(int statusCode, String responseBody) {
         return statusCode == 429 || statusCode == 503 || statusCode == 500 || statusCode == 499 || statusCode == 408;
