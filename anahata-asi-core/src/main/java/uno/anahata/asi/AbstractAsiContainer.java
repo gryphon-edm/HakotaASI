@@ -586,15 +586,16 @@ public abstract class AbstractAsiContainer extends BasicPropertyChangeSource {
                 || status == AgiStatus.TOOL_PROMPT
                 || status == AgiStatus.CANDIDATE_CHOICE_PROMPT
                 || status == AgiStatus.ERROR
+                || status == AgiStatus.AUTO_EXECUTING_TOOLS
                 || status == AgiStatus.MAX_RETRIES_REACHED;
 
         if (!isStable) {
-            log.debug("Skipping {} auto-save for session {} - agi is currently in volatile state: {}",
+            log.info("Skipping {} auto-save for session {} - agi is currently in volatile state: {}",
                     reason, agi.getConfig().getSessionId(), status);
             return;
         }
 
-        log.debug("auto-save for session {} - status: {} - reason:" + reason,
+        log.info("auto-save for session {} - status: {} - reason:" + reason,
                 reason, agi.getConfig().getSessionId(), status);
 
         saveSessionTo(agi, getSessionsDir());
