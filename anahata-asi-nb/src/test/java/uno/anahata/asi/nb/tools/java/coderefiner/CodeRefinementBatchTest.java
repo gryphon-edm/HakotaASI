@@ -237,6 +237,13 @@ public class CodeRefinementBatchTest {
         i16.setBody("\"123\"");
         runBatch.accept(buildBatch.apply(List.of(i16)));
 
+        logToToolContext("Test 17: Update Field Declaration only (keeping existing initializer)");
+        CodeRefinementIntent i17 = new CodeRefinementIntent();
+        i17.setType(CodeRefinementIntent.Type.UPDATE);
+        i17.setMemberFqn("uno.anahata.asi.nb.tools.java.coderefiner.SmallTestClass$InnerTest.description");
+        i17.setDeclaration("private final String description");
+        runBatch.accept(buildBatch.apply(List.of(i17)));
+
         logToToolContext("All tests executed. Verifying AST...");
         
         String finalContent = new String(handle.getFileObject().asBytes(), "UTF-8");
@@ -263,8 +270,14 @@ public class CodeRefinementBatchTest {
         if (!finalContent.contains("* The third constant with args.") || !finalContent.contains("THIRD (\"third\");")) {
             throw new Exception("Test 15 Failed: Enum constant with args Javadoc missing or malformed!");
         }
+        /*
         if (!finalContent.contains("private String description = \"123\";")) {
             throw new Exception("Test 16 Failed: Field with initializer not correctly inserted!");
+        }
+*/      
+        //16 commentd out because for this to work 16 would have had to work
+        if (!finalContent.contains("private final String description = \"123\";")) {
+            throw new Exception("Test 17 Failed: Field declaration update lost the initializer or '=' sign!");
         }
         
         logToToolContext("Validation SUCCESS. The AST is perfect.");

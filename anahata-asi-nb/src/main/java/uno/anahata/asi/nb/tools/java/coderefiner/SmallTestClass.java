@@ -1,10 +1,7 @@
 package uno.anahata.asi.nb.tools.java.coderefiner;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import lombok.SneakyThrows;
-
+import java.io.File;
+import java.util.LinkedList;
 
 /**
  * Base Test Class for AST.
@@ -15,13 +12,10 @@ public class SmallTestClass {
      * Inner Class Doc.
      */
     public static class InnerTest {
-        /** Basic string property b. */
         private String b;
-        /** Basic description string property with default value. */
-        private String description = "123";
-        /** Basic empty foo method. */
+
+        private final String description = "123";
         public void foo() {}
-        /** Deprecated bar printing helper method. */
         @Deprecated
         public void bar() {
             System.out.println("bar");
@@ -31,7 +25,7 @@ public class SmallTestClass {
     /**
      * This method is extremely risky.
      */
-    @SneakyThrows
+    @lombok.SneakyThrows
     public void riskyMethod() {
         System.out.println("A");
 
@@ -42,41 +36,28 @@ public class SmallTestClass {
 
     /**
      * Processes generic numbers.
-     *
-     * @param <T> The numeric lower bound type parameter.
-     * @param <R> The mapped return generic collection element type parameter.
-     * @param input The generic number mapper container.
-     * @return A list of processed generics.
      */
-    public <T extends Number, R> List<R> processGenerics(Map<String, T> input) {
-        List<R> list = new ArrayList<>();
+    public <T extends Number, R> java.util.List<R> processGenerics(java.util.Map<String, T> input) {
+        java.util.List<R> list = new java.util.ArrayList<>();
+
+        // Look at this beautiful blank line!
+
         return list;
     }
 
-    /**
-     * Generic inner class representing coordinate/pair types.
-     *
-     * @param <X> First generic variable type.
-     * @param <Y> Second generic variable type.
-     */
     public static class GenericInner<X, Y> {
-        /** First generic coordinate field. */
         private X first;
-        /** Second generic coordinate field. */
         private Y second;
     }
 
-    /** Printing wrapper method A. */
     public void methodA() {
         System.out.println("A");
     }
 
-    /** Printing wrapper method B. */
     public void methodB() {
         System.out.println("B");
     }
 
-    /** Printing wrapper method C. */
     public void methodC() {
         System.out.println("C");
     }
@@ -85,12 +66,30 @@ public class SmallTestClass {
      * A test enum.
      */
     public enum TestEnum {
-        /** The first index enum constant. */
+        /** First doc */
         FIRST,
-        //comment
-        /** The second index enum constant. */
+        /** Second doc */
         SECOND,
-        /** The third index enum constant. */
+        /**
+         * The third constant.
+         */
         THIRD;
+    }
+
+    @lombok.Getter
+    public enum TestEnum2 {
+        FIRST ("first"),
+        /** Second doc */
+        SECOND ("second"),
+        /**
+         * The third constant with args.
+         */
+        THIRD ("third");
+
+        /** First doc */
+        private TestEnum2(String displayValue) {
+        this.displayValue = displayValue;
+        }
+        String displayValue;
     }
 }

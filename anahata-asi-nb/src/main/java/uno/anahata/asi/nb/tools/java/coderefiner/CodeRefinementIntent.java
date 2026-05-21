@@ -186,12 +186,14 @@ public class CodeRefinementIntent implements Serializable {
 
             long bodyStart = endPos;
             long bodyEnd = endPos;
+            long initStart = -1;
+            long initEnd = -1;
             if (member instanceof MethodTree mt && mt.getBody() != null) {
                 bodyStart = sp.getStartPosition(cut, mt.getBody());
                 bodyEnd = sp.getEndPosition(cut, mt.getBody());
             } else if (member instanceof VariableTree vt) {
-                long initStart = vt.getInitializer() != null ? sp.getStartPosition(cut, vt.getInitializer()) : -1;
-                long initEnd = vt.getInitializer() != null ? sp.getEndPosition(cut, vt.getInitializer()) : -1;
+                initStart = vt.getInitializer() != null ? sp.getStartPosition(cut, vt.getInitializer()) : -1;
+                initEnd = vt.getInitializer() != null ? sp.getEndPosition(cut, vt.getInitializer()) : -1;
                 if (initStart >= 0 && initEnd >= 0) {
                     bodyStart = initStart;
                     bodyEnd = initEnd;
@@ -292,6 +294,12 @@ public class CodeRefinementIntent implements Serializable {
                         sb.setLength(sb.length() - 1);
                     }
                     newBodyStr = sb.toString();
+                }
+            } else {
+                if (member instanceof VariableTree && initStart >= 0 && initEnd >= 0) {
+                    if (declaration != null && !newDeclStr.trim().endsWith("=")) {
+                        newBodyStr = " = " + oldBody.trim();
+                    }
                 }
             }
 
