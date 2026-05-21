@@ -1,11 +1,11 @@
 /* Licensed under the Anahata Software License (ASL) v 108. See the LICENSE file for details. Força Barça! */
 package uno.anahata.asi.nb;
 
+import java.net.URI;
 import java.nio.file.Files;
 import uno.anahata.asi.AbstractAsiContainer;
 import uno.anahata.asi.nb.mine.NetBeansIconProvider;
 import uno.anahata.asi.nb.tools.ide.Refactor;
-
 import uno.anahata.asi.nb.tools.ide.Editor;
 import uno.anahata.asi.nb.tools.ide.IDE;
 import uno.anahata.asi.swing.toolkit.Screens;
@@ -18,7 +18,6 @@ import uno.anahata.asi.nb.resources.handle.NbHandle;
 import uno.anahata.asi.agi.resource.handle.ResourceHandle;
 import uno.anahata.asi.nb.tools.java.BatchCodeRefiner;
 import uno.anahata.asi.nb.tools.java.CodeRefiner;
-import uno.anahata.asi.nb.tools.java.Javadocs;
 import uno.anahata.asi.swing.agi.SwingAgiConfig;
 import uno.anahata.asi.toolkit.Host;
 import uno.anahata.asi.swing.toolkit.SwingJava;
@@ -84,7 +83,7 @@ public class NetBeansAgiConfig extends SwingAgiConfig {
      * </p>
      */
     @Override
-    public ResourceHandle createResourceHandle(java.net.URI uri) {
+    public ResourceHandle createResourceHandle(URI uri) {
         if ("file".equalsIgnoreCase(uri.getScheme()) || "jar".equalsIgnoreCase(uri.getScheme())) {
             return new NbHandle(uri);
         }
