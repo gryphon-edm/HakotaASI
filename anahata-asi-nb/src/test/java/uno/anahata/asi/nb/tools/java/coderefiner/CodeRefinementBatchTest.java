@@ -82,7 +82,7 @@ public class CodeRefinementBatchTest {
         i2.setClassFqn("uno.anahata.asi.nb.tools.java.coderefiner.SmallTestClass");
         i2.setPosition(RelativePosition.END);
         i2.setDeclaration("public static class InnerTest");
-        i2.setBody("private int a;\nprivate String b;\npublic void foo() {}");
+        i2.setInnerBlockOrInitializer("private int a;\nprivate String b;\npublic void foo() {}");
         JavadocIntent j2 = new JavadocIntent();
         j2.setDescription("Inner Class Doc.");
         i2.setJavadoc(j2);
@@ -94,7 +94,7 @@ public class CodeRefinementBatchTest {
         i3.setClassFqn("uno.anahata.asi.nb.tools.java.coderefiner.SmallTestClass");
         i3.setPosition(RelativePosition.END);
         i3.setDeclaration("@lombok.SneakyThrows\npublic void riskyMethod()");
-        i3.setBody("System.out.println(\"A\");\n\n// Space!\n\nSystem.out.println(\"B\");");
+        i3.setInnerBlockOrInitializer("System.out.println(\"A\");\n\n// Space!\n\nSystem.out.println(\"B\");");
         runBatch.accept(buildBatch.apply(List.of(i3)));
 
         logToToolContext("Test 4: Update Inner Class Member (Insert with Annotation)");
@@ -104,7 +104,7 @@ public class CodeRefinementBatchTest {
         i4.setPosition(RelativePosition.BEFORE);
         i4.setAnchorMemberName("foo()");
         i4.setDeclaration("@Deprecated\npublic void bar()");
-        i4.setBody("System.out.println(\"bar\");");
+        i4.setInnerBlockOrInitializer("System.out.println(\"bar\");");
         runBatch.accept(buildBatch.apply(List.of(i4)));
 
         logToToolContext("Test 5: Update Member Javadoc Only");
@@ -137,7 +137,7 @@ public class CodeRefinementBatchTest {
         i8.setClassFqn("uno.anahata.asi.nb.tools.java.coderefiner.SmallTestClass");
         i8.setPosition(RelativePosition.END);
         i8.setDeclaration("public <T extends Number> java.util.List<T> processGenerics(java.util.Map<String, T> input)");
-        i8.setBody("return new java.util.ArrayList<>(input.values());");
+        i8.setInnerBlockOrInitializer("return new java.util.ArrayList<>(input.values());");
         JavadocIntent j8 = new JavadocIntent();
         j8.setDescription("Processes generic numbers.");
         i8.setJavadoc(j8);
@@ -149,7 +149,7 @@ public class CodeRefinementBatchTest {
         i9.setClassFqn("uno.anahata.asi.nb.tools.java.coderefiner.SmallTestClass");
         i9.setPosition(RelativePosition.END);
         i9.setDeclaration("public static class GenericInner<X, Y>");
-        i9.setBody("private X first;\nprivate Y second;");
+        i9.setInnerBlockOrInitializer("private X first;\nprivate Y second;");
         runBatch.accept(buildBatch.apply(List.of(i9)));
 
         logToToolContext("Test 10: Update Method with Generics and Blank Lines");
@@ -157,7 +157,7 @@ public class CodeRefinementBatchTest {
         i10.setType(CodeRefinementIntent.Type.UPDATE);
         i10.setMemberFqn("uno.anahata.asi.nb.tools.java.coderefiner.SmallTestClass.processGenerics(java.util.Map)");
         i10.setDeclaration("public <T extends Number, R> java.util.List<R> processGenerics(java.util.Map<String, T> input)");
-        i10.setBody("java.util.List<R> list = new java.util.ArrayList<>();\n\n// Look at this beautiful blank line!\n\nreturn list;");
+        i10.setInnerBlockOrInitializer("java.util.List<R> list = new java.util.ArrayList<>();\n\n// Look at this beautiful blank line!\n\nreturn list;");
         runBatch.accept(buildBatch.apply(List.of(i10)));
 
         logToToolContext("Test 11: Chained Anchoring (Multiple relative inserts)");
@@ -166,7 +166,7 @@ public class CodeRefinementBatchTest {
         i11a.setClassFqn("uno.anahata.asi.nb.tools.java.coderefiner.SmallTestClass");
         i11a.setPosition(RelativePosition.END);
         i11a.setDeclaration("public void methodA()");
-        i11a.setBody("System.out.println(\"A\");");
+        i11a.setInnerBlockOrInitializer("System.out.println(\"A\");");
 
         CodeRefinementIntent i11b = new CodeRefinementIntent();
         i11b.setType(CodeRefinementIntent.Type.INSERT);
@@ -174,7 +174,7 @@ public class CodeRefinementBatchTest {
         i11b.setPosition(RelativePosition.AFTER);
         i11b.setAnchorMemberName("methodA()");
         i11b.setDeclaration("public void methodB()");
-        i11b.setBody("System.out.println(\"B\");");
+        i11b.setInnerBlockOrInitializer("System.out.println(\"B\");");
 
         CodeRefinementIntent i11c = new CodeRefinementIntent();
         i11c.setType(CodeRefinementIntent.Type.INSERT);
@@ -182,7 +182,7 @@ public class CodeRefinementBatchTest {
         i11c.setPosition(RelativePosition.AFTER);
         i11c.setAnchorMemberName("methodB()");
         i11c.setDeclaration("public void methodC()");
-        i11c.setBody("System.out.println(\"C\");");
+        i11c.setInnerBlockOrInitializer("System.out.println(\"C\");");
 
         CodeRefinementBatch batch11 = buildBatch.apply(List.of(i11a, i11b, i11c));
         batch11.setImportsToAdd(List.of("java.util.LinkedList", "java.io.File"));
@@ -194,7 +194,7 @@ public class CodeRefinementBatchTest {
         i12.setClassFqn("uno.anahata.asi.nb.tools.java.coderefiner.SmallTestClass");
         i12.setPosition(RelativePosition.END);
         i12.setDeclaration("public enum TestEnum");
-        i12.setBody("/** First doc */\nFIRST,\n/** Second doc */\nSECOND,\nTHIRD;");
+        i12.setInnerBlockOrInitializer("/** First doc */\nFIRST,\n/** Second doc */\nSECOND,\nTHIRD;");
         JavadocIntent j12 = new JavadocIntent();
         j12.setDescription("A test enum.");
         i12.setJavadoc(j12);
@@ -215,7 +215,7 @@ public class CodeRefinementBatchTest {
         i14.setClassFqn("uno.anahata.asi.nb.tools.java.coderefiner.SmallTestClass");
         i14.setPosition(RelativePosition.END);
         i14.setDeclaration("@lombok.Getter\npublic enum TestEnum2");
-        i14.setBody("FIRST (\"first\"),\n/** Second doc */\nSECOND (\"second\"),\nTHIRD (\"third\");\n\n/** First doc */\nprivate TestEnum2(String displayValue) {\nthis.displayValue = displayValue;\n}\nString displayValue;");
+        i14.setInnerBlockOrInitializer("FIRST (\"first\"),\n/** Second doc */\nSECOND (\"second\"),\nTHIRD (\"third\");\n\n/** First doc */\nprivate TestEnum2(String displayValue) {\nthis.displayValue = displayValue;\n}\nString displayValue;");
         runBatch.accept(buildBatch.apply(List.of(i14)));
 
         logToToolContext("Test 15: Update Enum Constant with args Javadoc");
@@ -234,7 +234,7 @@ public class CodeRefinementBatchTest {
         i16.setPosition(RelativePosition.AFTER);
         i16.setAnchorMemberName("b");
         i16.setDeclaration("private String description");
-        i16.setBody("\"123\"");
+        i16.setInnerBlockOrInitializer("\"123\"");
         runBatch.accept(buildBatch.apply(List.of(i16)));
 
         logToToolContext("Test 17: Update Field Declaration only (keeping existing initializer)");

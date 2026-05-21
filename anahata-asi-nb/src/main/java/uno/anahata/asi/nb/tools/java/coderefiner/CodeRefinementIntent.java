@@ -32,16 +32,22 @@ public class CodeRefinementIntent implements Serializable {
      */
     public enum Type {
         /** Inserts a new member (method, field, or inner type). */
-        @Schema(description = "Inserts a new member (method, field, or inner type).")
+        @Schema(description = "Inserts a brand-new member (method, field, constructor, enum constant, or nested type). "
+            + "Requires: 'classFqn' of the container class, 'declaration' for the signature, and 'position' (plus 'anchorMemberName' if using BEFORE or AFTER).")
         INSERT,
         /** Updates an existing member's signature or body. */
-        @Schema(description = "Updates an existing member's signature or body.")
+        @Schema(description = "Surgically updates an existing member. Requires: 'memberFqn' of the target. "
+            + "1) To update signature: provide new 'declaration'. "
+            + "2) To update logic/value: provide 'innerBlockOrInitializer'. "
+            + "3) To update Javadoc only: provide 'javadoc' (and leave other fields null).")
         UPDATE,
         /** Deletes an existing member. */
-        @Schema(description = "Deletes an existing member.")
+        @Schema(description = "Deletes an existing member (method, field, or nested class) from the AST. "
+            + "Requires ONLY: 'memberFqn'. Other fields should be left null.")
         DELETE,
         /** Moves an existing member to a new position within its class. */
-        @Schema(description = "Moves an existing member to a new position within its class.")
+        @Schema(description = "Relocates an existing member to a new position in the same class. "
+            + "Requires: 'memberFqn' of the target, 'position', and 'anchorMemberName' (if BEFORE or AFTER).")
         MOVE
     }
 
@@ -56,7 +62,9 @@ public class CodeRefinementIntent implements Serializable {
      * Used for resolving the container during structural inserts. 
      * Nested types should use the '$' separator.
      */
-    @Schema(description = "The FQN of the target class (e.g. 'com.foo.Bar'). Mandatory for 'INSERT' inside a class. Use '$' for nested types. Leave empty for file-level.")
+    @Schema(description = "The FQN of the target class container (e.g. 'com.foo.Bar'). "
+        + "Mandatory for 'INSERT' and 'MOVE'. Nested classes must use the '$' separator (e.g. 'com.foo.Bar$InnerHelper'). "
+        + "Leave empty only for file-level insertions (like declaring a new top-level outer class).")
     private String classFqn;
 
     /**
@@ -64,7 +72,11 @@ public class CodeRefinementIntent implements Serializable {
      * Supports methods, fields, and inner classes. 
      * Method FQNs must include full parameter types (type erasure applied).
      */
-    @Schema(description = "The ABSOLUTE FQN of the member to operation on (e.g. 'com.foo.Bar.myMethod(java.util.List)'). FQNs are preferred for parameters. Generic brackets '<...>' are not required and will be ignored during matching.")
+    @Schema(description = "The absolute FQN of the target member to UPDATE, DELETE, or MOVE. "
+        + "Examples: Methods: 'com.foo.Bar.myMethod(java.lang.String,int)'. "
+        + "Fields: 'com.foo.Bar.myField'. Constructors: 'com.foo.Bar.<init>()'. "
+        + "Enum Constants: 'com.foo.Bar$MyEnum.CONSTANT'. "
+        + "Type erasure applies: DO NOT include generics/parameters with '<...>', use raw classes.")
     private String memberFqn;
 
     /**
@@ -72,7 +84,9 @@ public class CodeRefinementIntent implements Serializable {
      * This should include modifiers, return types, and parameter lists 
      * but NOT the body or Javadoc.
      */
-    @Schema(description = "The member signature or header (everything to the LEFT of the first '{' or '=')' without javadoc. (e.g. '@Override public void setItems(List<String> items)'). Mandatory for 'INSERT', optional for 'UPDATE' (only if you want to change the declaration). Do not provide Javadocs here. Will cause the tool to fail or corrupt the java source file.")
+    @Schema(description = "The exact member signature or header (everything to the LEFT of the first '{' or '='), including annotations and modifiers, but WITHOUT any Javadocs (e.g., '@Override public void foo()'). "
+        + "Mandatory for 'INSERT'. Optional for 'UPDATE' (provide only if changing modifiers or the signature). "
+        + "WARNING: Never put Javadocs in this field! Use the structured 'javadoc' property instead.")
     private String declaration;
 
     /**
@@ -80,28 +94,36 @@ public class CodeRefinementIntent implements Serializable {
      * For methods, this is the code inside the braces. 
      * For fields, it is the expression following the assignment operator.
      */
-    @Schema(description = "For methods, The WHOLE body code, the logic inside the braces. For fields, the initializer expression (part after '=') or can be blank if there is no initializer expression. FOr use with 'INSERT' and 'UPDATE'. **Do not include the method signature or field declaration in this 'body' field. i.e. ths field cannot start with annotations like @Override or modifiers like 'public void '**")
-    private String body;
+    @Schema(description = "Provides the inner body code or initializer value depending on the member type:\n"
+        + "1) For Methods & Constructors: The pure block statements inside the braces (excluding the method signature).\n"
+        + "2) For Fields: The initializer expression following the '=' operator (e.g. '\"123\"' or 'false').\n"
+        + "3) For Inner/Nested Types (Classes, Records, Interfaces): The full list of member definitions (methods, fields, nested classes) inside the type's braces.\n"
+        + "4) For Enum Constants: The constructor arguments (e.g., '\"arg\"' or '1, \"arg\"') or anonymous body.\n"
+        + "**WARNING: Do not duplicate the signature or declaration in this field! E.g., no 'public void' or '@Override' should start this field.**")
+    private String innerBlockOrInitializer;
 
     /**
      * The relative position constraint for insertion or moving operations.
      * Requires an anchor member if using BEFORE or AFTER.
      */
-    @Schema(description = "Position relative to the anchor member. **Mandatory for 'INSERT' and 'MOVE'**.")
+    @Schema(description = "The placement constraint. Mandatory for 'INSERT' and 'MOVE'. "
+        + "If BEFORE or AFTER, you must specify 'anchorMemberName'. If START or END, 'anchorMemberName' is ignored.")
     private RelativePosition position;
 
     /**
      * The simple name or signature of the anchor member to position against.
      * Used in conjunction with {@link RelativePosition}.
      */
-    @Schema(description = "Anchor member name relative to class (e.g. 'myMethod()'). Mandatory for BEFORE/AFTER positions in 'INSERT' and 'MOVE'.")
+    @Schema(description = "The simple name or signature of the member to position against (e.g., 'myField' or 'foo(java.lang.String)'). "
+        + "Mandatory if 'position' is BEFORE or AFTER.")
     private String anchorMemberName;
 
     /**
      * A human-readable reason explaining the intent. 
      * Visible in the UI during the refinement review phase.
      */
-    @Schema(description = "The reason for this structural change. Will be displayed in the UI.")
+    @Schema(description = "A concise, developer-friendly explanation of why this modification is being made. "
+        + "Will be rendered as an AI comment above the diff in the NetBeans review panel.")
     private String reason;
 
     /**
@@ -117,15 +139,15 @@ public class CodeRefinementIntent implements Serializable {
      */
     public String toDiagnosticString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("\n-type             : ").append(type);
-        sb.append("\n-classFqn         : ").append(classFqn);
-        sb.append("\n-memberFqn        : ").append(memberFqn);
-        sb.append("\n-position         : ").append(position);
-        sb.append("\n-anchorMemberName : ").append(anchorMemberName);
-        sb.append("\n-reason           : ").append(reason);
-        sb.append("\n-declaration      : [").append(abbreviate(declaration, 256)).append("]");
-        sb.append("\n-body             : [").append(abbreviate(body, 256)).append("]");
-        sb.append("\n-javadoc          : ").append(javadoc != null ? "Present" : "null");
+        sb.append("\n-type                     : ").append(type);
+        sb.append("\n-classFqn                 : ").append(classFqn);
+        sb.append("\n-memberFqn                : ").append(memberFqn);
+        sb.append("\n-position                 : ").append(position);
+        sb.append("\n-anchorMemberName         : ").append(anchorMemberName);
+        sb.append("\n-reason                   : ").append(reason);
+        sb.append("\n-declaration              : [").append(abbreviate(declaration, 256)).append("]");
+        sb.append("\n-innerBlockOrInitializer  : [").append(abbreviate(innerBlockOrInitializer, 256)).append("]");
+        sb.append("\n-javadoc                  : ").append(javadoc != null ? "Present" : "null");
         return sb.toString();
     }
 
@@ -261,19 +283,19 @@ public class CodeRefinementIntent implements Serializable {
             }
 
             String newBodyStr = oldBody;
-            if (body != null) {
+            if (innerBlockOrInitializer != null) {
                 if (member instanceof VariableTree) {
-                    if (body.isBlank()) {
+                    if (innerBlockOrInitializer.isBlank()) {
                         newBodyStr = "";
                         int eq = newDeclStr.lastIndexOf('=');
                         if (eq != -1) newDeclStr = newDeclStr.substring(0, eq).trim();
                     } else {
-                        newBodyStr = (newDeclStr.trim().endsWith("=") ? " " : " = ") + body;
+                        newBodyStr = (newDeclStr.trim().endsWith("=") ? " " : " = ") + innerBlockOrInitializer;
                     }
                 } else if (member instanceof MethodTree || member instanceof ClassTree || member instanceof BlockTree) {
                     String bodyIndent = baseIndent + "    ";
-                    String[] lines = body.split("\\r?\\n", -1);
-                    boolean hasBraces = body.trim().startsWith("{") && body.trim().endsWith("}");
+                    String[] lines = innerBlockOrInitializer.split("\\r?\\n", -1);
+                    boolean hasBraces = innerBlockOrInitializer.trim().startsWith("{") && innerBlockOrInitializer.trim().endsWith("}");
                     StringBuilder sb = new StringBuilder();
                     if (!hasBraces) {
                         sb.append("{\n");
@@ -490,7 +512,7 @@ public class CodeRefinementIntent implements Serializable {
             boolean isBlock = declStr.equals("static") || declStr.isEmpty();
             boolean isField = !isMethod && !isClass && !isBlock;
 
-            if (isField && body != null && !body.isEmpty() && declStr.endsWith(";")) {
+            if (isField && innerBlockOrInitializer != null && !innerBlockOrInitializer.isEmpty() && declStr.endsWith(";")) {
                 declStr = declStr.substring(0, declStr.length() - 1).trim();
             }
 
@@ -501,13 +523,13 @@ public class CodeRefinementIntent implements Serializable {
             }
             memberBuilder.append(declStr.replace("\n", "\n" + indent));
             
-            if (body != null && !body.isEmpty()) {
+            if (innerBlockOrInitializer != null && !innerBlockOrInitializer.isEmpty()) {
                 if (isField) {
-                    memberBuilder.append(" = ").append(body).append(";");
+                    memberBuilder.append(" = ").append(innerBlockOrInitializer).append(";");
                 } else {
-                    boolean hasBraces = body.trim().startsWith("{") && body.trim().endsWith("}");
+                    boolean hasBraces = innerBlockOrInitializer.trim().startsWith("{") && innerBlockOrInitializer.trim().endsWith("}");
                     String bodyIndent = indent + "    ";
-                    String[] lines = body.split("\\r?\\n", -1);
+                    String[] lines = innerBlockOrInitializer.split("\\r?\\n", -1);
                     if (!hasBraces) {
                         memberBuilder.append(" {\n");
                     } else {
