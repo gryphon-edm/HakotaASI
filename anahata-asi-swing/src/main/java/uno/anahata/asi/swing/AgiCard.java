@@ -70,9 +70,10 @@ public class AgiCard extends JPanel {
     /** The listener for resource changes in the resource manager. */
     private final EdtPropertyChangeListener resourceListener;
 
-    @Getter
-    /** Whether the card is currently selected in the container. */
-    private boolean selected = false;
+    /**
+     * Whether the card is currently selected in the container.
+     */
+    @Getter private boolean selected = false;
     
     /** The UI theme derived from the agi's configuration. */
     private final SwingAgiConfig.UITheme theme;

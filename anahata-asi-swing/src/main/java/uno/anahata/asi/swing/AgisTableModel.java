@@ -175,6 +175,10 @@ public class AgisTableModel extends AbstractTableModel {
         }
     }
 
+    /**
+     * Attaches reactive property change listeners to the given AGI session. This registers the metrics listener for properties like nickname, summary, history, resources, and current status.
+     * @param agi The AGI session to attach listeners to.
+     */
     private void attachListeners(Agi agi) {
         agi.addPropertyChangeListener("nickname", metricsListener);
         agi.addPropertyChangeListener("summary", metricsListener);
@@ -184,6 +188,10 @@ public class AgisTableModel extends AbstractTableModel {
         agi.getStatusManager().addPropertyChangeListener("currentStatus", metricsListener);
     }
 
+    /**
+     * Detaches reactive property change listeners from the given AGI session. This unregisters the metrics listener to prevent memory leaks.
+     * @param agi The AGI session to detach listeners from.
+     */
     private void detachListeners(Agi agi) {
         agi.removePropertyChangeListener("nickname", metricsListener);
         agi.removePropertyChangeListener("summary", metricsListener);

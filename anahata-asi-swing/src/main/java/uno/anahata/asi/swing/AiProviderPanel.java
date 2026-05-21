@@ -104,8 +104,14 @@ public class AiProviderPanel extends ScrollablePanel {
      */
     private final JComboBox<TokenizerType> tokenizerCombo;
 
+    /**
+     * The text area for entering and displaying allowed models for this provider.
+     */
     private final JTextArea allowedModelsArea;
 
+    /**
+     * Checkbox to toggle Google Cloud Vertex AI endpoint usage.
+     */
     private JCheckBox vertexCheck;
 
     /**
@@ -401,6 +407,9 @@ public class AiProviderPanel extends ScrollablePanel {
         }
     }
 
+    /**
+     * Updates the hyperlinked label to browse to the key acquisition URL.
+     */
     private void updateLinkLabel() {
         if (provider.getKeysAcquisitionUri() == null) {
             return;
@@ -458,8 +467,9 @@ public class AiProviderPanel extends ScrollablePanel {
     }
 
     /**
-     * Synchronizes the UI state back to the provider domain and flushes the key
-     * pool to disk. This is called by the parent preferences panel.
+     * Synchronizes the UI state back to the provider domain and flushes the key pool to disk. This is called by the parent preferences panel.
+     * @throws value If writing the keys file fails.
+     * @throws javaTarget java.io.IOException
      */
     public void syncToProvider() throws IOException {
         provider.setDisplayName(displayNameField.getText().trim());
