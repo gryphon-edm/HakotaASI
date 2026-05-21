@@ -139,7 +139,7 @@ public class History extends AnahataToolkit {
     /**
      * Creates the consolidated history index.
      *
-     * @return
+     * @return The formatted Markdown consolidated index string containing message and part metadata.
      */
     public String createConsolidatedIndex() {
         StringBuilder sb = new StringBuilder("**Consolidated History Metadata Index**\n");
@@ -163,6 +163,11 @@ public class History extends AnahataToolkit {
         return sb.toString();
     }
 
+    /**
+     * Clears all Context Window Garbage Collector (CwGC) log records from memory.
+     *
+     * @return A descriptive confirmation string indicating the number of logs cleared.
+     */
     @AgiTool(value = "Deletes the garbage collector logs")
     public String clearGarbageCollectorLogs() {
         List<GarbageCollectorRecord> lr = getAgi().getContextManager().getGarbageCollector().getLogRecords();
