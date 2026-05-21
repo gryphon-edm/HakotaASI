@@ -159,7 +159,7 @@ public class CodeRefiner extends AnahataToolkit {
      * @throws Exception if optimization fails
      */
     private void optimizeImportsInternal(FileObject fo, boolean removeUnused) throws Exception {
-                final Set<String> takenSimpleNames = new HashSet<>();
+                final Set<String> originalTakenSimpleNames = new HashSet<>();
 
                 JavaSource js1 = JavaSource.forFileObject(fo);
                 js1.runModificationTask(wc -> {
@@ -172,7 +172,7 @@ public class CodeRefiner extends AnahataToolkit {
                         String impStr = imp.getQualifiedIdentifier().toString();
                         int lastDot = impStr.lastIndexOf('.');
                         if (lastDot != -1) {
-                            takenSimpleNames.add(impStr.substring(lastDot + 1));
+                            originalTakenSimpleNames.add(impStr.substring(lastDot + 1));
                         }
                     }
                     new TreePathScanner<Void, Void>() {
@@ -184,7 +184,7 @@ public class CodeRefiner extends AnahataToolkit {
                                 if (e instanceof TypeElement te) {
                                     String fqn = te.getQualifiedName().toString();
                                     if (!node.toString().equals(fqn)) {
-                                        takenSimpleNames.add(te.getSimpleName().toString());
+                                        originalTakenSimpleNames.add(te.getSimpleName().toString());
                                     }
                                 }
                             }
@@ -197,13 +197,14 @@ public class CodeRefiner extends AnahataToolkit {
                             if (path != null) {
                                 Element e = wc.getTrees().getElement(path);
                                 if (e instanceof TypeElement te) {
-                                    takenSimpleNames.add(te.getSimpleName().toString());
+                                    originalTakenSimpleNames.add(te.getSimpleName().toString());
                                 }
                             }
                             return super.visitIdentifier(node, p);
                         }
                     }.scan(new TreePath(originalCut), null);
 
+                    final Set<String> takenSimpleNames = new HashSet<>(originalTakenSimpleNames);
                     final Set<TypeElement> importsToAdd = new LinkedHashSet<>();
 
                     new TreePathScanner<Void, WorkingCopy>() {
@@ -223,14 +224,6 @@ public class CodeRefiner extends AnahataToolkit {
                             long start = sp.getStartPosition(originalCut, node);
                             long end = sp.getEndPosition(originalCut, node);
                             if (start < 0 || end < 0 || start >= end) {
-                                return super.visitMemberSelect(node, wcSub);
-                            }
-                            try {
-                                String actualText = wcSub.getText().substring((int) start, (int) end);
-                                if (!actualText.equals(node.toString())) {
-                                    return super.visitMemberSelect(node, wcSub);
-                                }
-                            } catch (Exception ex) {
                                 return super.visitMemberSelect(node, wcSub);
                             }
                             TreePath path = getCurrentPath();
@@ -260,6 +253,7 @@ public class CodeRefiner extends AnahataToolkit {
                                                 } else {
                                                     importsToAdd.add(te);
                                                 }
+                                                takenSimpleNames.add(simpleName);
                                             }
                                         }
                                     }
@@ -318,6 +312,7 @@ public class CodeRefiner extends AnahataToolkit {
                                                              } else {
                                                                 importsToAdd.add(te);
                                                             }
+                                                            takenSimpleNames.add(simpleName);
                                                         }
                                                     }
                                                 } else if (candidates.size() > 1) {
@@ -397,14 +392,6 @@ public class CodeRefiner extends AnahataToolkit {
                             if (start < 0 || end < 0 || start >= end) {
                                 return super.visitMemberSelect(node, wcSub);
                             }
-                            try {
-                                String actualText = wcSub.getText().substring((int) start, (int) end);
-                                if (!actualText.equals(node.toString())) {
-                                    return super.visitMemberSelect(node, wcSub);
-                                }
-                            } catch (Exception ex) {
-                                return super.visitMemberSelect(node, wcSub);
-                            }
                             TreePath path = getCurrentPath();
                             if (path != null) {
                                 Element e = wcSub.getTrees().getElement(path);
@@ -420,7 +407,7 @@ public class CodeRefiner extends AnahataToolkit {
                                         }
                                         
                                         String simpleName = (outerType != null ? outerType : te).getSimpleName().toString();
-                                        if (!takenSimpleNames.contains(simpleName)) {
+                                        if (!originalTakenSimpleNames.contains(simpleName)) {
                                             PackageElement tePkg = wcSub.getElements().getPackageOf(outerType != null ? outerType : te);
                                             String pkgName = tePkg != null ? tePkg.getQualifiedName().toString() : "";
                                             String currentPkg = cut.getPackage() != null ? cut.getPackage().getPackageName().toString() : "";
