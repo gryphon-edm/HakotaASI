@@ -66,7 +66,7 @@ public class SharedScreenEditorFrame extends JFrame {
     /**
      * Constructs a new editor frame for the given AGI session.
      *
-     * @param agi The target AGI session.
+     * @param agiPanel The target AGI panel.
      */
     public SharedScreenEditorFrame(AgiPanel agiPanel) {
         this.agiPanel = agiPanel;

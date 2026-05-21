@@ -1,12 +1,12 @@
 /* Licensed under the Anahata Software License (ASL) v 108. See the LICENSE file for details. Força Barça! */
 package uno.anahata.asi.agi.resource.handle;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
-import java.net.URLConnection;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -126,7 +126,7 @@ public class UrlHandle extends AbstractResourceHandle {
         URI uri = getUri();
         String path = uri.getPath();
         if (path != null && !path.isBlank()) {
-            return new java.io.File(path).getName();
+            return new File(path).getName();
         }
         return uri.getHost() != null ? uri.getHost() : uri.getScheme();
     }

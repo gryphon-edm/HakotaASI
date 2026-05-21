@@ -3,6 +3,7 @@ package uno.anahata.asi.agi.resource.view;
 
 import uno.anahata.asi.agi.resource.handle.ResourceHandle;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -17,7 +18,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.input.ReversedLinesFileReader;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * The V2 Universal Streaming Viewport Engine.
@@ -115,7 +115,7 @@ public class TextViewport {
             // High-performance backward read for local files
             List<String> lines = new ArrayList<>();
             Pattern pattern = (settings.getGrepPattern() != null) ? Pattern.compile(settings.getGrepPattern()) : null;
-            java.io.File file = new java.io.File(handle.getUri());
+            File file = new File(handle.getUri());
             
             Charset charset = handle.getCharset();
             // Workaround for commons-io 2.19.0 object identity bug in modular environments

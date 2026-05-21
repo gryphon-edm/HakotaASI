@@ -545,9 +545,9 @@ public class InputPanel extends JPanel {
     /**
      * Updates the state and text of the send and stop buttons based on the current {@link AgiStatus}.
      * <p>
-     * This method handles the logic for switching between the "Send" and "Run Pending & Send"
+     * This method handles the logic for switching between the "Send" and "Run Pending and Send"
      * states, manages the visibility of the "Stop" button during active API calls, and
-     * ensures the "Decline Pending & Send" button is correctly toggled when tools are pending.
+     * ensures the "Decline Pending and Send" button is correctly toggled when tools are pending.
      * </p>
      */
     private void updateSendButtonState() {

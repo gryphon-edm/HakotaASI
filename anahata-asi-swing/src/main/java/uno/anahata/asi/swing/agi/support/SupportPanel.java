@@ -43,7 +43,7 @@ public class SupportPanel extends ScrollablePanel {
     }
 
     /**
-     * {@inheritDoc}
+     * Initializes the support panel's UI components and layout.
      * <p>
      * Adds the "Play Arkanoid" button to the links grid, providing a
      * recreational break for the developer.</p>
