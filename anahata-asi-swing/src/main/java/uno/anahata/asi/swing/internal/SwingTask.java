@@ -231,12 +231,18 @@ public class SwingTask<T> {
         }
     }
     
-    /** @return true if the task was cancelled. */
+    /**
+     * Checks if this background task has been cancelled.
+     * @return true if the task was cancelled.
+     */
     public boolean isCancelled() {
         return futureTask != null && futureTask.isCancelled();
     }
     
-    /** @return true if the task has completed. */
+    /**
+     * Checks if this background task has finished execution.
+     * @return true if the task has completed.
+     */
     public boolean isDone() {
         return futureTask != null && futureTask.isDone();
     }

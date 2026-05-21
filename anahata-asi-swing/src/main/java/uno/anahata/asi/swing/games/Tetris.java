@@ -8,13 +8,14 @@ import javax.swing.*;
 import javax.swing.Timer;
 
 /**
- * Anahata Atoms Tetris - A high-fidelity implementation of the classic puzzle game.
+ * Anahata Atoms Tetris - A high-fidelity implementation of the classic puzzle
+ * game.
  * <p>
- * This game uses programmatically drawn "Atoms" as blocks, providing a crisp, 
- * vector-like aesthetic. It features responsive keyboard controls, score tracking, 
- * and a smooth collision engine.
+ * This game uses programmatically drawn "Atoms" as blocks, providing a crisp,
+ * vector-like aesthetic. It features responsive keyboard controls, score
+ * tracking, and a smooth collision engine.
  * </p>
- * 
+ *
  * @author anahata
  */
 public class Tetris extends JPanel implements ActionListener {
@@ -36,7 +37,8 @@ public class Tetris extends JPanel implements ActionListener {
      */
     private final Timer timer;
     /**
-     * Flag signaling that the current piece has landed and hit-testing is complete.
+     * Flag signaling that the current piece has landed and hit-testing is
+     * complete.
      */
     private boolean isFallingFinished = false;
     /**
@@ -64,7 +66,8 @@ public class Tetris extends JPanel implements ActionListener {
      */
     private Shape curPiece;
     /**
-     * One-dimensional array matching grid coordinates to static landed block colors.
+     * One-dimensional array matching grid coordinates to static landed block
+     * colors.
      */
     private final Color[] board;
 
@@ -110,8 +113,9 @@ public class Tetris extends JPanel implements ActionListener {
 
     /**
      * {@inheritDoc}
-     * <p>Renders the static board and the currently falling piece using 
-     * shining Atom primitives.</p>
+     * <p>
+     * Renders the static board and the currently falling piece using shining
+     * Atom primitives.</p>
      */
     @Override
     public void paintComponent(Graphics g) {
@@ -138,20 +142,23 @@ public class Tetris extends JPanel implements ActionListener {
                 drawAtom(g2d, x * TILE_SIZE, boardTop + (BOARD_HEIGHT - y - 1) * TILE_SIZE, curPiece.getColor());
             }
         }
-        
+
         // HUD
         g2d.setColor(Color.WHITE);
         g2d.setFont(new Font("Monospaced", Font.BOLD, 14));
         g2d.drawString("Lines: " + numLinesRemoved, 10, 20);
-        if (isPaused) g2d.drawString("PAUSED", 10, 40);
+        if (isPaused) {
+            g2d.drawString("PAUSED", 10, 40);
+        }
     }
 
     /**
      * Renders a high-fidelity glossy vector atom bubble at coordinates.
-     * @param g2d The Graphics context.
+     *
      * @param y Visual Y coordinate.
-     * @param x Visual X coordinate.
      * @param color The design fill color of the atom.
+     * @param g2d The Graphics context.
+     * @param x Visual X coordinate.
      */
     private void drawAtom(Graphics2D g2d, int x, int y, Color color) {
         g2d.setColor(color);
@@ -170,7 +177,9 @@ public class Tetris extends JPanel implements ActionListener {
     private void dropDown() {
         int newY = curY;
         while (newY > 0) {
-            if (!tryMove(curPiece, curX, newY - 1)) break;
+            if (!tryMove(curPiece, curX, newY - 1)) {
+                break;
+            }
             newY--;
         }
         pieceDropped();
@@ -195,7 +204,8 @@ public class Tetris extends JPanel implements ActionListener {
     }
 
     /**
-     * Lamps the falling piece onto the static board, checks cleared rows, and spawns the next piece.
+     * Lamps the falling piece onto the static board, checks cleared rows, and
+     * spawns the next piece.
      */
     private void pieceDropped() {
         for (int i = 0; i < 4; i++) {
@@ -204,11 +214,14 @@ public class Tetris extends JPanel implements ActionListener {
             board[(y * BOARD_WIDTH) + x] = curPiece.getColor();
         }
         removeFullLines();
-        if (!isFallingFinished) newPiece();
+        if (!isFallingFinished) {
+            newPiece();
+        }
     }
 
     /**
-     * Spawns a new random block, setting initial positions and terminating on overflow.
+     * Spawns a new random block, setting initial positions and terminating on
+     * overflow.
      */
     private void newPiece() {
         curPiece.setRandomShape();
@@ -223,18 +236,24 @@ public class Tetris extends JPanel implements ActionListener {
     }
 
     /**
-     * Evaluates prospective coordinates for boundary limits and existing blocks, committing state on success.
-     * @param newX Candidate X coordinate.
+     * Evaluates prospective coordinates for boundary limits and existing
+     * blocks, committing state on success.
+     *
      * @param newPiece The shape to move or rotate.
      * @param newY Candidate Y coordinate.
+     * @param newX Candidate X coordinate.
      * @return true if the move is legal and committed.
      */
     private boolean tryMove(Shape newPiece, int newX, int newY) {
         for (int i = 0; i < 4; i++) {
             int x = newX + newPiece.x(i);
             int y = newY - newPiece.y(i);
-            if (x < 0 || x >= BOARD_WIDTH || y < 0 || y >= BOARD_HEIGHT) return false;
-            if (shapeAt(x, y) != null) return false;
+            if (x < 0 || x >= BOARD_WIDTH || y < 0 || y >= BOARD_HEIGHT) {
+                return false;
+            }
+            if (shapeAt(x, y) != null) {
+                return false;
+            }
         }
         curPiece = newPiece;
         curX = newX;
@@ -244,7 +263,8 @@ public class Tetris extends JPanel implements ActionListener {
     }
 
     /**
-     * Scans, identifies, clears, and shifts completed rows downwards with score aggregation.
+     * Scans, identifies, clears, and shifts completed rows downwards with score
+     * aggregation.
      */
     private void removeFullLines() {
         int numFullLines = 0;
@@ -275,11 +295,14 @@ public class Tetris extends JPanel implements ActionListener {
 
     /**
      * Retrieves the color block at matching column and row coordinates.
-     * @param y Grid row index.
+     *
      * @param x Grid column index.
+     * @param y Grid row index.
      * @return Color of the cell or null if empty.
      */
-    private Color shapeAt(int x, int y) { return board[(y * BOARD_WIDTH) + x]; }
+    private Color shapeAt(int x, int y) {
+        return board[(y * BOARD_WIDTH) + x];
+    }
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -294,12 +317,15 @@ public class Tetris extends JPanel implements ActionListener {
     /**
      * Enumeration of all standard tetromino geometry variations.
      */
-    enum Tetrominoes { NoShape, ZShape, SShape, LineShape, TShape, SquareShape, LShape, MirroredLShape }
+    enum Tetrominoes {
+        NoShape, ZShape, SShape, LineShape, TShape, SquareShape, LShape, MirroredLShape
+    }
 
     /**
      * Represents the layout and operations of a single Tetris block geometry.
      */
     static class Shape {
+
         /**
          * The category of Tetrominoes shape this instance represents.
          */
@@ -309,31 +335,44 @@ public class Tetris extends JPanel implements ActionListener {
          */
         private final int[][] coords;
         /**
-         * Global constant mapping ordinal types to physical coordinate patterns.
+         * Global constant mapping ordinal types to physical coordinate
+         * patterns.
          */
-        private static final int[][][] coordsTable = new int[][][] {
-            { { 0, 0 },   { 0, 0 },   { 0, 0 },   { 0, 0 } },
-            { { 0, -1 },  { 0, 0 },   { -1, 0 },  { -1, 1 } },
-            { { 0, -1 },  { 0, 0 },   { 1, 0 },   { 1, 1 } },
-            { { 0, -1 },  { 0, 0 },   { 0, 1 },   { 0, 2 } },
-            { { -1, 0 },  { 0, 0 },   { 1, 0 },   { 0, 1 } },
-            { { 0, 0 },   { 1, 0 },   { 0, 1 },   { 1, 1 } },
-            { { -1, -1 }, { 0, -1 },  { 0, 0 },   { 0, 1 } },
-            { { 1, -1 },  { 0, -1 },  { 0, 0 },   { 0, 1 } }
+        private static final int[][][] coordsTable = new int[][][]{
+            {{0, 0}, {0, 0}, {0, 0}, {0, 0}},
+            {{0, -1}, {0, 0}, {-1, 0}, {-1, 1}},
+            {{0, -1}, {0, 0}, {1, 0}, {1, 1}},
+            {{0, -1}, {0, 0}, {0, 1}, {0, 2}},
+            {{-1, 0}, {0, 0}, {1, 0}, {0, 1}},
+            {{0, 0}, {1, 0}, {0, 1}, {1, 1}},
+            {{-1, -1}, {0, -1}, {0, 0}, {0, 1}},
+            {{1, -1}, {0, -1}, {0, 0}, {0, 1}}
         };
 
         /**
          * Constructs a new blank shape initialized to NoShape.
          */
-        public Shape() { coords = new int[4][2]; setShape(Tetrominoes.NoShape); }
+        public Shape() {
+            coords = new int[4][2];
+            setShape(Tetrominoes.NoShape);
+        }
 
+        /**
+         * Sets the geometric shape and initializes relative coordinate offsets
+         * from coordsTable.
+         *
+         * @param shape The Tetrominoes category of the shape.
+         */
         public void setShape(Tetrominoes shape) {
-            for (int i = 0; i < 4 ; i++) {
+            for (int i = 0; i < 4; i++) {
                 System.arraycopy(coordsTable[shape.ordinal()][i], 0, coords[i], 0, 2);
             }
             pieceShape = shape;
         }
 
+        /**
+         * Randomly assigns a tetromino shape excluding NoShape.
+         */
         public void setRandomShape() {
             Random r = new Random();
             int x = Math.abs(r.nextInt()) % 7 + 1;
@@ -343,36 +382,84 @@ public class Tetris extends JPanel implements ActionListener {
 
         /**
          * Translates active tetromino types to high-salience design colors.
+         *
          * @return The design color of this block.
          */
         public Color getColor() {
             return switch (pieceShape) {
-                case ZShape -> new Color(220, 53, 69);
-                case SShape -> new Color(40, 167, 69);
-                case LineShape -> new Color(0, 123, 255);
-                case TShape -> new Color(111, 66, 193);
-                case SquareShape -> new Color(255, 193, 7);
-                case LShape -> new Color(253, 126, 20);
-                case MirroredLShape -> new Color(32, 201, 151);
-                default -> Color.GRAY;
+                case ZShape ->
+                    new Color(220, 53, 69);
+                case SShape ->
+                    new Color(40, 167, 69);
+                case LineShape ->
+                    new Color(0, 123, 255);
+                case TShape ->
+                    new Color(111, 66, 193);
+                case SquareShape ->
+                    new Color(255, 193, 7);
+                case LShape ->
+                    new Color(253, 126, 20);
+                case MirroredLShape ->
+                    new Color(32, 201, 151);
+                default ->
+                    Color.GRAY;
             };
         }
 
-        public int x(int index) { return coords[index][0]; }
-        public int y(int index) { return coords[index][1]; }
+        /**
+         * Retrieves the relative X coordinate offset for the child segment at
+         * the specified index.
+         *
+         * @param index The 0-based index of the child block.
+         * @return relative grid X coordinate offset.
+         */
+        public int x(int index) {
+            return coords[index][0];
+        }
+
+        /**
+         * Retrieves the relative Y coordinate offset for the child segment at
+         * the specified index.
+         *
+         * @param index The 0-based index of the child block.
+         * @return relative grid Y coordinate offset.
+         */
+        public int y(int index) {
+            return coords[index][1];
+        }
+
         /**
          * Accessor for the underlying tetromino category.
+         *
          * @return The active Tetrominoes ordinal value.
          */
-        public Tetrominoes getShape() { return pieceShape; }
+        public Tetrominoes getShape() {
+            return pieceShape;
+        }
+
+        /**
+         * Calculates the lowest Y coordinate among all active segment blocks.
+         *
+         * @return the minimum Y offset.
+         */
         public int minY() {
             int m = coords[0][1];
-            for (int i=0; i<4; i++) m = Math.min(m, coords[i][1]);
+            for (int i = 0; i < 4; i++) {
+                m = Math.min(m, coords[i][1]);
+            }
             return m;
         }
 
+        /**
+         * Performs a left-hand 90-degree vector rotation on the shape block
+         * coordinates.
+         *
+         * @return a new rotated Shape instance.
+         */
         public Shape rotateLeft() {
-            if (pieceShape == Tetrominoes.SquareShape) return this;
+            if (pieceShape == Tetrominoes.SquareShape) {
+                return this;
+            }
             Shape result = new Shape();
             result.pieceShape = pieceShape;
             for (int i = 0; i < 4; ++i) {
@@ -384,27 +471,42 @@ public class Tetris extends JPanel implements ActionListener {
     }
 
     /**
-     * Custom keyboard listener to capture action keystrokes on the Event Dispatch Thread.
+     * Custom keyboard listener to capture action keystrokes on the Event
+     * Dispatch Thread.
      */
     class TAdapter extends KeyAdapter {
+
         @Override
         public void keyPressed(KeyEvent e) {
-            if (!isStarted || curPiece.getShape() == Tetrominoes.NoShape) return;
+            if (!isStarted || curPiece.getShape() == Tetrominoes.NoShape) {
+                return;
+            }
             int keycode = e.getKeyCode();
-            if (keycode == 'p' || keycode == 'P') { pause(); return; }
-            if (isPaused) return;
+            if (keycode == 'p' || keycode == 'P') {
+                pause();
+                return;
+            }
+            if (isPaused) {
+                return;
+            }
             switch (keycode) {
-                case KeyEvent.VK_LEFT -> tryMove(curPiece, curX - 1, curY);
-                case KeyEvent.VK_RIGHT -> tryMove(curPiece, curX + 1, curY);
-                case KeyEvent.VK_UP -> tryMove(curPiece.rotateLeft(), curX, curY);
-                case KeyEvent.VK_SPACE -> dropDown();
-                case KeyEvent.VK_DOWN -> oneLineDown();
+                case KeyEvent.VK_LEFT ->
+                    tryMove(curPiece, curX - 1, curY);
+                case KeyEvent.VK_RIGHT ->
+                    tryMove(curPiece, curX + 1, curY);
+                case KeyEvent.VK_UP ->
+                    tryMove(curPiece.rotateLeft(), curX, curY);
+                case KeyEvent.VK_SPACE ->
+                    dropDown();
+                case KeyEvent.VK_DOWN ->
+                    oneLineDown();
             }
         }
     }
 
     /**
      * Launcher for the Tetris game.
+     *
      * @param args command line arguments (ignored).
      */
     public static void main(String[] args) {
