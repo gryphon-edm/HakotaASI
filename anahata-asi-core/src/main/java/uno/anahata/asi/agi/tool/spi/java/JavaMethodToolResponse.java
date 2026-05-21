@@ -62,6 +62,11 @@ public class JavaMethodToolResponse extends AbstractToolResponse<JavaMethodToolC
     @JsonIgnore
     private transient AtomicBoolean executing = new AtomicBoolean(false);
 
+    /**
+     * Constructs a new JavaMethodToolResponse for a specific call.
+     *
+     * @param call The originating tool call.
+     */
     public JavaMethodToolResponse(@NonNull JavaMethodToolCall call) {
         super(call);
         setStatus(ToolExecutionStatus.PENDING);

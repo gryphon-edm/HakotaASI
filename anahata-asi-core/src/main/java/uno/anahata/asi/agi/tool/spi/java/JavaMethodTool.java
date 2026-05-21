@@ -86,9 +86,9 @@ public class JavaMethodTool extends AbstractTool<JavaMethodToolParameter, JavaMe
     }
     
     /**
-     * Initializes the maxDepth and description attributes
+     * Initializes the maxDepth and description attributes.
      * 
-     * @param toolAnnotation 
+     * @param toolAnnotation The source @AgiTool annotation containing metadata.
      */
     private final void initAttributes(AgiTool toolAnnotation) {
         // Set max depth using the clean inheritance model
@@ -193,6 +193,11 @@ public class JavaMethodTool extends AbstractTool<JavaMethodToolParameter, JavaMe
         }
     }
     
+    /**
+     * {@inheritDoc}
+     * <p>Returns a rich, formatted description string containing the base description,
+     * current permission status, and effective max depth details.</p>
+     */
     @Override
     public String getDescription() {
         StringBuilder sb = new StringBuilder(super.description);

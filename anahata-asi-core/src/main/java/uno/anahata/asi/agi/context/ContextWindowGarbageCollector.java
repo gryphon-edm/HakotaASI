@@ -25,12 +25,20 @@ import uno.anahata.asi.agi.tool.spi.AbstractTool;
 @Getter
 public class ContextWindowGarbageCollector extends BasicPropertyChangeSource {
 
+    /** The parent ContextManager orchestrating the active session. */
     private final ContextManager contextManager;
+
+    /** The concurrent log records of all garbage collection sweeps. */
     private final List<GarbageCollectorRecord> logRecords = new CopyOnWriteArrayList<>();
     
     /** The results of the last token calculation pass. */
     private Stats stats = Stats.builder().build();
 
+    /**
+     * Constructs a ContextWindowGarbageCollector with its parent manager.
+     *
+     * @param contextManager The parent ContextManager instance.
+     */
     public ContextWindowGarbageCollector(@NonNull ContextManager contextManager) {
         this.contextManager = contextManager;
     }
@@ -152,12 +160,19 @@ public class ContextWindowGarbageCollector extends BasicPropertyChangeSource {
     @Data
     @Builder
     public static class Stats {
+        /** The total tokens consumed by system instructions. */
         private final int systemInstructionsTokens;
+        /** The total tokens consumed by all enabled tool declarations. */
         private final int toolDeclarationsTokens;
+        /** The total tokens consumed by active message and part metadata. */
         private final int metadataTokens;
+        /** The total tokens consumed by unpruned history parts. */
         private final int activeHistoryTokens;
+        /** The total tokens consumed by pruned history parts. */
         private final int prunedHistoryTokens;
+        /** The total tokens consumed by unpruned RAG message content. */
         private final int ragTokens;
+        /** The cumulative tokens recycled by the garbage collector. */
         private final int garbageCollectedTokens;
 
         /**

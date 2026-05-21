@@ -28,6 +28,18 @@ public class JavaMethodToolParameter extends AbstractToolParameter<JavaMethodToo
     @Getter
     private final int index;
 
+    /**
+     * Private constructor for initializing a JavaMethodToolParameter.
+     *
+     * @param tool The parent JavaMethodTool.
+     * @param name The parameter name.
+     * @param description A descriptive label/instruction for the parameter.
+     * @param jsonSchema The raw OpenAPI 3 JSON schema.
+     * @param required Whether this parameter is mandatory.
+     * @param rendererId An optional custom renderer ID.
+     * @param javaType The native Java reflection type.
+     * @param index The parameter position.
+     */
     private JavaMethodToolParameter(
             @NonNull JavaMethodTool tool,
             @NonNull String name,

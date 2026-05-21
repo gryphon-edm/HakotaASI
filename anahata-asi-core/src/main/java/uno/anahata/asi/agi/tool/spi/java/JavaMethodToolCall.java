@@ -17,6 +17,15 @@ import uno.anahata.asi.agi.tool.spi.AbstractToolCall;
 @Getter
 public class JavaMethodToolCall extends AbstractToolCall<JavaMethodTool, JavaMethodToolResponse> {
     
+    /**
+     * Constructs a new JavaMethodToolCall instance.
+     *
+     * @param modelMessage The model message initiating this call.
+     * @param id The unique identifier of this call.
+     * @param tool The target JavaMethodTool instance.
+     * @param rawArgs The raw, untyped JSON arguments passed by the model.
+     * @param args The converted, type-safe Java arguments.
+     */
     public JavaMethodToolCall(AbstractModelMessage modelMessage, String id, @NonNull JavaMethodTool tool, @NonNull Map<String, Object> rawArgs, @NonNull Map<String, Object> args) {
         super(modelMessage, id, tool, rawArgs, args);
     }
