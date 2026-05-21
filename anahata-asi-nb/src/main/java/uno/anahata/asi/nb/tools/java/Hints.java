@@ -164,6 +164,9 @@ public class Hints extends AnahataToolkit {
             List<ErrorDescription> hints = invoker.computeHints(info);
             if (hints != null) {
                 for (ErrorDescription ed : hints) {
+                    if (ed == null) {
+                        continue;
+                    }
                     long hintStart = ed.getRange().getBegin().getOffset();
                     if (hintStart >= start && hintStart <= end) {
                         results.add(new HintInfo(fo.getPath(), ed.getDescription(), ed.getSeverity().toString(), ed.getRange().getBegin().getLine(), ed.getRange().getBegin().getColumn(), ed.getId()));
@@ -215,6 +218,9 @@ public class Hints extends AnahataToolkit {
                 List<ErrorDescription> hints = invoker.computeHints(copy);
                 if (hints != null) {
                     for (ErrorDescription ed : hints) {
+                        if (ed == null) {
+                            continue;
+                        }
                         if (hintId.equals(ed.getId())) {
                             List<Fix> fixes = ed.getFixes().getFixes();
                             if (fixes != null && !fixes.isEmpty()) {
@@ -267,6 +273,9 @@ public class Hints extends AnahataToolkit {
             List<ErrorDescription> hints = invoker.computeHints(info);
             if (hints != null) {
                 for (ErrorDescription ed : hints) {
+                    if (ed == null) {
+                        continue;
+                    }
                     fileHints.add(new HintInfo(fo.getPath(), ed.getDescription(), ed.getSeverity().toString(), ed.getRange().getBegin().getLine(), ed.getRange().getBegin().getColumn(), ed.getId()));
                 }
             }
@@ -317,6 +326,9 @@ public class Hints extends AnahataToolkit {
                             List<ErrorDescription> hints = invoker.computeHints(info);
                             if (hints != null) {
                                 for (ErrorDescription ed : hints) {
+                                    if (ed == null) {
+                                        continue;
+                                    }
                                     if (hintIds == null || hintIds.isEmpty() || hintIds.contains(ed.getId())) {
                                         allHints.add(new HintInfo(fo.getPath(), ed.getDescription(), ed.getSeverity().toString(), ed.getRange().getBegin().getLine(), ed.getRange().getBegin().getColumn(), ed.getId()));
                                     }
