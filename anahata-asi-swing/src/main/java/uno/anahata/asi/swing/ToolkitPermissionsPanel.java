@@ -301,7 +301,11 @@ public class ToolkitPermissionsPanel extends JPanel {
             String description;
             /** The list of tools contained within this toolkit. */
             List<ToolNode> tools = new ArrayList<>();
-            /** Constructs a toolkit node. */
+            /**
+             * Constructs a toolkit node.
+             * @param description The description from the AgiToolkit annotation.
+             * @param name The simple name of the toolkit class.
+             */
             ToolkitNode(String name, String description) { 
                 this.name = name; 
                 this.description = description; 
@@ -320,7 +324,13 @@ public class ToolkitPermissionsPanel extends JPanel {
             ToolPermission permission;
             /** The parent toolkit node. */
             ToolkitNode parent;
-            /** Constructs a tool node. */
+            /**
+             * Constructs a tool node.
+             * @param name The name of the tool method.
+             * @param p The current global permission level.
+             * @param parent The parent toolkit node.
+             * @param description The description from the AgiTool annotation.
+             */
             ToolNode(String name, String description, ToolPermission p, ToolkitNode parent) {
                 this.name = name; 
                 this.description = description;

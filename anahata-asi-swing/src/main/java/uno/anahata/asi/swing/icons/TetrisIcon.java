@@ -14,6 +14,10 @@ import java.awt.*;
  */
 public class TetrisIcon extends AbstractAnahataIcon {
 
+    /**
+     * Constructs a new TetrisIcon with the specified visual dimensions.
+     * @param size The size of the icon in pixels.
+     */
     public TetrisIcon(int size) {
         super(size);
     }
@@ -39,6 +43,14 @@ public class TetrisIcon extends AbstractAnahataIcon {
         g2.dispose();
     }
 
+    /**
+     * Draws an individual glossy vector atom bubble at the specified coordinates.
+     * @param size The physical diameter of the atom.
+     * @param g2 The Graphics2D context.
+     * @param y The relative Y coordinate coordinate.
+     * @param x The relative X coordinate coordinate.
+     * @param color The design fill color of the atom.
+     */
     private void drawAtom(Graphics2D g2, double x, double y, double size, Color color) {
         g2.setColor(color);
         g2.fillOval((int)x, (int)y, (int)size, (int)size);

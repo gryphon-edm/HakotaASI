@@ -29,13 +29,31 @@ import uno.anahata.asi.swing.components.WrapLayout;
 @Slf4j
 public class UriParameterRenderer implements ParameterRenderer<Object> {
 
+    /**
+     * The parent AGI panel interface.
+     */
     private AgiPanel agiPanel;
+    /**
+     * The tool call execution context associated with this parameter.
+     */
     private AbstractToolCall<?, ?> call;
+    /**
+     * The declared name of this parameter.
+     */
     private String paramName;
+    /**
+     * The raw value bound to this parameter.
+     */
     private Object value;
 
+    /**
+     * Wrapper panel layout containing rendering chips.
+     */
     private final JPanel container = new JPanel(new WrapLayout(FlowLayout.LEFT, 5, 5));
 
+    /**
+     * Constructs a new UriParameterRenderer and initializes the container layout.
+     */
     public UriParameterRenderer() {
         container.setOpaque(false);
     }
@@ -82,6 +100,11 @@ public class UriParameterRenderer implements ParameterRenderer<Object> {
         return true;
     }
 
+    /**
+     * Dynamically builds a beautiful UI chip for the specified URI.
+     * @param uriString The string representation of the URI.
+     * @return A panel representing the chip with an action button.
+     */
     private JPanel createChip(String uriString) {
         JPanel chip = new JPanel(new BorderLayout(10, 0));
         chip.setOpaque(true);

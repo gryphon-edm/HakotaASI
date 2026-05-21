@@ -28,11 +28,26 @@ import uno.anahata.asi.swing.toolkit.render.ToolkitUiRegistry;
  */
 public class ToolkitPanel extends ScrollablePanel {
 
+    /**
+     * The parent container panel.
+     */
     private final ContextPanel parentPanel;
     
+    /**
+     * Label showing the toolkit's name.
+     */
     private final JLabel nameLabel;
+    /**
+     * Label displaying the toolkit's description.
+     */
     private final JLabel descLabel;
+    /**
+     * Checkbox toggling active state of this toolkit.
+     */
     private final JCheckBox enabledCheckbox;
+    /**
+     * Spinner defining maximum context pruning depth.
+     */
     private final JSpinner maxDepthSpinner;
     /** Wrapper container for specialized toolkit UI components. */
     private final JPanel rendererContainer;

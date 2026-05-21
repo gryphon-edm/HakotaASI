@@ -636,10 +636,11 @@ public class InputPanel extends JPanel {
 
     /**
      * Runs a background task with custom completion and error callbacks on the EDT.
-     * @param onError Edted callback when the task fails.
      * @param backgroundTask The background logic to execute.
+     * @param onError Callback executed on the EDT when the task fails.
+     * @param onDone Callback executed on the EDT when the task succeeds.
      * @param taskName The descriptive task name.
-     * @param onDone Edted callback when the task succeeds.
+     * @param <T> The result type of the task.
      */
     private <T> void executeTask(String taskName, Callable<T> backgroundTask, Consumer<T> onDone, Consumer<Exception> onError) {
         new SwingTask<>(agiPanel, taskName, backgroundTask, onDone, onError, true).start();

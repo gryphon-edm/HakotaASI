@@ -80,11 +80,10 @@ public class UICapture {
     }
     
     /**
-     * Takes a scerenshot of a given screen, must be called on the EDT.
-     * 
-     * @param gd the screen
-     * @return the image
-     * @throws AWTException 
+     * Takes a screenshot of a given screen, must be called on the EDT.
+     * @param gd the physical screen device.
+     * @return the captured BufferedImage.
+     * @throws java.awt.AWTException if the Robot class cannot be initialized on this graphics device.
      */
     public static BufferedImage getSafeScreenCapture(GraphicsDevice gd) throws AWTException {
         return getSafeScreenCapture(gd.getDefaultConfiguration().getBounds());
