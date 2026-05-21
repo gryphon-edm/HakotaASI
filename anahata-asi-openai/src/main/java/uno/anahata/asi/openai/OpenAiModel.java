@@ -228,6 +228,9 @@ public class OpenAiModel extends AbstractModel {
 
     /**
      * Record holding the three distinct partitions of a request payload.
+     * @param fullPayload the raw JSON of the entire aggregated payload.
+     * @param configJson the raw JSON of the request configuration partition.
+     * @param historyJson the raw JSON of the history/memory partition.
      */
     public record PreparedPayload(String fullPayload, String configJson, String historyJson) {
 

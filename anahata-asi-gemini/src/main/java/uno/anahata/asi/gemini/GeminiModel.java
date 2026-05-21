@@ -68,6 +68,11 @@ public class GeminiModel extends AbstractModel {
      */
     private transient Model genaiModel;
 
+    /**
+     * Constructs a new GeminiModel adapter.
+     * @param provider the owning provider instance.
+     * @param genaiModel the native Google GenAI model metadata.
+     */
     public GeminiModel(GeminiAiProvider provider, Model genaiModel) {
         this.provider = provider;
         this.genaiModel = genaiModel;

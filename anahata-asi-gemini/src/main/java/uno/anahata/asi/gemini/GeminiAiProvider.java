@@ -52,7 +52,7 @@ public class GeminiAiProvider extends AbstractAiProvider {
      * Craetes a new Gemini Provider using the Official Google Genai Java SDK.
      *
      * @param uuid registration id
-     * @param displayName
+     * @param displayName the human-readable display name for this provider.
      * @param vertex if true will point to vertex express.
      */
     public GeminiAiProvider(String uuid, String displayName, boolean vertex) {

@@ -7,15 +7,13 @@
  * (gpt-4o and successors) using a stateful, item-based architecture that supports
  * native tool execution, web search, and code interpretation.
  * </p>
- * <p>
- * Key architectural patterns:
+ * <p>Key architectural patterns include:</p>
  * <ul>
  *   <li><b>Partitioned Construction:</b> Payload assembly that separates Identity (Config) 
  *   from Memory (History) for UI transparency.</li>
  *   <li><b>Multimodal Harvesting:</b> Real-time extraction of citations, search results, 
  *   and generated media from API output items.</li>
  * </ul>
- * </p>
  * 
  * @author anahata
  */

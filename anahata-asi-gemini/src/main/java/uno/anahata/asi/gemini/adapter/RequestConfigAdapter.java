@@ -42,14 +42,9 @@ public final class RequestConfigAdapter {
     /**
      * Converts an Anahata RequestConfig to a native Google GenAI 
      * GenerateContentConfig.
-     * <p>Implementation details: This method performs high-fidelity mapping of:
-     * <ul>
-     *   <li>System Instructions (synthesized into a single Content object)</li>
-     *   <li>Thinking Levels (mapped to native Google enums)</li>
-     *   <li>Tool Declarations (both local Java tools and server-side capabilities)</li>
-     *   <li>Candidate counts and sampling parameters (TopK/TopP)</li>
-     * </ul>
-     * </p>
+     * <p>Implementation details: This method performs high-fidelity mapping of the system instructions,
+     * thinking levels, tool declarations (both local Java tools and server-side capabilities), and
+     * candidate counts/sampling parameters.</p>
      * @param requestConfig The Anahata config to convert.
      * @return The corresponding GenerateContentConfig.
      */

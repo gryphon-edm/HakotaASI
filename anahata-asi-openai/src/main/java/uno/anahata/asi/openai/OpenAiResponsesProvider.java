@@ -77,6 +77,10 @@ public class OpenAiResponsesProvider extends AbstractAiProvider {
         this("OpenAI");
     }
 
+    /**
+     * Constructs a new OpenAiProvider with a custom UUID.
+     * @param uuid the unique provider identifier.
+     */
     public OpenAiResponsesProvider(String uuid) {
         super(uuid);
         setBaseUrl("https://api.openai.com/v1/");
@@ -86,6 +90,11 @@ public class OpenAiResponsesProvider extends AbstractAiProvider {
         setKeysAcquisitionUri("https://platform.openai.com/api-keys");
     }
 
+    /**
+     * Creates an authorized HTTP Request Builder for the specified endpoint.
+     * @param endpoint the target sub-resource endpoint (e.g. "responses").
+     * @return a pre-configured, authorized HttpRequest Builder.
+     */
     public HttpRequest.Builder createRequestBuilder(String endpoint) {
         String url = getBaseUrl();
         if (url == null) {
