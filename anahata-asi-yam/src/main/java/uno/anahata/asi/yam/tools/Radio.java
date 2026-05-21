@@ -299,6 +299,10 @@ public class Radio extends AnahataToolkit {
          */
         private byte[] byteBuf = new byte[4096];
 
+        /**
+         * Constructs a new bridged audio device for the specified hardware device.
+         * @param hardwareDevice the target hardware audio device
+         */
         public BridgedJavaSoundAudioDevice(AudioDevice hardwareDevice) {
             this.hardwareDevice = hardwareDevice;
         }
