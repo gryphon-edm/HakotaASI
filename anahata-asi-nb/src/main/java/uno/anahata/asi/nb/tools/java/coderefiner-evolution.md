@@ -208,3 +208,44 @@ We constructed a bulletproof test case using an in-memory `JavaSource` bound to 
 The historical crashes were caused by our V3 architecture handing `importFQNs` a manually hacked, un-attributed AST. Because V4 uses pure text-splicing, we can now safely use `importFQNs` on an isolated memory file to restore the `optimize=true` functionality!
 
 Go Anahata!
+
+## Turn 388: Rename of `body` to `innerBlockOrInitializer` and Cognitive Friction Strategy (May 21, 2026)
+
+### The Problem
+During development and real-world testing of our V4 AST-Guided text replacement engine, we identified a recurring cognitive trap for various LLM models. When updating or inserting members, models would frequently get confused by the generic name of the `body` parameter. 
+Under high context pressure, the model's auto-regressive decoding fast-weights (pre-conditioned on millions of git diffs and standard code declarations) would take over, and they would mistakenly generate the full signature declaration (e.g. `public void myMethod() { ... }` or `private boolean selected = ...`) *inside* the `body` field.
+
+This caused two critical types of failures:
+1. When performing updates on fields with existing initializers (like `selected = false;`), updating the declaration to `@Getter private boolean selected` while keeping `body` as `null` (to retain the initializer) would result in the assignment operator `=` being eaten, producing invalid code (e.g., `@Getter private boolean selected false;`).
+2. Duplication of annotations and signatures, leading to parsing and AST-guided text-replacement boundary failures.
+
+### The Solution: Cognitive Friction & Schema Precision
+To solve this systematically, we implemented two critical upgrades on **May 21, 2026**:
+1. **Surgical Field Renaming (Approach D):** We renamed the `body` property across the entire refiner toolkit to **`innerBlockOrInitializer`**. This highly specific name disrupts the LLM's automated fast-weights, forcing it to consult the schema definition and recognize that it should only provide the block statements inside the braces (for methods/classes) or the raw initializer value (for fields).
+2. **Four-Quadrant `@Schema` Documentation Matrix:** We expanded the `@Schema` annotations and toolkit instructions to explicitly structure and separate the rules for all four Java member types:
+   * **Methods & Constructors:** Pure block statements inside the curly braces `{ ... }` (excluding the signature).
+   * **Fields:** The initializer expression following the `=` operator (e.g. `"123"` or `false`).
+   * **Inner/Nested Types (Classes, Records, Interfaces):** The full list of nested member definitions (methods, fields, nested classes) defined inside the type's braces.
+   * **Enum Constants:** Constructor arguments (e.g. `"\"arg\""` or `1, "arg"`) or anonymous constant bodies.
+   * **Universal Negative Guard:** Re-enforced that access modifiers (e.g., `public`, `private`) or annotations (e.g., `@Override`) must NEVER start this field.
+
+We also updated `toDiagnosticString()`, test suites (including adding a dedicated `Test 17` validating field updates with existing initializers), and aligned the instructions. Standalone testing shows that this naming shift and schema alignment successfully resolves the alignment trap.
+
+### The `optimizeImports` Parameter & Lombok Conflict Status
+While the `CodeRefinementBatch` has an `optimize` parameter, it is currently not being used in standard execution due to a historical conflict we encountered when combining `GeneratorUtilities.importFQNs`, `CasualDiff`, and Lombok annotations on rebuilt AST structures. However, we believe we have fully solved this namespace/formatting desync in the standalone `CodeRefiner.optimizeImports()` implementation. We are currently actively testing `CodeRefiner.optimizeImports()` across multiple edge cases (such as Lombok positions, implicit sub-packages, and planning clashes). If these comprehensive test suites pass successfully, we will integrate this new, robust import optimization engine into the standard `BatchCodeRefiner` pipeline!
+
+---
+
+### The Future: Approach C — The AST Self-Healing Parser (The Ultimate Evolution!)
+
+During our brainstorming, we designed **Approach C**, a highly evolved, compiler-guided "self-healing" fallback mechanism. 
+
+#### **The Self-Healing Concept:**
+If a model still slips and includes the signature inside the `innerBlockOrInitializer` field, rather than failing the turn, the Java toolkit backend can programmatically detect and heal the input using Javac:
+1. **Pass 1 (Trap Check):** We attempt to parse the received `innerBlockOrInitializer` string wrapped in a dummy class: `class __Dummy { <innerBlockOrInitializer> }`. If Javac parses it as a `MethodTree` (with a matching target name) or `VariableTree` with access modifiers, we know the signature was included in the block. We then surgically extract the inner body (`methodTree.getBody().toString()`) or the initializer expression (`variableTree.getInitializer().toString()`) and replace the string on the fly.
+2. **Pass 2 (Statements Verification):** We wrap the string in a dummy method: `class __Dummy { void __dummy() { <innerBlockOrInitializer> } }`. If Pass 1 failed but Pass 2 succeeds, we confirm it is a clean statement block and proceed.
+
+#### **Status: Held in Reserve**
+We are going to **hold onto this AST Self-Healing Parser** for now. We want to gather empirical data and observe how much of a performance and accuracy boost the cognitive friction of `innerBlockOrInitializer` and our upgraded `@Schema` / `@AgiTool` annotations bring. If we find that smaller or more distracted local models still occasionally slip, we will implement Approach C as a final, bulletproof AST safety net.
+
+Go Anahata!
