@@ -172,8 +172,7 @@ public class History extends AnahataToolkit {
 
     /**
      * Updates the pruning policy for all parts of one or more messages.
-     * <p>
-     * Pruning states:
+     * <p>Pruning states:</p>
      * <ul>
      * <li><b>PINNED</b>: Never garbage collected; always remains in
      * context.</li>
@@ -181,7 +180,6 @@ public class History extends AnahataToolkit {
      * history.</li>
      * <li><b>AUTO</b>: Standard lifecycle managed by the CwGC system.</li>
      * </ul>
-     * </p>
      *
      * @param messageIds The sequential IDs of the messages to update.
      * @param newState The new pruning state to apply.
