@@ -48,7 +48,9 @@ public enum AgiStatus {
     /** The agi session has been shut down. */
     SHUTDOWN("Shutdown", "The agi session has been shut down.", false);
 
+    /** The user-friendly, descriptive label for the status. */
     private final String displayName;
+    /** A detailed, technical description of the status and its implications. */
     private final String description;
     /**
      * Indicates if the agi is currently in an active state (e.g., processing, waiting for API, executing tools).

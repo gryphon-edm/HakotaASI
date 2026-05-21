@@ -13,10 +13,21 @@ package uno.anahata.asi.agi.tool;
  */
 public class AgiToolException extends RuntimeException {
 
+    /**
+     * Constructs a new AgiToolException with a specific error message.
+     * 
+     * @param message The user-friendly error message.
+     */
     public AgiToolException(String message) {
         super(message);
     }
 
+    /**
+     * Constructs a new AgiToolException with a specific error message and cause.
+     * 
+     * @param message The user-friendly error message.
+     * @param cause The underlying cause of the exception.
+     */
     public AgiToolException(String message, Throwable cause) {
         super(message, cause);
     }

@@ -9,14 +9,30 @@ package uno.anahata.asi.agi.provider;
  */
 public class ApiCallInterruptedException extends RuntimeException {
 
+    /**
+     * Constructs a new ApiCallInterruptedException with a specific error message.
+     * 
+     * @param message The details of the interruption.
+     */
     public ApiCallInterruptedException(String message) {
         super(message);
     }
 
+    /**
+     * Constructs a new ApiCallInterruptedException with a specific error message and cause.
+     * 
+     * @param message The details of the interruption.
+     * @param cause The underlying cause of the interruption.
+     */
     public ApiCallInterruptedException(String message, Throwable cause) {
         super(message, cause);
     }
 
+    /**
+     * Constructs a new ApiCallInterruptedException with a specific underlying cause.
+     * 
+     * @param cause The underlying cause of the interruption.
+     */
     public ApiCallInterruptedException(Throwable cause) {
         super(cause);
     }
