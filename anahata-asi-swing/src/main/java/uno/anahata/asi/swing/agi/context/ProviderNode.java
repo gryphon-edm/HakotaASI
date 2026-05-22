@@ -6,6 +6,7 @@ package uno.anahata.asi.swing.agi.context;
 import java.util.ArrayList;
 import java.util.List;
 import uno.anahata.asi.agi.context.ContextProvider;
+import uno.anahata.asi.agi.provider.TokenizerType;
 import uno.anahata.asi.agi.tool.spi.AbstractToolkit;
 import uno.anahata.asi.swing.agi.AgiPanel;
 import uno.anahata.asi.agi.tool.ToolManager;
@@ -78,13 +79,13 @@ public class ProviderNode extends AbstractContextNode<ContextProvider> {
     @Override
     protected void calculateLocalTokens() {
         if (userObject.isEffectivelyProviding()) {
-            this.instructionsTokens = userObject.getInstructionsTokenCount();
-            this.ragTokens = userObject.getRagTokenCount();
+            TokenizerType type = getAgi().getSelectedModel() != null ? getAgi().getSelectedModel().getTokenizerType() : TokenizerType.CL100K_BASE;
+            this.instructionsTokens = userObject.getInstructionsTokenCount(type);
+            this.ragTokens = userObject.getRagTokenCount(type);
         } else {
             this.instructionsTokens = 0;
             this.ragTokens = 0;
         }
-        
     }
 
     /** {@inheritDoc} */

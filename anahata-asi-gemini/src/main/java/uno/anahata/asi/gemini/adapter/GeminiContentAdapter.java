@@ -178,27 +178,27 @@ public class GeminiContentAdapter {
         boolean shouldIncludeContent = !isEffectivelyPruned || includePruned;
 
         if (shouldInjectInbandMetadata()) {
-            // METADATA INTERLEAVING: The metadata header is always created if the 
-            // message allows it. The AbstractPart itself now handles the 
+            // METADATA INTERLEAVING: The metadata header is always created if the
+            // message allows it. The AbstractPart itself now handles the
             // rich "Ghost" hint when effectively pruned.
             Part.Builder headerBuilder = createMetadataPartBuilder(part.createMetadataHeader());
 
-            // If we are NOT going to include the actual part (because it's pruned), 
-            // the metadata header must take responsibility for carrying the 
+            // If we are NOT going to include the actual part (because it's pruned),
+            // the metadata header must take responsibility for carrying the
             // thought signature if one exists.
             if (!shouldIncludeContent && part instanceof ThoughtSignature ts && ts.getThoughtSignature() != null) {
-                //if it has been prunned already, its probably many turns old? 
+                //if it has been prunned already, its probably many turns old?
                 //does it really make sense?
                 //headerBuilder.thoughtSignature(ts.getThoughtSignature());
             }
 
             googleParts.add(headerBuilder.build());
-        } 
+        }
 
         if (shouldIncludeContent) {
             boolean includeThoughtSignature = true;
             if (anahataMessage instanceof AbstractModelMessage<?> amm) {
-                // If we know the source provider and it's different from the current one, 
+                // If we know the source provider and it's different from the current one,
                 // we don't replay the signature as it might be invalid/incompatible.
                 if (amm.getProviderUuid() != null && targetProviderUuid != null) {
                     includeThoughtSignature = Objects.equals(amm.getProviderUuid(), targetProviderUuid);
@@ -207,7 +207,7 @@ public class GeminiContentAdapter {
 
             Part googlePart = new GeminiPartAdapter(part, includeThoughtSignature).toGoogle();
             if (googlePart != null) {
-                part.setTokenCount(TokenizerUtils.countTokens(googlePart.toJson()));
+                part.setTokenCount(TokenizerUtils.countTokens(googlePart.toJson(), anahataMessage.getActiveTokenizer()));
                 googleParts.add(googlePart);
             }
         }

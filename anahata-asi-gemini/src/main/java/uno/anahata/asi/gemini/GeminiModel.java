@@ -431,7 +431,6 @@ public class GeminiModel extends AbstractModel {
             boolean started = false;
             GeminiResponse lastGeminiResponse = null;
 
-            // Accumulators for usage metadata
             int totalCandidatesTokens = 0;
 
             for (GenerateContentResponse chunk : stream) {
@@ -453,14 +452,13 @@ public class GeminiModel extends AbstractModel {
 
                 handleChunk(chunk, targets);
 
-                // Accumulate billed tokens if present in the chunk
                 Optional<GenerateContentResponseUsageMetadata> usage = chunk.usageMetadata();
                 if (usage.isPresent()) {
                     GenerateContentResponseUsageMetadata um = usage.get();
-                    // Gemini usually sends the total accumulated so far in each chunk.
                     totalCandidatesTokens = Math.max(totalCandidatesTokens, um.candidatesTokenCount().orElse(0));
                     for (GeminiModelMessage target : targets) {
-                        target.setBilledTokenCount(totalCandidatesTokens);
+                        target.setBilledCompletionTokens(totalCandidatesTokens);
+                        target.setBilledPromptTokens(um.promptTokenCount().orElse(0));
                     }
                 }
 
@@ -471,10 +469,8 @@ public class GeminiModel extends AbstractModel {
             if (lastGeminiResponse != null) {
                 for (GeminiModelMessage target : targets) {
                     target.setResponse(lastGeminiResponse);
-                    // Ensure the final model version is set
                     target.setModelId(lastGeminiResponse.getModelVersion());
 
-                    // Ensure the finish reason is set if it's still null after the stream
                     if (target.getFinishReason() == null) {
                         target.setFinishReason(FinishReason.GOD_FUCKING_KNOWS);
                     }

@@ -347,7 +347,7 @@ public class OpenAiModelMessage extends AbstractModelMessage<OpenAiResponse> {
      */
     public void handleStreamEvent(JsonNode eventNode) {
         String type = eventNode.path("type").asText();
-        
+
         switch (type) {
             case "response.output_text.delta":
                 appendContent(eventNode.path("delta").asText());
@@ -360,7 +360,6 @@ public class OpenAiModelMessage extends AbstractModelMessage<OpenAiResponse> {
                 JsonNode item = eventNode.path("item");
                 String itemType = item.path("type").asText();
                 if ("message".equals(itemType)) {
-                    // Text is already streamed via deltas, but we must harvest citations.
                     JsonNode content = item.get("content");
                     if (content != null && content.isArray()) {
                         for (JsonNode partNode : content) {
@@ -373,7 +372,6 @@ public class OpenAiModelMessage extends AbstractModelMessage<OpenAiResponse> {
                         }
                     }
                 } else {
-                    // For tools, searches, and code execution, process the completed item seamlessly.
                     processItem(item);
                 }
                 break;
@@ -382,7 +380,8 @@ public class OpenAiModelMessage extends AbstractModelMessage<OpenAiResponse> {
                 if (response != null && response.has("usage")) {
                     JsonNode usage = response.get("usage");
                     if (usage != null && !usage.isNull()) {
-                        setBilledTokenCount(usage.path("output_tokens").asInt(0));
+                        setBilledCompletionTokens(usage.path("output_tokens").asInt(0));
+                        setBilledPromptTokens(usage.path("input_tokens").asInt(0));
                     }
                 }
                 if (response != null && response.has("status")) {

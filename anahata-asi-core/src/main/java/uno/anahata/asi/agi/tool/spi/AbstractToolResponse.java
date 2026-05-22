@@ -179,7 +179,7 @@ public abstract class AbstractToolResponse<C extends AbstractToolCall<?, ?>> ext
      * Updates the estimated token count based on the current state of the response.
      */
     private void updateTokenCount() {
-        setTokenCount(TokenizerUtils.countTokens(JacksonUtils.prettyPrint(this)));
+        setTokenCount(TokenizerUtils.countTokens(JacksonUtils.prettyPrint(this), getCall() != null && getCall().getMessage() != null ? getCall().getMessage().getActiveTokenizer() : uno.anahata.asi.agi.provider.TokenizerType.CL100K_BASE));
         // Notify the call that its size has changed.
         if (call != null) {
             call.updateResponseTokenCount();

@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import uno.anahata.asi.internal.TokenizerUtils;
 import uno.anahata.asi.agi.message.RagMessage;
+import uno.anahata.asi.agi.provider.TokenizerType;
 
 /**
  * Defines the contract for providers that inject just-in-time context into an AI request.
@@ -171,11 +172,11 @@ public interface ContextProvider {
     }
 
     /**
-     * Calculates the token count for the system instructions provided by this instance.
-     * 
+     * Calculates the token count for the system instructions provided by this instance using the specified tokenizer.
+     * @param type The tokenizer strategy to use.
      * @return The estimated token count.
      */
-    default int getInstructionsTokenCount() {
+    default int getInstructionsTokenCount(TokenizerType type) {
         try {
             List<String> instructions = getSystemInstructions();
             if (instructions.isEmpty()) {
@@ -183,7 +184,7 @@ public interface ContextProvider {
             }
             int count = 0;
             for (String s : instructions) {
-                count += TokenizerUtils.countTokens(s);
+                count += TokenizerUtils.countTokens(s, type);
             }
             return count;
         } catch (Exception e) {
@@ -192,16 +193,15 @@ public interface ContextProvider {
     }
 
     /**
-     * Calculates the token count for the RAG content provided by this instance.
-     * 
+     * Calculates the token count for the RAG content provided by this instance using the specified tokenizer.
+     * @param type The tokenizer strategy to use.
      * @return The estimated token count.
      */
-    default int getRagTokenCount() {
+    default int getRagTokenCount(TokenizerType type) {
         RagMessage rm = new RagMessage(null);
-        
         try {
             populateMessage(rm);
-            return rm.getTokenCount(true); 
+            return rm.getTokenCount(true);
         } catch (Exception e) {
             return 0;
         }

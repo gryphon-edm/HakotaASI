@@ -9,10 +9,12 @@ import java.util.Objects;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import uno.anahata.asi.agi.ExpandToolsPreference;
 import uno.anahata.asi.internal.TextUtils;
 import uno.anahata.asi.agi.message.AbstractPart;
 import uno.anahata.asi.agi.message.AbstractModelMessage;
 import uno.anahata.asi.agi.message.ThoughtSignature;
+import uno.anahata.asi.internal.TokenizerUtils;
 
 /**
  * Represents a request to execute a specific tool. It holds a direct reference
@@ -97,10 +99,10 @@ public abstract class AbstractToolCall<T extends AbstractTool<?, ?>, R extends A
         
         // 1. Initialize the response object.
         this.response = createResponse();
-        uno.anahata.asi.agi.ExpandToolsPreference expandPref = getAgiConfig().getExpandTools();
-        if (expandPref == uno.anahata.asi.agi.ExpandToolsPreference.ALL) {
+        ExpandToolsPreference expandPref = getAgiConfig().getExpandTools();
+        if (expandPref == ExpandToolsPreference.ALL) {
             setExpanded(true);
-        } else if (expandPref == uno.anahata.asi.agi.ExpandToolsPreference.PROMPT) {
+        } else if (expandPref == ExpandToolsPreference.PROMPT) {
             setExpanded(tool.getPermission() == ToolPermission.PROMPT);
         } else {
             setExpanded(false);
@@ -176,12 +178,11 @@ public abstract class AbstractToolCall<T extends AbstractTool<?, ?>, R extends A
 
     /**
      * Calculates the total tokens for this call, including its nested response.
-     * 
      * @return The total token count.
      */
     private int calculateTotalTokens() {
         // Approximate call tokens based on name and arguments
-        int callTokens = uno.anahata.asi.internal.TokenizerUtils.countTokens(asText());
+        int callTokens = TokenizerUtils.countTokens(asText(), getMessage().getActiveTokenizer());
         int responseTokens = response != null ? response.getTokenCount() : 0;
         return callTokens + responseTokens;
     }

@@ -76,11 +76,15 @@ public abstract class AbstractModelMessage<R extends Response> extends AbstractM
      */
     private String safetyRatings;
 
-    /**
-     * The number of billed tokens for this candidate, as reported by the API.
-     */
-    private int billedTokenCount;
 
+    /**
+     * The number of billed prompt (input) tokens for this candidate, as reported by the API.
+     */
+    private int billedPromptTokens;
+    /**
+     * The number of billed completion (output) tokens for this candidate, as reported by the API.
+     */
+    private int billedCompletionTokens;
     /**
      * The raw JSON response from the model.
      */
@@ -189,17 +193,26 @@ public abstract class AbstractModelMessage<R extends Response> extends AbstractM
         propertyChangeSupport.firePropertyChange("rawJson", oldJson, this.rawJson);
     }
 
+
     /**
-     * Sets the billed token count and fires a property change event.
-     *
-     * @param billedTokenCount The new billed token count.
+     * Sets the billed prompt token count and fires a property change event.
+     * @param billedPromptTokens The new billed prompt token count.
      */
-    public void setBilledTokenCount(int billedTokenCount) {
-        int oldBilledTokenCount = this.billedTokenCount;
-        this.billedTokenCount = billedTokenCount;
-        propertyChangeSupport.firePropertyChange("billedTokenCount", oldBilledTokenCount, billedTokenCount);
+    public void setBilledPromptTokens(int billedPromptTokens) {
+        int oldBilledPromptTokens = this.billedPromptTokens;
+        this.billedPromptTokens = billedPromptTokens;
+        propertyChangeSupport.firePropertyChange("billedPromptTokens", oldBilledPromptTokens, billedPromptTokens);
     }
 
+    /**
+     * Sets the billed completion token count and fires a property change event.
+     * @param billedCompletionTokens The new billed completion token count.
+     */
+    public void setBilledCompletionTokens(int billedCompletionTokens) {
+        int oldBilledCompletionTokens = this.billedCompletionTokens;
+        this.billedCompletionTokens = billedCompletionTokens;
+        propertyChangeSupport.firePropertyChange("billedCompletionTokens", oldBilledCompletionTokens, billedCompletionTokens);
+    }
     /**
      * Sets the finish reason and fires a property change event.
      *

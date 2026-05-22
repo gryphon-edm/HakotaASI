@@ -3,6 +3,7 @@ package uno.anahata.asi.agi.message;
 
 import lombok.Getter;
 import lombok.Setter;
+import uno.anahata.asi.agi.provider.TokenizerType;
 import uno.anahata.asi.internal.TokenizerUtils;
 
 /**
@@ -31,20 +32,19 @@ public abstract class TextPart extends AbstractPart {
     
     /**
      * Sets the text content and fires a property change event for the "text" property.
-     * Also updates the token count.
-     * @param text The new text content.
+     * Also updates the token count using the active session tokenizer.
+     * @param text The new text content to apply.
      */
     public void setText(String text) {
         String oldText = this.text;
         this.text = text;
-        setTokenCount(TokenizerUtils.countTokens(text));
+        setTokenCount(TokenizerUtils.countTokens(text, getActiveTokenizer()));
         propertyChangeSupport.firePropertyChange("text", oldText, text);
     }
 
     /**
      * Appends text to the existing content and fires a property change event.
-     * Also updates the token count using an incremental estimate.
-     * 
+     * Also updates the token count using the active session tokenizer.
      * @param delta The text to append.
      */
     public void appendText(String delta) {
@@ -53,8 +53,7 @@ public abstract class TextPart extends AbstractPart {
         }
         String oldText = this.text;
         this.text = (this.text == null ? "" : this.text) + delta;
-        // Incremental estimation to avoid full recalculation on every chunk
-        setTokenCount(TokenizerUtils.countTokens(this.text));
+        setTokenCount(TokenizerUtils.countTokens(this.text, getActiveTokenizer()));
         propertyChangeSupport.firePropertyChange("text", oldText, this.text);
     }
 

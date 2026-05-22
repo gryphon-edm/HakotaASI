@@ -5,6 +5,7 @@ package uno.anahata.asi.swing.agi.context;
 
 import java.util.Collections;
 import java.util.List;
+import uno.anahata.asi.agi.provider.TokenizerType;
 import uno.anahata.asi.agi.tool.spi.AbstractTool;
 import uno.anahata.asi.agi.tool.spi.AbstractToolkit;
 import uno.anahata.asi.agi.tool.ToolPermission;
@@ -63,7 +64,8 @@ public class ToolNode extends AbstractContextNode<AbstractTool<?, ?>> {
     /** {@inheritDoc} */
     @Override
     protected void calculateLocalTokens() {
-        this.declarationsTokens = userObject.getTokenCount();
+        TokenizerType type = getAgi().getSelectedModel() != null ? getAgi().getSelectedModel().getTokenizerType() : TokenizerType.CL100K_BASE;
+        this.declarationsTokens = userObject.getTokenCount(type);
     }
 
     /** {@inheritDoc} */

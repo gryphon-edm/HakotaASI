@@ -75,33 +75,28 @@ public class GeminiResponse extends Response<GeminiModelMessage> {
     public GeminiResponse(String requestConfigJson, String historyJson, Agi agi, String modelId, GenerateContentResponse genaiResponse) {
         this.rawRequestConfigJson = requestConfigJson;
         this.rawHistoryJson = historyJson;
-        this.genaiResponse = genaiResponse;        
+        this.genaiResponse = genaiResponse;
         this.rawJson = genaiResponse.toJson();
         this.modelVersion = genaiResponse.modelVersion().orElse(modelId);
-        
-        // --- 1. Convert Usage Metadata ---
+
         this.usageMetadata = genaiResponse.usageMetadata()
             .map(this::convertUsageMetadata)
-            .orElse(ResponseUsageMetadata.builder().build()); // Default empty metadata
+            .orElse(ResponseUsageMetadata.builder().build());
 
-        // --- 2. Convert Candidates ---
         List<Candidate> googleCandidates = genaiResponse.candidates().orElse(Collections.emptyList());
         this.candidates = googleCandidates.stream()
             .map(candidate -> {
                 GeminiModelMessage msg = new GeminiModelMessage(agi, modelVersion, candidate, this);
-                // Fallback: If candidate doesn't have its own token count and there's only one candidate,
-                // use the total candidatesTokenCount from usageMetadata.
                 if (msg.getTokenCount(false) <= 0 && googleCandidates.size() == 1) {
-                    msg.setBilledTokenCount(usageMetadata.getCandidatesTokenCount());
+                    msg.setBilledPromptTokens(usageMetadata.getPromptTokenCount());
+                    msg.setBilledCompletionTokens(usageMetadata.getCandidatesTokenCount());
                 }
                 return msg;
             })
             .collect(Collectors.toList());
 
-        // --- 3. Convert Prompt Feedback ---
         this.promptFeedback = genaiResponse.promptFeedback()
             .flatMap(GenerateContentResponsePromptFeedback::blockReasonMessage);
-        
     }
 
     /**

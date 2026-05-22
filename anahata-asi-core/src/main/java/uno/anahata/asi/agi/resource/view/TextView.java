@@ -11,6 +11,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.internal.TokenizerUtils;
 import uno.anahata.asi.agi.message.RagMessage;
+import uno.anahata.asi.agi.provider.TokenizerType;
 import uno.anahata.asi.persistence.Rebindable;
 import uno.anahata.asi.agi.resource.Resource;
 
@@ -113,13 +114,14 @@ public class TextView extends AbstractResourceView implements Rebindable {
         return Collections.singletonList("```\n" + (content != null ? content : "") + "\n```");
     }
 
-    /** 
-     * {@inheritDoc} 
+    /**
+     * {@inheritDoc}
+     * @param type The tokenizer strategy to use.
+     * @return The estimated token count.
      */
-    @Override
-    public int getTokenCount() {
+    @Override public int getTokenCount(TokenizerType type) {
         String content = viewport.getVisibleContent();
-        return TokenizerUtils.countTokens(content != null ? content : "") + 20;
+        return TokenizerUtils.countTokens(content != null ? content : "", type) + 20;
     }
 
     @Override

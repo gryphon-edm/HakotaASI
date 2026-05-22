@@ -15,6 +15,7 @@ import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import lombok.extern.slf4j.Slf4j;
+import uno.anahata.asi.agi.provider.TokenizerType;
 import uno.anahata.asi.agi.resource.view.TextView;
 import uno.anahata.asi.agi.resource.view.TextViewportSettings;
 import uno.anahata.asi.swing.agi.AgiPanel;
@@ -222,7 +223,10 @@ public class TextViewPanel extends AbstractViewPanel<TextView> {
             lineNumbersCheck.setSelected(settings.isIncludeLineNumbers());
             colWidthSpinner.setValue(settings.getColumnWidth());
 
-            tokenLabel.setText("Estimated Tokens: " + view.getTokenCount());
+            TokenizerType type = getAgiPanel().getAgi().getSelectedModel() != null
+                ? getAgiPanel().getAgi().getSelectedModel().getTokenizerType()
+                : TokenizerType.CL100K_BASE;
+            tokenLabel.setText("Estimated Tokens: " + view.getTokenCount(type));
             summaryLabel.setText(view.getViewport().toString());
 
             // Enabled if content is cut off

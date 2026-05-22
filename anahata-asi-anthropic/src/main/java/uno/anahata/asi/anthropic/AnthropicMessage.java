@@ -83,7 +83,7 @@ public class AnthropicMessage extends AbstractModelMessage<AnthropicResponse> {
             case "message_start":
                 JsonNode msgNode = data.get("message");
                 if (msgNode != null && msgNode.has("usage")) {
-                    setBilledTokenCount(msgNode.get("usage").path("input_tokens").asInt(0));
+                    setBilledPromptTokens(msgNode.get("usage").path("input_tokens").asInt(0));
                 }
                 break;
             case "content_block_start":
@@ -123,7 +123,7 @@ public class AnthropicMessage extends AbstractModelMessage<AnthropicResponse> {
                     setFinishReasonFromAnthropic(deltaNode.path("stop_reason").asText());
                 }
                 if (data.has("usage")) {
-                    setBilledTokenCount(getBilledTokenCount() + data.get("usage").path("output_tokens").asInt(0));
+                    setBilledCompletionTokens(getBilledCompletionTokens() + data.get("usage").path("output_tokens").asInt(0));
                 }
                 break;
         }

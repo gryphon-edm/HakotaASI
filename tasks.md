@@ -4,6 +4,8 @@ This file tracks the actionable tasks and tactical goals for the Anahata ASI (V2
 
 ## 0. Zero Day Go Live: 
 
+- [ ] Remove syntax highligthing from java code blocks in text parts.
+
 - [ ] Test CodeRefiner.optimizeImports more and if it is good, then integrate it in BCR
 
 - [ ] ToolCallPanel sometimes shows white sspace between the adjustingtabbedpane and the response titled panel

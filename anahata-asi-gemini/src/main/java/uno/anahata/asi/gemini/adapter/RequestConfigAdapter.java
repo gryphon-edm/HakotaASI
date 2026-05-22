@@ -27,6 +27,7 @@ import uno.anahata.asi.internal.TokenizerUtils;
 import uno.anahata.asi.agi.provider.RequestConfig;
 import uno.anahata.asi.agi.provider.ThinkingLevel;
 import uno.anahata.asi.agi.provider.ServerTool;
+import uno.anahata.asi.agi.provider.TokenizerType;
 import uno.anahata.asi.agi.tool.spi.AbstractTool;
 
 /**
@@ -49,42 +50,43 @@ public final class RequestConfigAdapter {
      * @return The corresponding GenerateContentConfig.
      */
     public static GenerateContentConfig toGoogle(RequestConfig requestConfig) {
-                
         log.info("Generating GenerateContentConfig for " + requestConfig);
 
         GenerateContentConfig.Builder builder = GenerateContentConfig.builder();
-        
+
         builder.shouldReturnHttpResponse(false);
         builder.clearHttpOptions();
-        
+
+        TokenizerType tokenizerType = requestConfig.getAgi() != null && requestConfig.getAgi().getSelectedModel() != null ? requestConfig.getAgi().getSelectedModel().getTokenizerType() : TokenizerType.GEMINI;
+
         if (!requestConfig.getSystemInstructions().isEmpty()) {
             List<Part> parts = new ArrayList<>();
             for (String si : requestConfig.getSystemInstructions()) {
                parts.add(Part.fromText(si));
             }
-            
+
             Content sysInstContent = Content.builder().role("system").parts(parts).build();
             String rawJson = sysInstContent.toJson();
-            int tokenCount = TokenizerUtils.countTokens(rawJson);
-            
+            int tokenCount = TokenizerUtils.countTokens(rawJson, tokenizerType);
+
             requestConfig.setSystemInstructionsRawJson(rawJson);
             requestConfig.setSystemInstructionsTokenCount(tokenCount);
             log.info("System Instructions: {} tokens", tokenCount);
-            
+
             builder.systemInstruction(sysInstContent);
         }
-        
+
         List<String> modalities = requestConfig.getResponseModalities();
         if (modalities != null && !modalities.isEmpty()) {
             builder.responseModalities(modalities);
         } else {
             builder.responseModalities("TEXT");
         }
-        
+
         // Adapt Thinking Config based on session settings and thinking level
         ThinkingConfig.Builder thinkingBuilder = ThinkingConfig.builder();
         boolean includeThoughts = requestConfig.getAgi().getConfig().isIncludeThoughts();
-        
+
 
         ThinkingLevel ourLevel = requestConfig.getThinkingLevel();
         if (ourLevel != null && ourLevel != ThinkingLevel.THINKING_LEVEL_UNSPECIFIED) {
@@ -107,7 +109,7 @@ public final class RequestConfigAdapter {
         // We must convert Integer topK to Float for the builder.
         Optional.ofNullable(requestConfig.getTopK()).map(Integer::floatValue).ifPresent(builder::topK);
         Optional.ofNullable(requestConfig.getTopP()).ifPresent(builder::topP);
-        
+
         if (requestConfig.getCandidateCount() != null) {
             builder.candidateCount(requestConfig.getCandidateCount());
         }
@@ -116,14 +118,14 @@ public final class RequestConfigAdapter {
         if (localTools != null && !localTools.isEmpty()) {
             log.info("Local tools enabled, adding " + localTools.size() + " tools");
             List<FunctionDeclaration> declarations = new ArrayList<>();
-            
+
             boolean useNativeSchemas = requestConfig.isUseNativeSchemas();
-            
+
             for (AbstractTool<?, ?> tool : localTools) {
                 FunctionDeclaration fd = new GeminiFunctionDeclarationAdapter(tool, useNativeSchemas).toGoogle();
                 if (fd != null) {
                     String rawJson = fd.toJson();
-                    int tokenCount = TokenizerUtils.countTokens(rawJson);
+                    int tokenCount = TokenizerUtils.countTokens(rawJson, tokenizerType);
                     // Note: We don't have a direct way to set this back on the tool here without casting,
                     // but we log it for now. The tool itself should ideally hold its provider-specific count.
                     log.debug("Tool {}: {} tokens", tool.getName(), tokenCount);
@@ -134,11 +136,11 @@ public final class RequestConfigAdapter {
             if (!declarations.isEmpty()) {
                 Tool tool = Tool.builder().functionDeclarations(declarations).build();
                 builder.tools(tool);
-                
+
                 FunctionCallingConfig.Builder fccb = FunctionCallingConfig.builder();
-                
+
                 fccb.mode(FunctionCallingConfigMode.Known.AUTO);
-                
+
                 ToolConfig tc = ToolConfig.builder()
                                 .functionCallingConfig(fccb.build())
                         .build();

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.agi.message.RagMessage;
+import uno.anahata.asi.agi.provider.TokenizerType;
 
 /**
  * A resource view that interprets content as binary media (images, audio, etc.).
@@ -49,11 +50,12 @@ public class MediaView extends AbstractResourceView {
         }
     }
 
-    /** 
-     * {@inheritDoc} 
+    /**
+     * {@inheritDoc}
+     * @param type The tokenizer strategy to use.
+     * @return The estimated token count.
      */
-    @Override
-    public int getTokenCount() {
+    @Override public int getTokenCount(TokenizerType type) {
         if (cachedData == null) {
             return 0;
         }

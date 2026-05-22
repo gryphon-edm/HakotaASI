@@ -57,13 +57,4 @@ public final class TokenizerUtils {
         }
     }
 
-    /**
-     * Counts the number of tokens in the given text using the application's default tokenizer (CL100K_BASE).
-     *
-     * @param text The text to count tokens for. Can be null or empty.
-     * @return The number of tokens, or 0 if the text is null or empty.
-     */
-    public static int countTokens(String text) {
-        return countTokens(text, TokenizerType.CL100K_BASE);
-    }
 }

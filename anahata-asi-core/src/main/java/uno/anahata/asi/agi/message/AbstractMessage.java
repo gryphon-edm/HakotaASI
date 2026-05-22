@@ -15,6 +15,7 @@ import org.apache.commons.lang3.Validate;
 import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.internal.TimeUtils;
 import uno.anahata.asi.agi.event.BasicPropertyChangeSource;
+import uno.anahata.asi.agi.provider.TokenizerType;
 import uno.anahata.asi.internal.TokenizerUtils;
 
 /**
@@ -271,15 +272,25 @@ public abstract class AbstractMessage extends BasicPropertyChangeSource {
     }
 
     /**
-     * Calculates the total "effective" tokens in this message, summing the
-     * effective counts of its parts plus the message-level metadata header.
-     *
-     * @return The effective token count.
+     * Resolves the active tokenizer for this message based on the parent AGI session's selected model.
+     * Fallbacks to CL100K_BASE if the session or model is null.
+     * @return The active TokenizerType.
+     */
+    public TokenizerType getActiveTokenizer() {
+        if (agi != null && agi.getSelectedModel() != null) {
+            return agi.getSelectedModel().getTokenizerType();
+        }
+        return TokenizerType.CL100K_BASE;
+    }
+    /**
+     * Calculates the total effective tokens consumed by this message, including the
+     * in-band metadata header and all of its parts.
+     * @return The total effective token count.
      */
     public int getEffectiveTokenCount() {
         int count = 0;
         if (shouldCreateMetadata()) {
-            count += TokenizerUtils.countTokens(createMetadataHeader());
+            count += TokenizerUtils.countTokens(createMetadataHeader(), getActiveTokenizer());
         }
         count += parts.stream().mapToInt(AbstractPart::getEffectiveTokenCount).sum();
         return count;

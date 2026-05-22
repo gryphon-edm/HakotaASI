@@ -9,6 +9,7 @@ import uno.anahata.asi.agi.AgiConfig;
 import uno.anahata.asi.internal.TextUtils;
 import uno.anahata.asi.internal.TokenizerUtils;
 import uno.anahata.asi.agi.event.BasicPropertyChangeSource;
+import uno.anahata.asi.agi.provider.TokenizerType;
 
 /**
  * The foundational component of an {@link AbstractMessage}, representing a 
@@ -310,13 +311,20 @@ public abstract class AbstractPart extends BasicPropertyChangeSource {
         return sb.toString();
     }
 
+    public TokenizerType getActiveTokenizer() {
+        Agi agi = getAgi();
+        if (agi != null && agi.getSelectedModel() != null) {
+            return agi.getSelectedModel().getTokenizerType();
+        }
+        return TokenizerType.CL100K_BASE;
+    }
     /**
      * Calculates the token count of the metadata header for this part.
      * 
      * @return The token count of the metadata header.
      */
     public int getMetadataTokenCount() {
-        return TokenizerUtils.countTokens(createMetadataHeader());
+        return TokenizerUtils.countTokens(createMetadataHeader(), getActiveTokenizer());
     }
 
     /**

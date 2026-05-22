@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.agi.context.ContextPosition;
+import uno.anahata.asi.agi.provider.TokenizerType;
 import uno.anahata.asi.agi.resource.Resource;
 import uno.anahata.asi.internal.TokenizerUtils;
 import uno.anahata.asi.swing.agi.AgiPanel;
@@ -69,8 +70,9 @@ public class ResourceNode extends AbstractContextNode<Resource> {
      */
     @Override
     protected void calculateLocalTokens() {
-        int viewTokens = (userObject.getView() != null) ? userObject.getView().getTokenCount() : 0;
-        int headerTokens = TokenizerUtils.countTokens(userObject.getHeader());
+        TokenizerType type = getAgi().getSelectedModel() != null ? getAgi().getSelectedModel().getTokenizerType() : TokenizerType.CL100K_BASE;
+        int viewTokens = (userObject.getView() != null) ? userObject.getView().getTokenCount(type) : 0;
+        int headerTokens = TokenizerUtils.countTokens(userObject.getHeader(), type);
         int totalTokens = viewTokens + headerTokens;
         if (userObject.getContextPosition() == ContextPosition.SYSTEM_INSTRUCTIONS) {
             this.instructionsTokens = totalTokens;

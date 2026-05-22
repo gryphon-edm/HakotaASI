@@ -5,6 +5,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
+import uno.anahata.asi.agi.provider.TokenizerType;
 import uno.anahata.asi.internal.TokenizerUtils;
 
 /**
@@ -40,13 +41,13 @@ public abstract class AbstractToolParameter<T extends AbstractTool<?, ?>> {
     private final String rendererId;
     
     /**
-     * Calculates the token count of this parameter on-the-fly.
+     * Calculates the token count of this parameter on-the-fly using the specified tokenizer.
      * The count is a provider-agnostic approximation of the token overhead,
      * calculated by summing the tokens in its description and JSON schema.
-     *
+     * @param type The tokenizer strategy to use.
      * @return The total token count.
      */
-    public int getTokenCount() {
-        return TokenizerUtils.countTokens(description) + TokenizerUtils.countTokens(jsonSchema);
+    public int getTokenCount(TokenizerType type) {
+        return TokenizerUtils.countTokens(description, type) + TokenizerUtils.countTokens(jsonSchema, type);
     }
 }

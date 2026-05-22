@@ -17,6 +17,7 @@ import uno.anahata.asi.agi.context.ContextProvider;
 import uno.anahata.asi.agi.context.ContextPosition;
 import uno.anahata.asi.agi.event.BasicPropertyChangeSource;
 import uno.anahata.asi.agi.message.RagMessage;
+import uno.anahata.asi.agi.provider.TokenizerType;
 import uno.anahata.asi.persistence.Rebindable;
 import uno.anahata.asi.internal.TimeUtils;
 import uno.anahata.asi.internal.TokenizerUtils;
@@ -353,13 +354,14 @@ public class Resource extends BasicPropertyChangeSource implements Rebindable, C
 
     /**
      * {@inheritDoc}
+     * @param type The tokenizer strategy to use.
+     * @return The estimated token count for system instructions.
      */
-    @Override
-    public int getInstructionsTokenCount() {
+    @Override public int getInstructionsTokenCount(TokenizerType type) {
         try {
-            int tokens = TokenizerUtils.countTokens(getHeader());
+            int tokens = TokenizerUtils.countTokens(getHeader(), type);
             if (contextPosition == ContextPosition.SYSTEM_INSTRUCTIONS && view != null) {
-                tokens += view.getTokenCount();
+                tokens += view.getTokenCount(type);
             }
             return tokens;
         } catch (Exception e) {
@@ -369,13 +371,14 @@ public class Resource extends BasicPropertyChangeSource implements Rebindable, C
 
     /**
      * {@inheritDoc}
+     * @param type The tokenizer strategy to use.
+     * @return The estimated token count for RAG prompt augmentation.
      */
-    @Override
-    public int getRagTokenCount() {
+    @Override public int getRagTokenCount(TokenizerType type) {
         try {
-            int tokens = TokenizerUtils.countTokens(getHeader());
+            int tokens = TokenizerUtils.countTokens(getHeader(), type);
             if (contextPosition == ContextPosition.PROMPT_AUGMENTATION && view != null) {
-                tokens += view.getTokenCount();
+                tokens += view.getTokenCount(type);
             }
             return tokens;
         } catch (Exception e) {

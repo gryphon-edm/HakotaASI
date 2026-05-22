@@ -321,7 +321,6 @@ public class OpenAiCompatibleModel extends AbstractModel {
         Agi agi = request.config().getAgi();
         ObjectNode payload = preparePayload(request, true);
         String jsonPayload = payload.toString();
-        // Partition JSON: History vs Config
         JsonNode historyNode = payload.get("messages");
         if (historyNode == null) {
             historyNode = payload.get("input");
@@ -380,7 +379,6 @@ public class OpenAiCompatibleModel extends AbstractModel {
                                 observer.onError(new RuntimeException("OpenAI Stream Chunk Error: " + chunk.get("error").path("message").asText()));
                                 return;
                             }
-                            // 1. Handle Responses API Events (response.*)
                             if (chunk.has("type") && chunk.get("type").asText().startsWith("response.")) {
                                 if (!started.get()) {
                                     targets.add(createModelMessage(agi));
@@ -390,8 +388,7 @@ public class OpenAiCompatibleModel extends AbstractModel {
                                 for (OpenAiCompatibleModelMessage target : targets) {
                                     target.updateFromNode(chunk, reasoningStyle, reasoningFieldName, reasoningTags);
                                 }
-                            } // 2. Handle standard Chat Completions Choices
-                            else if (chunk.has("choices")) {
+                            } else if (chunk.has("choices")) {
                                 JsonNode choices = chunk.get("choices");
                                 if (choices != null && choices.isArray() && choices.size() > 0) {
                                     if (!started.get()) {
@@ -408,17 +405,14 @@ public class OpenAiCompatibleModel extends AbstractModel {
                                     }
                                 }
                             }
-                            // Accumulate raw JSON chunk
                             for (OpenAiCompatibleModelMessage target : targets) {
                                 target.appendRawJson(data);
                             }
                             OpenAiCompatibleResponse chunkResponse = new OpenAiCompatibleResponse(agi, modelId, data, configJson, historyJson, this);
-                            // Accumulate usage metadata if present in this chunk (like Gemini does)
-                            // OpenAI typically sends usage only in the final chunk
-                            if (chunkResponse.getUsageMetadata() != null
-                                    && chunkResponse.getUsageMetadata().getTotalTokenCount() > 0) {
+                            if (chunkResponse.getUsageMetadata() != null && chunkResponse.getUsageMetadata().getTotalTokenCount() > 0) {
                                 for (OpenAiCompatibleModelMessage target : targets) {
-                                    target.setBilledTokenCount(chunkResponse.getUsageMetadata().getCandidatesTokenCount());
+                                    target.setBilledPromptTokens(chunkResponse.getUsageMetadata().getPromptTokenCount());
+                                    target.setBilledCompletionTokens(chunkResponse.getUsageMetadata().getCandidatesTokenCount());
                                 }
                             }
                             observer.onNext(chunkResponse);
@@ -427,35 +421,26 @@ public class OpenAiCompatibleModel extends AbstractModel {
                         }
                     }
                 }
-                // Set the final response on each target message (like Gemini does)
                 if (!targets.isEmpty()) {
-                    // Check if we ever received usage from the API during streaming
-                    // Modal's GLM-5 returns usage: null in all streaming chunks
                     boolean usageProvided = targets.stream()
-                            .anyMatch(t-> t.getBilledTokenCount() > 0);
+                            .anyMatch(t-> t.getBilledCompletionTokens() > 0 || t.getBilledPromptTokens() > 0);
                     OpenAiCompatibleResponse finalResponse;
                     if (!usageProvided) {
-                        // No usage provided by API - estimate tokens ourselves
                         log.info("No usage metadata provided by API, estimating tokens using {} tokenizer", getTokenizerType());
-                        // Estimate prompt tokens from the payload
-                        int estimatedPromptTokens = TokenizerUtils.countTokens(
-                                jsonPayload, getTokenizerType());
-                        // Estimate completion tokens from accumulated content per target
+                        int estimatedPromptTokens = TokenizerUtils.countTokens(jsonPayload, getTokenizerType());
                         int totalCompletionTokens = 0;
                         for (OpenAiCompatibleModelMessage target : targets) {
-                            // Get accumulated text content from parts
                             StringBuilder contentBuilder = new StringBuilder();
                             for (AbstractPart part : target.getParts()) {
                                 if (part instanceof ModelTextPart mtp) {
                                     contentBuilder.append(mtp.getText());
                                 }
                             }
-                            int estimatedCompletionTokens = TokenizerUtils.countTokens(
-                                    contentBuilder.toString(), getTokenizerType());
+                            int estimatedCompletionTokens = TokenizerUtils.countTokens(contentBuilder.toString(), getTokenizerType());
                             totalCompletionTokens += estimatedCompletionTokens;
-                            target.setBilledTokenCount(estimatedCompletionTokens);
+                            target.setBilledPromptTokens(estimatedPromptTokens);
+                            target.setBilledCompletionTokens(estimatedCompletionTokens);
                         }
-                        // Create response with estimated usage metadata
                         finalResponse = createResponseWithEstimatedUsage(agi, modelId, configJson, historyJson,
                                 estimatedPromptTokens, totalCompletionTokens, getTokenizerType());
                     } else {
@@ -469,7 +454,6 @@ public class OpenAiCompatibleModel extends AbstractModel {
                     }
                 }
             }
-
         } catch (Exception e) {
             log.error("Failed to execute OpenAI stream", e);
             observer.onError(e);

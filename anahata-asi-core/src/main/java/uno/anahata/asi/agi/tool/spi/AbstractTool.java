@@ -14,6 +14,7 @@ import uno.anahata.asi.internal.TokenizerUtils;
 import uno.anahata.asi.agi.message.AbstractModelMessage;
 
 import uno.anahata.asi.agi.event.BasicPropertyChangeSource;
+import uno.anahata.asi.agi.provider.TokenizerType;
 
 /**
  * The abstract base class for a tool, now generic on its Parameter and Call types.
@@ -105,20 +106,20 @@ public abstract class AbstractTool<P extends AbstractToolParameter, C extends Ab
     public abstract Type getResponseType();
     
     /**
-     * Calculates the total token count of this tool on-the-fly.
+     * Calculates the total token count of this tool on-the-fly using the specified tokenizer.
      * The count is a provider-agnostic approximation of the token overhead,
      * calculated by summing the tokens in its description, response schema,
      * and all of its parameters.
-     *
+     * @param type The tokenizer strategy to use.
      * @return The total token count.
      */
-    public int getTokenCount() {
+    public int getTokenCount(TokenizerType type) {
         int totalTokens = 0;
-        totalTokens += TokenizerUtils.countTokens(description);
-        totalTokens += TokenizerUtils.countTokens(responseJsonSchema);
+        totalTokens += TokenizerUtils.countTokens(description, type);
+        totalTokens += TokenizerUtils.countTokens(responseJsonSchema, type);
 
         for (AbstractToolParameter<?> param : parameters) {
-            totalTokens += param.getTokenCount();
+            totalTokens += param.getTokenCount(type);
         }
 
         return totalTokens;

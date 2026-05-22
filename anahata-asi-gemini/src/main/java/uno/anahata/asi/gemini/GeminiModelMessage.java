@@ -62,23 +62,24 @@ public class GeminiModelMessage extends AbstractModelMessage<GeminiResponse> {
         super(agi, response.getModelVersion() != null ? response.getModelVersion() : modelId);
         this.geminiCandidate = candidate;
         setResponse(response);
-        
-        // Populate new fields from Candidate
+
         candidate.groundingMetadata().ifPresent(gm -> setGroundingMetadata(toAnahataGroundingMetadata(gm)));
-        
+
         setFinishReason(toAnahataFinishReason(candidate.finishReason().orElse(null)));
         candidate.finishMessage().ifPresent(this::setFinishMessage);
         candidate.safetyRatings().ifPresent(sr -> setSafetyRatings(sr.stream()
             .map(s -> s.category().map(c -> c.knownEnum().name()).orElse("") + ":" + s.probability().map(p -> p.knownEnum().name()).orElse(""))
             .collect(Collectors.joining(", "))));
-        
-        // Set billed tokens from candidate if available, otherwise fallback to usage metadata
-        int billedTokens = candidate.tokenCount().orElse(0);
-        if (billedTokens <= 0 && response.getUsageMetadata() != null) {
-            billedTokens = response.getUsageMetadata().getCandidatesTokenCount();
+
+        int promptTokens = 0;
+        int completionTokens = candidate.tokenCount().orElse(0);
+        if (completionTokens <= 0 && response.getUsageMetadata() != null) {
+            promptTokens = response.getUsageMetadata().getPromptTokenCount();
+            completionTokens = response.getUsageMetadata().getCandidatesTokenCount();
         }
-        setBilledTokenCount(billedTokens);
-        
+        setBilledPromptTokens(promptTokens);
+        setBilledCompletionTokens(completionTokens);
+
         setRawJson(candidate.toJson());
         setCitationMetadata(candidate.citationMetadata()
             .map(cm -> cm.citations().orElse(List.of()).stream()
@@ -87,15 +88,11 @@ public class GeminiModelMessage extends AbstractModelMessage<GeminiResponse> {
                 .map(Optional::get)
                 .collect(Collectors.joining(", ")))
             .orElse(""));
-        
-        // All construction logic is now encapsulated here. The parent (this) exists
-        // before any child parts are created and added. The AbstractPart constructor
-        // adds the part to the message, so we just need a terminal operation to
-        // trigger the stream.
+
         candidate.content().ifPresent(content -> content.parts().ifPresent(parts -> parts.stream()
             .map(this::toAnahataPart)
             .filter(Objects::nonNull)
-            .collect(Collectors.toList()))); // Use a terminal operation that doesn't re-add the parts.
+            .collect(Collectors.toList())));
     }
 
     /**

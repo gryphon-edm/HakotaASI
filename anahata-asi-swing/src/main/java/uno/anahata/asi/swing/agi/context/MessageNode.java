@@ -87,7 +87,7 @@ public class MessageNode extends AbstractContextNode<AbstractMessage> {
      */
     @Override
     protected void calculateLocalTokens() {
-        this.historyTokens = userObject.shouldCreateMetadata() ? TokenizerUtils.countTokens(userObject.createMetadataHeader()) : 0;
+        this.historyTokens = userObject.shouldCreateMetadata() ? TokenizerUtils.countTokens(userObject.createMetadataHeader(), userObject.getActiveTokenizer()) : 0;
     }
 
     /**
