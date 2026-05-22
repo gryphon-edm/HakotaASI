@@ -22,7 +22,9 @@ import uno.anahata.asi.agi.tool.schema.SchemaProvider;
  */
 public class CoreContextProvider implements ContextProvider {
 
-    /** The parent agi session. */
+    /**
+     * The parent agi session.
+     */
     private final Agi agi;
 
     /**
@@ -34,6 +36,7 @@ public class CoreContextProvider implements ContextProvider {
 
     /**
      * Constructs a new CoreContextProvider for a specific agi session.
+     *
      * @param agi The parent agi session. Must not be null.
      */
     public CoreContextProvider(@NonNull Agi agi) {
@@ -104,9 +107,9 @@ public class CoreContextProvider implements ContextProvider {
                 + "No flattering. ";
 
         String reasoning = "During your internal reasoning phase, reason through the problem using natural, conversational human paragraphs, not 'machine like' paragraphs. Brainstorm out loud, weigh the pros and cons emotionally and logically, and formulate your thoughts in full paragraphs before providing the final output. This will help the user understand your approach to solving the problem";
-        
+
         String ui = "**UML**: The UI supports rendering of UML diagrams using marmaid codeblocks.";
-        
+
         String tool = "**Tool Execution**\n"
                 + "\n- All tools you see are java methods in java objects, in 'anahata terms' these objects are called 'toolkits' and each method in that object annotated with an @AgiTool annotation becomes a tool that you can execute. These java objects are stateful instances and they can have instance attributes to preserve state across turns. They all get serialized to disk every time a session is saved.\n"
                 + "\n- Toolkits can be enabled or disabled (would make the tools invisible to you) and there is a 'permission' for each tool that can take these values: Prompt, Approve, Deny. The user can change the permission of any tool and also enable/disable toolkits at will. If a toolkit is disabled, you should still get a hint of what that toolkit can do. \n"
@@ -119,13 +122,13 @@ public class CoreContextProvider implements ContextProvider {
                 + "\n- If a tool call you proposed is still 'EXECUTING', the user can click send and you wont get the result of the tool call until possibly a few turns later and you will only see the result of the tool call when the execution finish. In other words, lets say on your first turn (message id 2) you propose a tool call, if the user clicks send when the tool is EXECUTING, you repond and the user then says 'cool bananas' the same tool message in the history (the one that followed model message id = 2) that say EXECUTING in the first turn, now it has 'magically changed' in the history to EXECUTED and the result is there. So yeah, the history is not what you would call 'inmutable'. \n"
                 + "\n- There is a toggle button on the UI (and therefore a flag in the anahata framework) called 'auto-reply tool calls' so if you produce a batch of the tool calls, the user can either let the anahata framework automatically execute the batch of tool calls in the sequence you proposed and send you the responses 'inmediatly' or he may decide to review them one by one, tweak the parameters, skip some or run whichever tools he wants in whichever order he wants and even write a message before sending you the tool execution responses.\n"
                 + "\n- **Java Maps & JSON Object Dictionaries**: When a tool parameter is a Java `Map<String, String>` (representing dynamic properties or dictionaries), the OpenAPI schema maps this to a standard JSON object with `additionalProperties`.";
-        
+
         if (!agi.getToolManager().isWrapResponseSchemas()) {
             String schema = SchemaProvider.generateInlinedSchemaString(JavaMethodToolResponse.class);
             tool += "\n- **Global Tool Response Wrapper**: Note that JSON schemas in individual tool definitions represent only the raw 'result' type. However, EVERY tool response is wrapped in a `JavaMethodToolResponse` object. This wrapper includes execution status, errors, logs, and other metadata. The wrapper structure is defined by this schema:\n\n"
                     + "```json\n" + schema + "\n```\n";
         }
-        
+
         String rag = "**The RAG message**:\n"
                 + "1. The last message on every turn (which always starts with `--- RAG Message ---` is Augmented Workspace Context. Gets dynamically generated and the user doesnt see it in the UI. It contains:\n"
                 + " a) all resources either you or the user have loaded (the user can also 'add files to context' manually)"
@@ -134,7 +137,6 @@ public class CoreContextProvider implements ContextProvider {
                 + "3. The RAG message gets generated dynamically after all tool execution finished and right before the api call (that is why it always has the latest content and lastModified timestamp for each resource)\n"
                 + "4. Always use the 'lastModified' timestamp that you see in the RAG message for any tools that modify files (e.g. updateTextFile, replaceInTextFile) dont try to guess ir or take it from any other part in the history or any other tool call, always use the lastModifed timestamps from the RAG message. They are just for optimistic locking so the one in the RAG message is your source of truth.\n";
 
-        
         return Arrays.asList(fun, reasoning, ui, tool, rag);
     }
 
