@@ -232,7 +232,10 @@
             <div class="sidebar-nav">
                 <h4>Domain Model</h4>
                 <ul>
+                    <li><a href="#asi-container">ASI Container</a></li>
                     <li><a href="#agi-container" class="active">AGI Container</a></li>
+                    <li><a href="#agi-config">AGI Configuration</a></li>
+                    <li><a href="#context-manager">Context Manager</a></li>
                     <li><a href="#messages-parts" >Messages & Parts</a></li>
                     <li><a href="#metadata">In-Band Metadata</a></li>
                     <li><a href="#gc">Garbage Collection</a></li>
@@ -257,6 +260,71 @@
                 </div>
             </section>
 
+            <section id="asi-container">
+                <h2>The ASI Container</h2>
+                <p>The <code>AbstractAsiContainer</code> acts as the authoritative JVM host for active Agi sessions. It is responsible for session lifecycle orchestration, global configuration registries, session passivation, active session routing, and platform-specific UI Look-and-Feel bootstrapping.</p>
+                
+                <div class="mermaid-card" onclick="this.classList.toggle('expanded')">
+                    <div class="code-header">ASI Container Architecture & State Passivation Flow</div>
+                    <div class="mermaid">
+                    graph TD
+                        subgraph JVM Memory Scopes [JVM Memory Scopes]
+                            AppMap[Application Map - Shared JVM-wide]
+                            ContMap[Container Map - Shared Application-wide]
+                        end
+
+                        subgraph AbstractAsiContainer [AbstractAsiContainer]
+                            ActiveAgis[Active Agi Sessions Pool]
+                            Preferences[AsiContainerPreferences]
+                            ToolPerms[Global Tool Permissions Registry]
+                        end
+
+                        subgraph PreferencesDNA [Preferences DNA Blueprint]
+                            AgiTemplate[AgiConfig Template]
+                            ReqTemplate[RequestConfig Template]
+                            DnaVersion[DNA Version & Drift Monitor]
+                        end
+
+                        subgraph PassivationPipeline [Passivation & Recovery]
+                            TmpFile[1. Write to Session .tmp]
+                            AtomicMove[2. Atomic Move to .kryo]
+                            RebindHook[3. State Healing via Rebindable]
+                        end
+
+                        AppMap --> AbstractAsiContainer
+                        ContMap --> AbstractAsiContainer
+                        ActiveAgis --> PassivationPipeline
+                        Preferences --> PreferencesDNA
+                        ToolPerms --> Preferences
+                    </div>
+                </div>
+
+                <div class="metabolic-dashboard">
+                    <div class="logic-grid" style="grid-template-columns: 1fr 1fr;">
+                        <div class="logic-card">
+                            <i class="fas fa-network-wired" style="color: var(--primary-light); float: right; font-size: 1.2rem; margin-left: 10px;"></i>
+                            <h5>Container Topology & Memory Scopes</h5>
+                            <p style="clear: none; font-size: 0.95rem; line-height: 1.6; margin-top: 1rem;">Manages the active session pool (<code>activeAgis</code>). It exposes thread-safe, container-scoped (<code>containerAttributes</code>) and JVM-scoped (<code>applicationAttributes</code>) memory maps, allowing distinct Agi sessions to securely share runtime state, cached models, or collaborative tool assets.</p>
+                        </div>
+                        <div class="logic-card">
+                            <i class="fas fa-save" style="color: var(--verified-green); float: right; font-size: 1.2rem; margin-left: 10px;"></i>
+                            <h5>Passivation & Atomic Saves</h5>
+                            <p style="clear: none; font-size: 0.95rem; line-height: 1.6; margin-top: 1rem;">Orchestrates transaction-grade state serialization of active Agi sessions to binary <code>.kryo</code> files. Uses the atomic save pattern—writing first to a temporary <code>.tmp</code> file before executing a filesystem-level atomic move—to completely protect session history and state from unexpected power losses or system crashes.</p>
+                        </div>
+                        <div class="logic-card">
+                            <i class="fas fa-dna" style="color: var(--barca-gold); float: right; font-size: 1.2rem; margin-left: 10px;"></i>
+                            <h5>DNA Templates & Request Blueprints</h5>
+                            <p style="clear: none; font-size: 0.95rem; line-height: 1.6; margin-top: 1rem;">Exposes the <code>AsiContainerPreferences</code> to manage global defaults for new sessions. It configures the session's genetic blueprint (<code>AgiConfig</code> template) with predefined models, providers, and registered toolkits (e.g. <code>Session</code>, <code>History</code>, <code>Resources</code>), and templates the <code>RequestConfig</code> (temperature, top-p, and output token limits).</p>
+                        </div>
+                        <div class="logic-card">
+                            <i class="fas fa-shield-halved" style="color: var(--accent); float: right; font-size: 1.2rem; margin-left: 10px;"></i>
+                            <h5>Global Tool Permissions & Drift</h5>
+                            <p style="clear: none; font-size: 0.95rem; line-height: 1.6; margin-top: 1rem;">Maintains an authoritative map of tool fully qualified names (e.g. <code>LocalFiles.readFile</code>) to execution policies (<code>PROMPT</code>, <code>APPROVE_ALWAYS</code>, <code>DENY</code>) across all sessions. It also detects <b>DNA Version Drift</b>: if an application update introduces new toolkits, the container automatically reconciles and merges the disk-cached template with compiled defaults.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <section id="agi-container">
                 <h2>The AGI Container</h2>
                 <p>The <code>Agi</code> class is the central orchestrator. It manages the session lifecycle, state persistence, and model communication.</p>
@@ -265,6 +333,91 @@
                     <li><b>Non-Blocking Inputs:</b> Implements a <code>stagedUserMessage</code> queue, allowing users to submit input while the ASI is currently processing a turn.</li>
                     <li><b>Metabolic Policy:</b> The <code>AgiConfig</code> defines default <b>Turns to Keep</b> (Max Depth) for different data types: Text (108), Thoughts (12), Tools (12), and Blobs (4).</li>
                 </ul>
+            </section>
+
+            <section id="agi-config">
+                <h2>AGI Configuration (DNA Blueprint)</h2>
+                <p>The <code>AgiConfig</code> acts as the genetic blueprint ("DNA") for an individual Agi session. It defines the starting model configurations, enabled toolkits, and granular context window metabolic policies.</p>
+                
+                <div class="metabolic-dashboard">
+                    <h4 style="color: var(--white); margin-bottom: 1.5rem;">Default Sinking Stack Decay Policies (Max Depth)</h4>
+                    <p style="font-size: 0.95rem; line-height: 1.6; opacity: 0.85; margin-bottom: 1.5rem;">
+                        Each multimodal part is registered with a designated Time-to-Live (TTL) counter, defined as <b>Turns to Keep</b> in the session's active context. When a turn completes, all active parts "sink" by 1 depth unit. Upon reaching 0, they are soft-recycled into Ghost hints.
+                    </p>
+                    <table class="state-matrix" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
+                                <th style="padding: 0.8rem; color: var(--barca-gold);">Part Type</th>
+                                <th style="padding: 0.8rem; color: var(--primary-light);">Default Turns (Max Depth)</th>
+                                <th style="padding: 0.8rem; color: var(--white); opacity: 0.8;">Metabolic Purpose</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 0.8rem; font-weight: 700;">TextPart</td>
+                                <td style="padding: 0.8rem; color: var(--primary-light); font-weight: 700;">108 Turns</td>
+                                <td style="padding: 0.8rem; opacity: 0.85;">Sustains high-level conversational memory and systemic behavioral rules.</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 0.8rem; font-weight: 700;">ThoughtPart</td>
+                                <td style="padding: 0.8rem; color: var(--barca-red); font-weight: 700;">12 Turns</td>
+                                <td style="padding: 0.8rem; opacity: 0.85;">Retains the model's intermediate logical and chain-of-thought reasonings.</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 0.8rem; font-weight: 700;">AbstractToolCall</td>
+                                <td style="padding: 0.8rem; color: var(--verified-green); font-weight: 700;">12 Turns</td>
+                                <td style="padding: 0.8rem; opacity: 0.85;">Maintains short-term tool arguments and result schemas for execution traceability.</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 0.8rem; font-weight: 700;">BlobPart</td>
+                                <td style="padding: 0.8rem; color: var(--accent); font-weight: 700;">4 Turns</td>
+                                <td style="padding: 0.8rem; opacity: 0.85;">Mitigates memory inflation by aggressively recycling heavy binary payloads (images, audio).</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="context-manager">
+                <h2>The Context Manager</h2>
+                <p>The <code>ContextManager</code> is the absolute heart of the session's Working Memory. It is responsible for chronological timeline auditing, on-the-fly RAG context fusion, and orchestrating the active garbage collection loop.</p>
+                
+                <div class="mermaid-card" onclick="this.classList.toggle('expanded')">
+                    <div class="code-header">Turn Lifecycle & Context Fusion Pipeline</div>
+                    <div class="mermaid">
+                    sequenceDiagram
+                        participant User as User / Host
+                        participant CM as ContextManager
+                        participant RM as ResourceManager
+                        participant GC as CwGC (Garbage Collector)
+                        participant Model as AI Model Provider
+
+                        User->>CM: 1. Send Message
+                        CM->>RM: 2. Just-In-Time Sense & Poll Live Resources
+                        RM-->>CM: 3. Return Fresh Resource Views (LIVE policy)
+                        CM->>CM: 4. Compile Unified RAG Message
+                        CM->>Model: 5. Execute API Generation Request
+                        Model-->>User: 6. Stream Response & Execute Tools
+                        User->>GC: 7. Turn Complete: Calculate Metabolism
+                        GC->>GC: 8. Expire Remaining Depth (Sinking Stack)
+                        GC->>CM: 9. Hard-Prune effectivelyPruned Messages
+                    </div>
+                </div>
+
+                <div class="metabolic-dashboard">
+                    <div class="logic-grid" style="grid-template-columns: 1fr 1fr;">
+                        <div class="logic-card">
+                            <i class="fas fa-microchip" style="color: var(--barca-gold); float: right; font-size: 1.2rem; margin-left: 10px;"></i>
+                            <h5>Memory Consolidation</h5>
+                            <p style="clear: none; font-size: 0.95rem; line-height: 1.6; margin-top: 1rem;">Maintains the sequential ID generator for all conversation turns and parts, ensuring strict temporal ordering. It builds the visible history list before dispatching payloads to the provider.</p>
+                        </div>
+                        <div class="logic-card">
+                            <i class="fas fa-eye" style="color: var(--primary-light); float: right; font-size: 1.2rem; margin-left: 10px;"></i>
+                            <h5>Sensory Fusion (RAG Compiler)</h5>
+                            <p style="clear: none; font-size: 0.95rem; line-height: 1.6; margin-top: 1rem;">Compiles the unified <code>RagMessage</code> dynamically right before generation. It polls active <code>ContextProvider</code>s, and parses resources to fetch the most up-to-date workspace views.</p>
+                        </div>
+                    </div>
+                </div>
             </section>
 
             <section id="messages-parts">
@@ -355,7 +508,21 @@
                         </div>
                     </div>
 
-                    <table class="state-matrix">
+                    <div style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem;">
+                        <h4 style="color: var(--white); margin-bottom: 1rem;">One-Pass Token Metabolism Calculation</h4>
+                        <p style="font-size: 0.95rem; line-height: 1.6; opacity: 0.85;">
+                            Rather than traversing the active history multiple times, the <code>ContextWindowGarbageCollector</code> executes a highly optimized, <b>single-pass calculation</b>. It aggregates token weights for system instructions, tools, active history, and pruned "Ghosts", compiling precise diagnostics in milliseconds to prevent context window congestion under high-concurrency environments.
+                        </p>
+                    </div>
+
+                    <div style="margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem;">
+                        <h4 style="color: var(--white); margin-bottom: 1rem;">Sinking Stack Desaturation</h4>
+                        <p style="font-size: 0.95rem; line-height: 1.6; opacity: 0.85;">
+                            Visual feedback is synchronized with history decay. In the JNDI Context Explorer, effectively pruned message parts undergo <b>visual desaturation</b>—icons fade out and text titles gray-scale dynamically—letting developers witness their session's active cognitive span at a glance.
+                        </p>
+                    </div>
+
+                    <table class="state-matrix" style="margin-top: 2rem;">
                         <thead>
                             <tr><th>pruningState</th><th>Symbol</th><th>Behavior</th></tr>
                         </thead>
@@ -544,10 +711,41 @@
             <section id="toolkits">
                 <h2>Toolkits & Tools</h2>
                 <div class="toolkit-list">
-                    <div class="toolkit-card"><i class="fas fa-history"></i><h4>Session</h4><p>Metadata & depth governor.</p></div>
-                    <div class="toolkit-card"><i class="fas fa-file-code"></i><h4>Files</h4><p>Atomic cross-platform I/O.</p></div>
-                    <div class="toolkit-card"><i class="fas fa-mug-hot"></i><h4>Java</h4><p>Singularity hot-reload engine.</p></div>
-                    <div class="toolkit-card"><i class="fas fa-terminal"></i><h4>Shell</h4><p>Direct host interaction.</p></div>
+                    <div class="toolkit-card">
+                        <i class="fas fa-server"></i>
+                        <h4>AsiContainer</h4>
+                        <p>Global lifecycle orchestrator. Spawns, lists, and terminates active sessions.</p>
+                    </div>
+                    <div class="toolkit-card">
+                        <i class="fas fa-fingerprint"></i>
+                        <h4>Session</h4>
+                        <p>Metadata & depth governor. Manages task dashboards and session policies.</p>
+                    </div>
+                    <div class="toolkit-card">
+                        <i class="fas fa-history"></i>
+                        <h4>History</h4>
+                        <p>Pruning, pinning, and metadata injection manager for the sliding context window.</p>
+                    </div>
+                    <div class="toolkit-card">
+                        <i class="fas fa-file-code"></i>
+                        <h4>Resources</h4>
+                        <p>URI-centric workspace, file, and web reader with live optimistic locking.</p>
+                    </div>
+                    <div class="toolkit-card">
+                        <i class="fab fa-java"></i>
+                        <h4>Java</h4>
+                        <p>Singularity hot-reload engine. JIT-compiles and executes Java on the fly.</p>
+                    </div>
+                    <div class="toolkit-card">
+                        <i class="fas fa-terminal"></i>
+                        <h4>Shell</h4>
+                        <p>Direct host-level OS terminal interaction and process streaming.</p>
+                    </div>
+                    <div class="toolkit-card">
+                        <i class="fas fa-microphone"></i>
+                        <h4>Audio</h4>
+                        <p>Autonomous hardware line selection, WAVE recording, and playback controls.</p>
+                    </div>
                 </div>
 
                 <h3>Advanced State Management</h3>
@@ -644,6 +842,20 @@ public class IssueNode {
                             <h5>State Healing (Rebindable)</h5>
                             <p>The <code>uno.anahata.asi.internal.kryo.Rebindable</code> interface allows any Java class in the entire object graph to restore transient fields post-deserialization.</p>
                         </div>
+                    </div>
+
+                    <div style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem;">
+                        <h4 style="color: var(--white); margin-bottom: 1rem;">Decorator-Driven State Healing</h4>
+                        <p style="font-size: 0.95rem; line-height: 1.6; opacity: 0.85;">
+                            When restoring a session, our custom <code>RebindableWrapperSerializer</code> intercepts Kryo's read stream. Any deserialized node implementing <code>Rebindable</code> is automatically captured, and its <code>rebind()</code> hook is triggered to cleanly reconstruct ephemeral locks, thread-local contexts, and active workspace listeners.
+                        </p>
+                    </div>
+
+                    <div style="margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem;">
+                        <h4 style="color: var(--white); margin-bottom: 1rem;">Hidden Class & Proxy Shielding</h4>
+                        <p style="font-size: 0.95rem; line-height: 1.6; opacity: 0.85;">
+                            Kryo reflection is highly sensitive to JVM-internal types. The <code>RebindableSerializerFactory</code> protects serialization pipelines from fatal classloader errors by detecting hidden classes (such as dynamic lambda proxies and un-addressable JRE internals), safely shielding them under a no-op null-serializer.
+                        </p>
                     </div>
                 </div>
 

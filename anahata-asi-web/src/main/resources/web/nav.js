@@ -21,14 +21,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     <a href="index.html" class="${isIndex ? 'active-link' : ''}">Home</a>
                     
                     <div class="dropdown">
-                        <a href="#" class="dropdown-toggle ${(isActive('core.html') || isActive('swing.html') || isActive('yam.html') || isActive('gemini.html')) ? 'active-link' : ''}">
+                        <a href="#" class="dropdown-toggle ${(isActive('core.html') || isActive('swing.html') || isActive('yam.html') || isActive('gemini.html') || isActive('openai.html') || isActive('anthropic.html') || isActive('compatible.html')) ? 'active-link' : ''}">
                             Modules <i class="fas fa-chevron-down"></i>
                         </a>
                         <div class="dropdown-menu">
                             <a href="core.html" class="${isActive('core.html') ? 'active-item' : ''}"><i class="fas fa-brain"></i> Core API</a>
                             <a href="swing.html" class="${isActive('swing.html') ? 'active-item' : ''}"><i class="fas fa-desktop"></i> Swing UI</a>
                             <a href="yam.html" class="${isActive('yam.html') ? 'active-item' : ''}"><i class="fas fa-flask"></i> Yam Tools</a>
+                            <div style="border-top: 1px solid rgba(255,255,255,0.1); margin: 5px 0;"></div>
                             <a href="gemini.html" class="${isActive('gemini.html') ? 'active-item' : ''}"><i class="fas fa-plug"></i> Gemini Provider</a>
+                            <a href="openai.html" class="${isActive('openai.html') ? 'active-item' : ''}"><i class="fas fa-bolt"></i> OpenAI Provider</a>
+                            <a href="anthropic.html" class="${isActive('anthropic.html') ? 'active-item' : ''}"><i class="fas fa-ghost"></i> Anthropic Provider</a>
+                            <a href="compatible.html" class="${isActive('compatible.html') ? 'active-item' : ''}"><i class="fas fa-globe"></i> Universal Alliance</a>
                         </div>
                     </div>
 
@@ -42,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
 
+                    <a href="quickstart.html" class="${isActive('quickstart.html') ? 'active-link' : ''}">Quick Start</a>
                     <a href="apidocs/index.html">Javadocs</a>
                     
                     <div class="social-links">

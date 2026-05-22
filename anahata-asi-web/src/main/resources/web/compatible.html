@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WMGS1YH2WD"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-WMGS1YH2WD');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Alliance | Anahata ASI Platform</title>
+    <link rel="icon" type="image/png" href="https://www.anahata.uno/icons/anahata_16.png">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .docs-wrapper { display: flex; max-width: 1400px; margin: 0 auto; padding: 160px 2rem 100px; gap: 4rem; }
+        .sidebar { width: 300px; flex-shrink: 0; position: sticky; top: 130px; height: calc(100vh - 160px); overflow-y: auto; padding-right: 1.5rem; }
+        .sidebar-nav h4 { color: var(--barca-gold); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 2px; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(237, 187, 0, 0.2); padding-bottom: 8px; }
+        .sidebar-nav ul { list-style: none; padding: 0; }
+        .sidebar-nav a { color: var(--text-muted); text-decoration: none; display: block; padding: 10px 15px; transition: var(--transition); border-left: 3px solid transparent; }
+        .sidebar-nav a:hover, .sidebar-nav a.active { color: var(--primary-light); border-left-color: var(--primary-light); background: linear-gradient(to right, rgba(44, 122, 123, 0.1), transparent); }
+        .main-content { flex-grow: 1; max-width: 900px; }
+        .alliance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin: 2rem 0; }
+    </style>
+</head>
+<body>
+    <div id="main-nav"></div>
+
+    <div class="docs-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-nav">
+                <h4>The Universal Alliance</h4>
+                <ul>
+                    <li><a href="#overview" class="active">Overview</a></li>
+                    <li><a href="#openai-compatible">OpenAI Compatible</a></li>
+                    <li><a href="#huggingface">Hugging Face</a></li>
+                    <li><a href="#modal">Modal (GLM-5)</a></li>
+                    <li><a href="#minimax">MiniMax</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <section id="overview">
+                <h1>The Universal <span style="color: var(--barca-gold)">Alliance</span></h1>
+                <p class="tagline" style="text-align: left;">Freedom from vendor lock-in.</p>
+                <p>The Anahata ASI Platform is designed to adapt to any intelligence source. Our Universal Alliance adapters allow you to connect to Groq, Local Ollama, DeepSeek, vLLM, and any other platform that respects the standard API contracts.</p>
+            </section>
+            
+            <section id="openai-compatible">
+                <h2>OpenAI Compatible (The Swiss Army Knife)</h2>
+                <p>The <code>OpenAiCompatibleProvider</code> is the ultimate fallback and universal connector. By simply dropping in a Base URL and an API Key, you can interface with hundreds of open-source and proprietary models instantly. It features automatic reasoning extraction for models that wrap their thoughts in XML-style tags.</p>
+            </section>
+
+            <div class="alliance-grid">
+                <section id="huggingface" class="adapter-box" style="margin: 0; border-top: 4px solid var(--barca-gold);">
+                    <h4><img src="assets/logos/uno.anahata.asi.huggingface.HuggingFaceProvider.png" alt="HF" style="height: 24px; vertical-align: middle; margin-right: 8px;"> Hugging Face (The Deep Inspector)</h4>
+                    <p>Our Hugging Face adapter doesn't just blindly send prompts. It runs a parallel <b>"Deep Inspection"</b> using the container's background executor to fetch <code>config.json</code> and <code>tokenizer_config.json</code> directly from the HF Hub. This allows it to dynamically learn the model's architecture, accurate token limits, and whether it uses <code>&lt;think&gt;</code> tags or <code>reasoning_content</code> fields!</p>
+                </section>
+
+                <section id="modal" class="adapter-box" style="margin: 0; border-top: 4px solid var(--primary-light);">
+                    <h4><img src="assets/logos/uno.anahata.asi.modal.ModalProvider.png" alt="Modal" style="height: 24px; vertical-align: middle; margin-right: 8px;"> Modal (GLM-5.1 Serverless)</h4>
+                    <p>A sleek, pre-configured adapter that instantly taps into Modal's serverless GLM-5.1 endpoint. It automatically parses GLM's native function calling mechanics and its specific <code>reasoning_content</code> fields for pristine UI rendering.</p>
+                </section>
+
+                <section id="minimax" class="adapter-box" style="margin: 0; border-top: 4px solid var(--barca-blue); grid-column: 1 / -1;">
+                    <h4><img src="assets/logos/uno.anahata.asi.minimax.MinimaxAnthropicProvider.png" alt="MiniMax" style="height: 24px; vertical-align: middle; margin-right: 8px;"> MiniMax (Anthropic-Compatible)</h4>
+                    <p>Demonstrating our extreme architectural flexibility, we mapped MiniMax's high-speed M2.5/M2.7 models through our <i>Anthropic-compatible</i> adapter rather than OpenAI's. This provides native access to their lightning-fast agentic workflows while reusing our bulletproof Claude SSE streaming logic.</p>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="nav.js"></script>
+    <img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=f19c44f5-8b2e-458f-beab-96e4f9f8e603" />
+</body>
+</html>

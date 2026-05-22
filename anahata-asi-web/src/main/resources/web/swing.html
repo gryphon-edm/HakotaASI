@@ -90,7 +90,7 @@
 
             <section id="orchestration">
                 <h2>Host Orchestration</h2>
-                <p>Build your own host environment (IDE plugin or standalone app) by implementing the <code>AgiController</code> interface. This decouples the session lifecycle from your UI layout.</p>
+                <p>Build your own host environment by extending <code>AbstractAsiContainerPanel</code>. It provides the session lifecycle operations (New, Import, Dispose) and a background refresh loop. The framework ships with two out-of-the-box implementations: <code>AsiCardsContainerPanel</code> (sticky-note dashboard) and <code>AsiTableContainerPanel</code> (compact grid).</p>
                 
                 <div class="nb-card" style="border-top-color: var(--barca-blue);">
                     <h5 style="color: var(--white); margin-top: 0;">Metabolic Efficiency</h5>
@@ -101,20 +101,21 @@
                     <div class="code-header">Orchestration Contract</div>
                     <div class="mermaid">
 classDiagram
-class AgiController {
-focus
-close
-dispose
-importSession
-createNew
-}
 class AbstractAsiContainerPanel {
-refreshView
-getSelectedAgi
-startRefresh
-stopRefresh
+createNew()
+importSession()
+focus(Agi)
+close(Agi)
+dispose(Agi)
 }
-AgiController <|.. AbstractAsiContainerPanel
+class AsiCardsContainerPanel {
+Dashboard View
+}
+class AsiTableContainerPanel {
+Compact List View
+}
+AbstractAsiContainerPanel <|-- AsiCardsContainerPanel
+AbstractAsiContainerPanel <|-- AsiTableContainerPanel
                     </div>
                 </div>
             </section>
