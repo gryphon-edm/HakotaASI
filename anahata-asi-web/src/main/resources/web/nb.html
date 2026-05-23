@@ -104,6 +104,7 @@
                 <ul>
                     <li><a href="#nbjava"><i class="fab fa-java"></i> NbJava</a></li>
                     <li><a href="#refactor"><i class="fas fa-magic"></i> Refactor</a></li>
+                    <li><a href="#batchcoderefiner"><i class="fas fa-wrench"></i> BatchCodeRefiner</a></li>
                     <li><a href="#coderefiner"><i class="fas fa-atom"></i> CodeRefiner</a></li>
                     <li><a href="#codemodel"><i class="fas fa-sitemap"></i> CodeModel</a></li>
                     <li><a href="#maven"><i class="fas fa-hammer"></i> Maven</a></li>
@@ -111,6 +112,11 @@
                     <li><a href="#hints"><i class="fas fa-lightbulb"></i> Hints</a></li>
                     <li><a href="#editor"><i class="fas fa-edit"></i> Editor</a></li>
                     <li><a href="#ide"><i class="fas fa-laptop-code"></i> IDE</a></li>
+                </ul>
+
+                <h4>Core Toolkits</h4>
+                <ul>
+                    <li><a href="#core-toolkits-matrix"><i class="fas fa-cube"></i> Core Registry</a></li>
                 </ul>
 
                 <h4>Sensory Context</h4>
@@ -361,6 +367,19 @@
                 </div>
             </section>
 
+            <!-- BatchCodeRefiner Toolkit -->
+            <section id="batchcoderefiner" class="toolkit-section">
+                <div class="toolkit-header"><i class="fas fa-wrench"></i><h2>BatchCodeRefiner Toolkit (1 Tool)</h2></div>
+                <p>Advanced structural Java refinement utilizing the V4 AST-Guided Batch Mode. This is Anahata's flagship tool for executing atomized code patches across classes, methods, fields, and constructors, ensuring zero formatting drift and complete comment preservation.</p>
+                <ul class="toolkit-highlights">
+                    <li><b>Atomicity Guaranteed:</b> Receives a list of multiple code refinement intents (inserts, updates, deletes, moves) and applies them programmatically in a single, safe transaction.</li>
+                    <li><b>100% Indentation Fidelity:</b> The refiner automatically computes the target scope's indentation level, aligning your block statements without needing leading pad spaces.</li>
+                </ul>
+                <div class="tool-grid">
+                    <div class="tool-card"><span class="tool-sig">refine(CodeRefinementBatch batch) <span class="badge-perm perm-prompt">Prompt</span></span><p class="tool-desc">Executes a batch of AST-guided structural edits on a single Java source file.</p></div>
+                </div>
+            </section>
+
             <!-- Refactor Toolkit -->
             <section id="refactor" class="toolkit-section">
                 <div class="toolkit-header"><i class="fas fa-magic"></i><h2>Refactor Toolkit (17 Tools)</h2></div>
@@ -559,6 +578,85 @@
                     </div>
                 </div>
             </section>
+
+            <!-- Universal Capability Matrix -->
+            <section id="core-toolkits-matrix" class="toolkit-section">
+                <div class="toolkit-header"><i class="fas fa-table"></i><h2>Universal Platform Capability Matrix</h2></div>
+                <p>Anahata ASI NetBeans inherits the entire robust capability catalog from the <a href="desktop.html" style="color: var(--barca-gold); text-decoration: underline;">ASI Desktop container</a>. Below is the complete platform index of all 148 tools actively compiled within the current running JVM, grouped by package namespace.</p>
+                
+                <div class="comparison-container" style="overflow-x: auto; margin-top: 2rem;">
+                    <table class="comparison-table" style="width: 100%; border-collapse: collapse; text-align: left; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; font-size: 0.9rem;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
+                                <th style="padding: 1rem; color: var(--barca-gold); width: 25%;">Category</th>
+                                <th style="padding: 1rem; color: var(--primary-light); width: 25%;">Toolkit ID</th>
+                                <th style="padding: 1rem; color: var(--white); width: 10%;">Tools</th>
+                                <th style="padding: 1rem; color: var(--white); width: 40%;">Scope & Key Capabilities</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 1rem; font-weight: 700;" rowspan="3">Core Container</td>
+                                <td style="padding: 1rem; color: var(--barca-gold); font-weight: 700;">AsiContainer</td>
+                                <td style="padding: 1rem;">4</td>
+                                <td style="padding: 1rem; opacity: 0.8;">Active session pool creation, metadata inspection, and binary history dump.</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 1rem; color: var(--barca-gold); font-weight: 700; border-left: none;">Session</td>
+                                <td style="padding: 1rem;">6</td>
+                                <td style="padding: 1rem; opacity: 0.8;">Summary dashboards, session nickname, context provider state toggles, and hosted tools.</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 1rem; color: var(--barca-gold); font-weight: 700; border-left: none;">History</td>
+                                <td style="padding: 1rem;">4</td>
+                                <td style="padding: 1rem; opacity: 0.8;">Sliding context window desaturation, part/message soft pruning, and thumbtack pinning.</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 1rem; font-weight: 700;" rowspan="6">Core OS & Hardware</td>
+                                <td style="padding: 1rem; color: var(--barca-gold); font-weight: 700;">Resources</td>
+                                <td style="padding: 1rem;">8</td>
+                                <td style="padding: 1rem; opacity: 0.8;">URI-centric file, URL, and String handle viewport managers with optimistic locking.</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 1rem; color: var(--barca-gold); font-weight: 700; border-left: none;">Audio</td>
+                                <td style="padding: 1rem;">4</td>
+                                <td style="padding: 1rem; opacity: 0.8;">Autonomous hardware line selection, WAV recording, and real-time RMS metering.</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 1rem; color: var(--barca-gold); font-weight: 700; border-left: none;">Screens</td>
+                                <td style="padding: 1rem;">6</td>
+                                <td style="padding: 1rem; opacity: 0.8;">Screen and window capture, multi-monitor visual visionary, and live sharing region.</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 1rem; color: var(--barca-gold); font-weight: 700; border-left: none;">Shell</td>
+                                <td style="padding: 1rem;">1</td>
+                                <td style="padding: 1rem; opacity: 0.8;">Host terminal interaction, process execution, and synchronous output capture.</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 1rem; color: var(--barca-gold); font-weight: 700; border-left: none;">Host</td>
+                                <td style="padding: 1rem;">2</td>
+                                <td style="padding: 1rem; opacity: 0.8;">Active OS processes exploration, CPU diagnostics, and process termination by PID.</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 1rem; color: var(--barca-gold); font-weight: 700; border-left: none;">Speech</td>
+                                <td style="padding: 1rem;">1</td>
+                                <td style="padding: 1rem; opacity: 0.8;">OS-independent TTS alerts and eyes-free speech synthesis.</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 1rem; font-weight: 700;" rowspan="3">Yam Extensions (Beta)</td>
+                                <td style="padding: 1rem; color: var(--barca-gold); font-weight: 700;">Chrome / Firefox</td>
+                                <td style="padding: 1rem;">38</td>
+                                <td style="padding: 1rem; opacity: 0.8;">Chromium and Gecko-based Selenium browser automation, form filling, and visual analysis.</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 1rem; color: var(--barca-gold); font-weight: 700; border-left: none;">Radio</td>
+                                <td style="padding: 1rem;">3</td>
+                                <td style="padding: 1rem; opacity: 0.8;">Curated internet radio streaming with SomaFM API, KEXP and FIP Paris channels.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -567,97 +665,5 @@
     <script src="nav.js"></script>
     <img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=f19c44f5-8b2e-458f-beab-96e4f9f8e603" />
     
-    <script>
-        const compData = {
-            "intellij": {
-                name: "IntelliJ AI Assistant (JetBrains)",
-                arch: "Proprietary JetBrains Cloud integration. Deep AST analysis but stateless session persistence.",
-                context: "<b>The Context Window Disaster (Issue LLM-13992):</b> Heavily limited. Silently truncates context when attachments exceed tiny thresholds. Opaque background context building burns up to 25% of monthly Pro quotas in a single workday of normal coding. Prone to catastrophic <b>413 Content Too Large</b> failures on EKS gateways.",
-                safety: "Basic chat and auto-complete. Standard click-to-accept autocomplete suggestions. No visual pre-flight reviews, side-by-side graphical diff view, or argument modification states.",
-                deployment: "Closed-source cloud gateway. Locked entirely to JetBrains' commercial licensing, billing, and proprietary server telemetry.",
-                agentic: "Completely static. Restricted to pre-compiled inspections. No dynamic self-evolution."
-            },
-            "eclipse": {
-                name: "GitHub Copilot for Eclipse (Microsoft)",
-                arch: "Client-side plugin sending stateless REST calls to Microsoft/GitHub servers.",
-                context: "<b>The Open-Source Illusion:</b> Released client wrapper as open-source under MIT on May 21, 2026 to bypass enterprise audits, but the actual orchestration, telemetry, and AI service remain closed-source. Wastes up to 40% of its active token window on 'Safety & Policy Scaffolding' (Microsoft's commercial liability filtering).",
-                safety: "Provides Next Edit Suggestions (NES) but lacks pre-flight AST-aware validation. No interactive local review gates.",
-                deployment: "Cloud-only telemetry. Requires active Microsoft enterprise account and billing. No native air-gapped or on-premise execution.",
-                agentic: "Uses static MCP (Model Context Protocol). No dynamic compilation or runtime class loading inside the IDE JVM."
-            },
-            "watsonx": {
-                name: "IBM watsonx Code Assistant (Enterprise)",
-                arch: "Closed-source IBM Cloud integration. Targeted at Enterprise Java Modernization (migrating Java 8 to 17/monolith to Jakarta EE).",
-                context: "Stores chats locally in a SQLite database (<code>~/.wca/chat.db</code>) for basic privacy, but completely lacks context window desaturation or metabolic garbage collection.",
-                safety: "Generates code snippets in chat. No side-by-side IDE diff visualizer with overlaid AI comment bubbles or programmatic 'PENDING' review gates.",
-                deployment: "<b>Heavy Vendor Lock-In:</b> Tied exclusively to IBM Cloud. Requires a premium, expensive <b>Standard Plan</b> on IBM Cloud. Cannot run offline open-weight models.",
-                agentic: "Completely static. Locked to pre-trained modernization blueprints."
-            },
-            "cursor": {
-                name: "Cursor Enterprise IDE",
-                arch: "VS Code fork with embedded Electron/TypeScript AI layers.",
-                context: "Uses codebase embedding vector databases, but struggles with large monorepos, causing Electron thread crashes or extreme memory leaks. Cannot resolve local addresses without public network tunnels.",
-                safety: "<b>The Ngrok Security Nightmare:</b> Cannot connect to Local Models on <code>localhost</code> directly because its prompts are built on Cursor's cloud. Forces developers to open <b>public ngrok tunnels</b> to route local prompts back to their machine! Absolute blocker for corporate compliance.",
-                deployment: "Cloud-only routing. No On-Premise, Hybrid, or VPC deployments available for secure environments. Client-side model name validation blocks custom enterprise models.",
-                agentic: "Restricted to standard OS terminal scripts and VS Code extension boundaries."
-            },
-            "antigravity": {
-                name: "Google Antigravity AI",
-                arch: "Browser-based or VS Code fork (Electron).",
-                context: "Standard sliding window with massive token limits, but lacks semantic garbage collection and pinning.",
-                safety: "Blind 'Auto mode' agentic execution without granular 'PENDING' state approvals.",
-                deployment: "Tethered completely to Google Cloud / Gemini ecosystems.",
-                agentic: "Pre-defined agent roles only."
-            },
-            "claude": {
-                name: "The Claude App (Desktop)",
-                arch: "Electron App + Node.js MCP.",
-                context: "Basic chat history retention. No IDE or Java project structural awareness.",
-                safety: "CLI manual approvals. No IDE integration for safe code patching.",
-                deployment: "Cloud-hosted Anthropic infrastructure.",
-                agentic: "Relies entirely on external MCP servers. Cannot inject code into a running JVM."
-            }
-        };
-
-        const select = document.getElementById('competitor-select');
-        const header = document.getElementById('comp-header');
-        const tbody = document.getElementById('comp-body');
-
-        function updateTable() {
-            const val = select.value;
-            const data = compData[val];
-            header.innerText = data.name;
-
-            tbody.innerHTML = 
-                '<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">' +
-                    '<td style="padding: 1rem; font-weight: 700;">Architectural Paradigm</td>' +
-                    '<td style="padding: 1rem; background: rgba(44, 122, 123, 0.05); border-left: 2px solid rgba(44, 122, 123, 0.5);"><b>Stateful ASI Container</b> directly inside the NetBeans JVM.</td>' +
-                    '<td style="padding: 1rem; border-left: 1px solid rgba(255,255,255,0.05); opacity: 0.8;">' + data.arch + '</td>' +
-                '</tr>' +
-                '<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">' +
-                    '<td style="padding: 1rem; font-weight: 700;">Context Window Metabolism</td>' +
-                    '<td style="padding: 1rem; background: rgba(44, 122, 123, 0.05); border-left: 2px solid rgba(44, 122, 123, 0.5);"><b>Context Window Garbage Collector (CwGC)</b> mathematically guarantees you never hit token limits by leaving \'Semantic Ghosts\' in the prompt.</td>' +
-                    '<td style="padding: 1rem; border-left: 1px solid rgba(255,255,255,0.05); opacity: 0.8;">' + data.context + '</td>' +
-                '</tr>' +
-                '<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">' +
-                    '<td style="padding: 1rem; font-weight: 700;">Execution Safety & HITL</td>' +
-                    '<td style="padding: 1rem; background: rgba(44, 122, 123, 0.05); border-left: 2px solid rgba(44, 122, 123, 0.5);"><b>Stateful PENDING UI</b>. Visually review changes in a native Diff Viewer with overlaid AI comment bubbles before execution.</td>' +
-                    '<td style="padding: 1rem; border-left: 1px solid rgba(255,255,255,0.05); opacity: 0.8;">' + data.safety + '</td>' +
-                '</tr>' +
-                '<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">' +
-                    '<td style="padding: 1rem; font-weight: 700;">Deployment & Privacy</td>' +
-                    '<td style="padding: 1rem; background: rgba(44, 122, 123, 0.05); border-left: 2px solid rgba(44, 122, 123, 0.5);"><b>100% Environment Agnostic</b>. Works fully air-gapped with Ollama/vLLM or routes to any cloud provider.</td>' +
-                    '<td style="padding: 1rem; border-left: 1px solid rgba(255,255,255,0.05); opacity: 0.8;">' + data.deployment + '</td>' +
-                '</tr>' +
-                '<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">' +
-                    '<td style="padding: 1rem; font-weight: 700;">Dynamic Self-Evolution</td>' +
-                    '<td style="padding: 1rem; background: rgba(44, 122, 123, 0.05); border-left: 2px solid rgba(44, 122, 123, 0.5);"><b>The Singularity Loop (NbJava)</b>. Downloads Maven JARs and JIT-compiles custom tools on-the-fly inside the IDE JVM.</td>' +
-                    '<td style="padding: 1rem; border-left: 1px solid rgba(255,255,255,0.05); opacity: 0.8;">' + data.agentic + '</td>' +
-                '</tr>';
-        }
-
-        select.addEventListener('change', updateTable);
-        updateTable(); // init
-    </script>
 </body>
 </html>
