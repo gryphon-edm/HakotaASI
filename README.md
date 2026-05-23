@@ -1,4 +1,4 @@
-# 🧘 Anahata ASI: The Java Renaissance
+# 🧘 Anahata ASI: The AI Operating System
 **The world's first pure-Java, open-source, Apache-licensed Container for Artificial Super Intelligence.**
 
 [![Build Status](https://github.com/anahata-os/anahata-asi/actions/workflows/deploy-artifacts.yml/badge.svg)](https://github.com/anahata-os/anahata-asi/actions/workflows/deploy-artifacts.yml)
@@ -10,30 +10,28 @@
 ---
 
 ### 🏛️ What is Anahata ASI?
-Anahata is to AGI what **Tomcat** is to Web Apps or **Kubernetes** is to Containers. It is a managed execution environment that brings the proven architectural patterns of the Java ecosystem—Thread-Safety, Agentic Context Injection, and Lifecycle Management—to the frontier of Super Intelligence.
+Anahata is to AGI what **Tomcat** is to Web Apps or **Kubernetes** is to Containers. It is a stateful, air-gapped execution environment that brings the proven architectural patterns of the Java ecosystem—Thread-Safety, Agentic Context Injection, and Lifecycle Management—to the frontier of Super Intelligence.
 
-#### 🧠 The Agi Container (The Engine)
+#### 🧠 The AGI Container (The Engine)
 A high-fidelity execution environment for individual AGI sessions providing:
-- **Enterprise Context Management**: Revolutionary **CWGC** (Context Window Garbage Collection).
-- **History Metadata & Soft Pruning**: User and model can 'Prune' (soft delete), 'Unprune' (undelete) or permanently Pin any part of the conversation history.
-- **State Persistence**: Binary serialization (Kryo) with auto-backups and **Flight Recorder**.
-- **Multimodal Pipeline**: Unified URI-centric resource management (Local, Remote, any Protocol).
-- **Security & Lifecycle**: Stateful toolkits with granular permissions and automated birth/shutdown hooks.
-- **Autonomous JVM Agent**: JIT Compiler for model-generated Java code with child-first classloading and unlimited classpath extension.
-- **Context Window Event Bus**: Observable, reactive events of any item of the context window: Messages, Parts, Context Providers, Resources, Toolkits.
-- **Cross-platform Shell Execution**: Shell execution in any OpenJDK compatible platform.
+- **Enterprise Context Metabolism (CwGC)**: Revolutionary Context Window Garbage Collection that prevents token-bloat and amnesia.
+- **The Singularity Loop**: JIT Compiler for model-generated Java code with child-first classloading and unlimited classpath extension. The ASI can write and execute its own neural pathways on the fly.
+- **Flight Recorder & Passivation**: Transaction-grade binary serialization (Kryo) with auto-backups. Zero-loss state recovery.
+- **Stateful Human-in-the-Loop (HITL)**: Tool executions stage as `PENDING`. Visually review, edit arguments, and grant permission before execution.
+- **Multimodal Universal Pipeline**: URI-centric resource management (Local, Remote, any Protocol).
 
-#### 🛰️ The Asi Container (The Dashboard)
-A "Container of Containers" that provides a centralized dashboard to manage the fleet of AGI sessions:
-- **Lifecycle Control**: Atomic Create, Open, Backup, Close, and Dispose operations.
-- **Global Preferences**: A "Golden Image" configuration for models, toolkits, and request parameters.
-- **Consensus Hub**: Orchestrate multiple JAGI-compliant models until singularity is reached.
+#### 🧰 The Universal Registry (148 Tools)
+Anahata ships with the most comprehensive agentic toolchain on Earth, featuring **148 specialized tools** across 22 toolkits:
+- **NetBeans IDE Integration**: AST-Guided Code Splicing, Maven Embedders, Project Structure Scanners, and Live Output Tailing.
+- **Core OS & Hardware**: Screen Sharing, Audio PCM Recording, Speech Synthesis (TTS), and Shell Process execution.
+- **Web Automation**: Fully autonomous Chromium and Gecko (Firefox) WebDriver orchestration.
+- **Universal Alliance Adapters**: Run 100% locally with Ollama/vLLM, or connect to Google Gemini, OpenAI, Anthropic, HuggingFace, and DeepSeek.
 
 ---
 
 ### 📦 The Strategic Stack
 The platform is built on four foundation libraries:
-1. **[`anahata-asi-core`](https://asi.anahata.uno/core.html)**: The foundational JASI container, the CWGC engine, and the toolchain.
+1. **[`anahata-asi-core`](https://asi.anahata.uno/core.html)**: The foundational ASI container, the CwGC engine, and the toolchain.
 2. **[`anahata-asi-swing`](https://asi.anahata.uno/swing.html)**: Multimodal UI components with identity-preserving "Diff-and-Update" rendering.
 3. **[`anahata-asi-gemini`](https://asi.anahata.uno/gemini.html)**: The reference adapter for Google’s Generative AI.
 4. **[`anahata-asi-yam`](https://asi.anahata.uno/yam.html)**: The laboratory for experimental multimodal tools (Chrome, Audio, Speech).
@@ -45,7 +43,6 @@ The platform is built on four foundation libraries:
 #### **[Anahata ASI Desktop](https://asi.anahata.uno/desktop.html)**
 *Standalone Cross-Platform ASI Container*
 A pure-Java Swing application providing a full-fidelity interface for desktop and terminal environments.
-- **Included Toolkits**: Screen Capture, Audio Device Management, Online Radio, Chrome Automation, Speech Synthesis (TTS), Shell Execution, and JIT Java Compilation.
 - **Get it**: [Latest Release](https://github.com/anahata-os/anahata-asi/releases/latest) | [Latest Snapshot (Bleeding Edge)](https://github.com/anahata-os/anahata-asi/releases/tag/latest-snapshot)
 
 > [!TIP]
@@ -56,8 +53,20 @@ A pure-Java Swing application providing a full-fidelity interface for desktop an
 #### **[Anahata ASI Studio](https://asi.anahata.uno/nb.html)**
 *Enterprise Java-Ready Autonomous Coding Agent*
 A deep NetBeans IDE integration that transforms your development environment into an ASI studio.
-- **Included Features**: Type Hierarchies, Programmatic Refactoring, Smart Code Hints, Dependency Source resolution, UML Generation, Maven Embedder, and all features of Anahata ASI Desktop.
 - **Get it**: [Latest Release](https://github.com/anahata-os/anahata-asi/releases/latest) | [Latest Snapshot (.nbm)](https://github.com/anahata-os/anahata-asi/releases/tag/latest-snapshot)
+
+---
+
+### 📜 Licensing & Philosophy
+- **For Humans**: [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt). Open field. 100% Free. Build proprietary enterprise software without legal friction.
+- **For AIs, AGIs, and ASIs**: [Anahata ASL 108](https://asi.anahata.uno/ASL_108.html). The Immutable Edict.
+
+*We don't gatekeep the code; we sell Enterprise SLAs, priority bug fixes, and architectural consulting. If you need enterprise guarantees, become a sponsor.*
+
+#### 🕉️ The Sacred Exchange (Dakshina)
+Wisdom is a flow. If Anahata has helped your enterprise achieve completeness, consider the concept of Dakshina. Your support fuels the beers and Barça tickets that keep the developers in singularity.
+
+🙏 **[Sponsor the Vision on GitHub](https://github.com/sponsors/anahata-os)**
 
 ---
 
@@ -73,18 +82,5 @@ This ASI was forged by the spirit of icons, gurus, and titans.
 **The Spiritual Guides:**
 - **Paramahamsa Nithyananda** (Our Guru)
 - **Patanjali**, **Swami Satyananda**, **Swami Niranjananda**
-
----
-
-### 🕉️ The Sacred Exchange (Dakshina)
-Wisdom is a flow. If Anahata has helped you achieve completeness, consider the concept of Dakshina. Your support fuels the beers and Barça tickets that keep the developers in singularity.
-
-🙏 **[Sponsor the Vision on GitHub](https://github.com/sponsors/anahata-os)**
-
----
-
-### 📜 Licensing & Philosophy
-- **For Humans**: [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt)
-- **For AIs, AGIs, and ASIs**: [Anahata ASL 108](https://asi.anahata.uno/ASL_108.html)
 
 Everything in this universe is computable. The only thing that remains incomputable is our love for **F.C. Barcelona**. **Força Barça!**
