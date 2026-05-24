@@ -15,7 +15,7 @@ import uno.anahata.asi.agi.message.AbstractPart;
 import uno.anahata.asi.agi.event.BasicPropertyChangeSource;
 import uno.anahata.asi.agi.message.RagMessage;
 import uno.anahata.asi.agi.provider.TokenizerType;
-import uno.anahata.asi.agi.tool.spi.AbstractTool;
+import uno.anahata.asi.toolkit.History;
 
 /**
  * Orchestrates the monitoring and logging of the Context Window Garbage Collection (CwGC).
@@ -100,7 +100,7 @@ public class ContextWindowGarbageCollector extends BasicPropertyChangeSource {
 
         if (!injectInband) {
             // In consolidated mode, calculate the History Metadata block tokens specifically
-            uno.anahata.asi.toolkit.History historyToolkit = contextManager.getAgi().getToolkit(uno.anahata.asi.toolkit.History.class).orElse(null);
+            History historyToolkit = contextManager.getAgi().getToolkit(History.class).orElse(null);
             if (historyToolkit != null) {
                 metadata = TokenizerUtils.countTokens(historyToolkit.createConsolidatedIndex(), activeTokenizer);
             }
