@@ -67,6 +67,8 @@ This project uses a set of key documents to guide development. For detailed info
 - **NO fqns on method bodies**: 
     1. Never add fqns inside a class, looks terrible. If you are using the resources toolkit, you need to include the imports. 
 
+- **No second turn to add javadocs**: Javadocs should be given when the method or field or class is created, not later in a second turn. I.e. no java code should be written in the codebase without javadoc.
+
 ## 5. Javadoc Standards
 
 Comprehensive documentation is mandatory for this open-source project. Existing Javadoc and comments must never be removed.
