@@ -74,7 +74,7 @@ public final class NetBeansOutput {
                 }
             }
         });
-        log.info("Output Tabs Markdown report generated in {}ms", System.currentTimeMillis() - start);
+        log.debug("Output Tabs Markdown report generated in {}ms", System.currentTimeMillis() - start);
         return sb.toString();
     }
 

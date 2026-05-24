@@ -71,7 +71,7 @@ public final class NetBeansTopComponents {
                     escape(info.getClassName())
             ));
         }
-        log.info("TopComponents Markdown report generated in {}ms", System.currentTimeMillis() - start);
+        log.debug("TopComponents Markdown report generated in {}ms", System.currentTimeMillis() - start);
         return sb.toString();
     }
 
