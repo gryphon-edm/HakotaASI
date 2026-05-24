@@ -99,7 +99,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>21</maven.compiler.release>
-        <netbeans.version>RELEASE290</netbeans.version>
+        <netbeans.version>RELEASE300</netbeans.version>
         <!-- Dependency Group Versions -->
         <lombok.version>1.18.42</lombok.version>
         <swagger.version>2.2.22</swagger.version><!--2.2.48 seems the latest-->
@@ -336,8 +336,8 @@
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <version>${maven-javadoc-plugin.version}</version>
                     <configuration>
-                        <doclint>none</doclint>
-                        <failOnError>false</failOnError>
+                        <doclint>all</doclint>
+                        <failOnError>true</failOnError>
                         <docfilessubdirs>true</docfilessubdirs>
                         <detectJavaApiLink>true</detectJavaApiLink>
                         <detectOfflineLinks>true</detectOfflineLinks>
