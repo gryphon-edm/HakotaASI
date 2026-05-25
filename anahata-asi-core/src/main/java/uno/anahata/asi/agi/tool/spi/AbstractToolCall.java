@@ -14,7 +14,7 @@ import uno.anahata.asi.internal.TextUtils;
 import uno.anahata.asi.agi.message.AbstractPart;
 import uno.anahata.asi.agi.message.AbstractModelMessage;
 import uno.anahata.asi.agi.message.ThoughtSignature;
-import uno.anahata.asi.internal.TokenizerUtils;
+import uno.anahata.asi.agi.provider.AbstractModel;
 
 /**
  * Represents a request to execute a specific tool. It holds a direct reference
@@ -167,22 +167,41 @@ public abstract class AbstractToolCall<T extends AbstractTool<?, ?>, R extends A
         return effective;
     }
 
+
     /**
-     * Internal callback used by the response to notify the call that its 
-     * token size has changed.
+     * {@inheritDoc}
+     * <p>
+     * Performs the lazy calculation of the total tool call and response tokens.
+     * </p>
      */
-    protected void updateResponseTokenCount() {
-        // Trigger a recalculation of this part's token count
+    @Override protected void calculateTokenCount() {
         setTokenCount(calculateTotalTokens());
     }
 
     /**
-     * Calculates the total tokens for this call, including its nested response.
+     * {@inheritDoc}
+     * <p>
+     * Resets the cached token counts of both the tool call and its nested response,
+     * forcing a lazy recalculation under the new selected model.
+     * </p>
+     */
+    @Override public void resetTokenCount() {
+        super.resetTokenCount();
+        if (response != null) {
+            response.resetTokenCount();
+        }
+    }
+    /**
+     * Calculates the total tokens consumed by this tool call, including its
+     * nested execution response, by delegating to the selected model's offline tokenizer.
      * @return The total token count.
      */
     private int calculateTotalTokens() {
-        // Approximate call tokens based on name and arguments
-        int callTokens = TokenizerUtils.countTokens(asText(), getMessage().getActiveTokenizer());
+        AbstractModel model = getAgi() != null ? getAgi().getSelectedModel() : null;
+        if (model == null) {
+            return 0;
+        }
+        int callTokens = model.countTokens(this);
         int responseTokens = response != null ? response.getTokenCount() : 0;
         return callTokens + responseTokens;
     }

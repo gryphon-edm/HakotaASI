@@ -9,7 +9,6 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import uno.anahata.asi.agi.context.ContextProvider;
-import uno.anahata.asi.agi.provider.TokenizerType;
 import uno.anahata.asi.agi.tool.ToolManager;
 
 /**
@@ -87,14 +86,13 @@ public abstract class AbstractToolkit<T extends AbstractTool<?,?>> {
 
     /**
      * Calculates the total token count of this toolkit on-the-fly by aggregating
-     * the token counts of all its contained tools using the specified tokenizer.
-     * @param type The tokenizer strategy to use.
+     * the cached token counts of all its contained tools.
      * @return The total token count for the entire toolkit.
      */
-    public int getTokenCount(TokenizerType type) {
+    public int getTokenCount() {
         int totalTokens = 0;
         for (AbstractTool<?, ?> tool : getAllTools()) {
-            totalTokens += tool.getTokenCount(type);
+            totalTokens += tool.getTokenCount();
         }
         return totalTokens;
     }

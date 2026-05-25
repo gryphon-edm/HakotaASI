@@ -15,6 +15,7 @@ import uno.anahata.asi.agi.message.AbstractPart;
 import uno.anahata.asi.agi.event.BasicPropertyChangeSource;
 import uno.anahata.asi.agi.message.RagMessage;
 import uno.anahata.asi.agi.provider.TokenizerType;
+import uno.anahata.asi.agi.tool.spi.AbstractTool;
 import uno.anahata.asi.toolkit.History;
 
 /**
@@ -65,7 +66,7 @@ public class ContextWindowGarbageCollector extends BasicPropertyChangeSource {
         // 2. Tool Declarations
         if (contextManager.getAgi().getConfig().isLocalToolsEnabled()) {
             int toolTokens = contextManager.getAgi().getToolManager().getEnabledTools().stream()
-                    .mapToInt(t -> t.getTokenCount(activeTokenizer))
+                    .mapToInt(AbstractTool::getTokenCount)
                     .sum();
             sb.toolDeclarationsTokens(toolTokens);
         }
@@ -117,7 +118,7 @@ public class ContextWindowGarbageCollector extends BasicPropertyChangeSource {
         int totalGarbageCollected = logRecords.stream()
                 .mapToInt(GarbageCollectorRecord::getTokenCount)
                 .sum();
-        sb.garbageCollectedTokens(totalGarbageCollected);
+            sb.garbageCollectedTokens(totalGarbageCollected);
 
         Stats oldStats = this.stats;
         this.stats = sb.build();

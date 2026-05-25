@@ -4,7 +4,6 @@ package uno.anahata.asi.agi.resource.view;
 import java.util.Collections;
 import java.util.List;
 import uno.anahata.asi.agi.message.RagMessage;
-import uno.anahata.asi.agi.provider.TokenizerType;
 import uno.anahata.asi.agi.resource.Resource;
 
 /**
@@ -31,6 +30,17 @@ public interface ResourceView {
      */
     void populateRag(RagMessage ragMessage) throws Exception;
 
+    /**
+     * Returns the token count for the current processed state of this view.
+     *      * 
+     *      * @return The token count.
+     */
+    int getTokenCount();
+
+    /**
+     * Resets the cached token count of this view, forcing a lazy recalculation on the next query.
+     */
+    void resetTokenCount();
     /** 
      * Provides system instructions if the resource is in that position. 
      * Returns a list of processed text blocks.
@@ -42,12 +52,6 @@ public interface ResourceView {
         return Collections.emptyList();
     }
     
-    /**
-     * Returns an estimated token count for the current processed state of the view using the specified tokenizer.
-     * @param type The tokenizer strategy to use.
-     * @return The estimated token count.
-     */
-    int getTokenCount(TokenizerType type) ;
 
     /**
      * Returns a machine-readable header summarizing the interpretation state.

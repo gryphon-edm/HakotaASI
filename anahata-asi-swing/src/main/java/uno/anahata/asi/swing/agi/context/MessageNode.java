@@ -6,8 +6,8 @@ package uno.anahata.asi.swing.agi.context;
 import java.util.List;
 import uno.anahata.asi.agi.message.AbstractMessage;
 import uno.anahata.asi.agi.message.AbstractPart;
+import uno.anahata.asi.agi.provider.AbstractModel;
 import uno.anahata.asi.swing.agi.AgiPanel;
-import uno.anahata.asi.internal.TokenizerUtils;
 
 /**
  * A context tree node representing a single message in the conversation.
@@ -85,9 +85,11 @@ public class MessageNode extends AbstractContextNode<AbstractMessage> {
      * tokens from all contained parts.
      * </p>
      */
-    @Override
     protected void calculateLocalTokens() {
-        this.historyTokens = userObject.shouldCreateMetadata() ? TokenizerUtils.countTokens(userObject.createMetadataHeader(), userObject.getActiveTokenizer()) : 0;
+        AbstractModel model = getAgi().getSelectedModel();
+        this.historyTokens = (userObject.shouldCreateMetadata() && model != null)
+                ? model.countTokens(userObject.createMetadataHeader())
+                : 0;
     }
 
     /**

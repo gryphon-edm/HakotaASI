@@ -3,11 +3,14 @@
  */
 package uno.anahata.asi.swing.agi.config;
 
+import java.awt.Color;
 import java.awt.Component;
+import java.awt.Font;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JCheckBox;
@@ -408,9 +411,9 @@ public class RequestConfigPanel extends ScrollablePanel implements PropertyChang
     private JPanel createSectionPanel(String title) {
         JPanel panel = new JPanel();
         panel.setOpaque(false);
-        panel.setBorder(javax.swing.BorderFactory.createTitledBorder(
-                javax.swing.BorderFactory.createLineBorder(new java.awt.Color(200, 200, 200)),
-                title, 0, 0, getFont().deriveFont(java.awt.Font.BOLD, 12f), new java.awt.Color(100, 100, 100)));
+        panel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(new Color(200, 200, 200)),
+                title, 0, 0, getFont().deriveFont(Font.BOLD, 12f), new Color(100, 100, 100)));
         return panel;
     }
 

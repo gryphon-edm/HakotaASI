@@ -107,6 +107,13 @@ public class ContextManager extends BasicPropertyChangeSource implements Rebinda
     }
 
     /**
+     * Resets the cached token counts on all messages and parts currently
+     * resident in the conversation history, forcing a lazy, background recalculation.
+     */
+    public void resetTokenCounts() {
+        history.forEach(AbstractMessage::resetTokenCounts);
+    }
+    /**
      * Registers a new context provider.
      *
      * @param provider The provider to register.

@@ -332,6 +332,11 @@ public class Agi extends BasicPropertyChangeSource {
             }
         }
 
+        // Reset cached token counts across all tools, history parts, and resources lazily on model change
+        getToolManager().resetTokenCounts();
+        getContextManager().resetTokenCounts();
+        getResourceManager().resetTokenCounts();
+
         propertyChangeSupport.firePropertyChange("selectedModel", oldModel, selectedModel);
         autoSave("model changed to: " + selectedModel.getModelId());
     }

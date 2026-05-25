@@ -5,7 +5,10 @@ package uno.anahata.asi.agi.provider;
 
 import java.util.List;
 import uno.anahata.asi.agi.message.AbstractModelMessage;
+import uno.anahata.asi.agi.message.BlobPart;
 import uno.anahata.asi.agi.tool.spi.AbstractTool;
+import uno.anahata.asi.agi.tool.spi.AbstractToolCall;
+import uno.anahata.asi.agi.tool.spi.AbstractToolResponse;
 
 /**
  * The abstract base class for a specific AI model (e.g., "gemini-1.5-pro-latest").
@@ -31,6 +34,38 @@ public abstract class AbstractModel {
         return tokenizerType != null ? tokenizerType : getProvider().getTokenizerType();
     }
 
+    /**
+     * Counts the number of tokens in the given text string using this model's specific tokenizer.
+     * @param text The text to count tokens for.
+     * @return The number of tokens, or 0 if the text is null or empty.
+     */
+    public abstract int countTokens(java.lang.String text);
+
+    public abstract int countTokens(AbstractToolCall<?, ?> toolCall);
+
+
+    /**
+     * Counts the number of tokens consumed by raw binary data based on its MIME type
+     * and model-specific multimodal billing rules.
+     * <p>
+     * This generic signature provides complete decoupling from domain part classes,
+     * allowing the model to tokenize any binary payload (such as blob parts or tool attachments).
+     * </p>
+     * @param mimeType The MIME type of the binary data (e.g. "image/png").
+     * @param data The raw binary data.
+     * @return The precise token count, or 0 if no model is active or the data is null.
+     */
+    public abstract int countTokens(byte[] data, String mimeType);
+    /**
+     * Counts the number of tokens consumed by the given tool execution response.
+     * <p>
+     * Model subclasses override this to serialize the response into its exact
+     * wire-format (Protobuf FunctionResponse, JSON, etc.) to ensure 100% accurate billing.
+     * </p>
+     * @param toolResponse The tool response to count tokens for.
+     * @return The exact number of tokens.
+     */
+    public abstract int countTokens(uno.anahata.asi.agi.tool.spi.AbstractToolResponse<?> toolResponse);
     /**
      * Gets the provider that owns this model.
      * @return The parent AI provider.

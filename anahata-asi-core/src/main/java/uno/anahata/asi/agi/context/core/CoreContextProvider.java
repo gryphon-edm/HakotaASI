@@ -25,6 +25,7 @@ public class CoreContextProvider implements ContextProvider {
     /**
      * The parent agi session.
      */
+    @Getter
     private final Agi agi;
 
     /**

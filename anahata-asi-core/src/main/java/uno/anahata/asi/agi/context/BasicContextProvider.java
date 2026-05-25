@@ -8,6 +8,7 @@ import java.util.List;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.agi.event.BasicPropertyChangeSource;
 
 
@@ -62,5 +63,16 @@ public class BasicContextProvider extends BasicPropertyChangeSource implements C
     @Override
     public void setParentProvider(ContextProvider parent) {
         this.parent = parent;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Resolves the parent AGI session by delegating up the context provider hierarchy.
+     * </p>
+     */
+    @Override
+        public Agi getAgi() {
+        return parent != null ? parent.getAgi() : null;
     }
 }

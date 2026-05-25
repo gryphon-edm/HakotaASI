@@ -13,14 +13,14 @@ import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.agi.context.ContextProvider;
 import uno.anahata.asi.agi.context.ContextPosition;
 import uno.anahata.asi.agi.event.BasicPropertyChangeSource;
 import uno.anahata.asi.agi.message.RagMessage;
-import uno.anahata.asi.agi.provider.TokenizerType;
+import uno.anahata.asi.agi.provider.AbstractModel;
 import uno.anahata.asi.persistence.Rebindable;
 import uno.anahata.asi.internal.TimeUtils;
-import uno.anahata.asi.internal.TokenizerUtils;
 
 /**
  * The Universal Resource Orchestrator.
@@ -41,6 +41,13 @@ import uno.anahata.asi.internal.TokenizerUtils;
 @Setter
 public class Resource extends BasicPropertyChangeSource implements Rebindable, ContextProvider {
 
+    /**
+     * The parent AGI session this resource belongs to.
+     * <p>
+     * Bidirectional references are managed natively by the Kryo serialization engine.
+     * </p>
+     */
+    private Agi agi = null;
     /**
      * The immutable unique identifier for this resource instance.
      */
@@ -106,13 +113,13 @@ public class Resource extends BasicPropertyChangeSource implements Rebindable, C
 
     /**
      * The uuid of the resource is the context provider id.
+     *
      * @return {@link uuid}
      */
     @Override
     public String getId() {
         return uuid;
     }
-    
 
     /**
      * Returns the full content of the resource as a String.
@@ -352,39 +359,7 @@ public class Resource extends BasicPropertyChangeSource implements Rebindable, C
         handle.dispose();
     }
 
-    /**
-     * {@inheritDoc}
-     * @param type The tokenizer strategy to use.
-     * @return The estimated token count for system instructions.
-     */
-    @Override public int getInstructionsTokenCount(TokenizerType type) {
-        try {
-            int tokens = TokenizerUtils.countTokens(getHeader(), type);
-            if (contextPosition == ContextPosition.SYSTEM_INSTRUCTIONS && view != null) {
-                tokens += view.getTokenCount(type);
-            }
-            return tokens;
-        } catch (Exception e) {
-            return 0;
-        }
-    }
 
-    /**
-     * {@inheritDoc}
-     * @param type The tokenizer strategy to use.
-     * @return The estimated token count for RAG prompt augmentation.
-     */
-    @Override public int getRagTokenCount(TokenizerType type) {
-        try {
-            int tokens = TokenizerUtils.countTokens(getHeader(), type);
-            if (contextPosition == ContextPosition.PROMPT_AUGMENTATION && view != null) {
-                tokens += view.getTokenCount(type);
-            }
-            return tokens;
-        } catch (Exception e) {
-            return 0;
-        }
-    }
 
     /**
      * Returns the detected MIME type of the underlying source.
@@ -403,7 +378,7 @@ public class Resource extends BasicPropertyChangeSource implements Rebindable, C
      */
     @Override
     public String getHeader() {
-        StringBuilder sb = new StringBuilder("Resource: uuid=").append(uuid).append("\n");        
+        StringBuilder sb = new StringBuilder("Resource: uuid=").append(uuid).append("\n");
         sb.append(handle.getHeader()).append("\n");
         sb.append("Name: ").append(getName()).append("\n");
         sb.append("Description: ").append(description).append("\n");
@@ -420,5 +395,72 @@ public class Resource extends BasicPropertyChangeSource implements Rebindable, C
         }
 
         return sb.toString();
+    }
+
+    /**
+     * Gets the parent AGI session.
+     * @return The active Agi session, or null.
+     */
+    public Agi getAgi() {
+        return agi;
+    }
+
+    /**
+     * Sets the parent AGI session.
+     * @param agi The active Agi session.
+     */
+    public void setAgi(Agi agi) {
+        this.agi = agi;
+    }
+
+    /**
+     * Convenience method to retrieve the currently selected model from the parent session.
+     * @return The active AbstractModel instance, or null if no model is selected.
+     */
+    public AbstractModel getSelectedModel() {
+        return agi != null ? agi.getSelectedModel() : null;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Resolves the active model from the parent AGI session and sums the token counts
+     * of this resource's header and active viewport. Returns 0 if no model is selected.
+     * </p>
+     */
+    @Override public int getInstructionsTokenCount() {
+        AbstractModel model = getSelectedModel();
+        if (model == null) {
+            return 0;
+        }
+        int headerTokens = model.countTokens(getHeader());
+        int viewTokens = (view != null && contextPosition == ContextPosition.SYSTEM_INSTRUCTIONS) ? view.getTokenCount() : 0;
+        return headerTokens + viewTokens;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Resolves the active model from the parent AGI session and sums the token counts
+     * of this resource's header and active viewport. Returns 0 if no model is selected.
+     * </p>
+     */
+    @Override public int getRagTokenCount() {
+        AbstractModel model = getSelectedModel();
+        if (model == null) {
+            return 0;
+        }
+        int headerTokens = model.countTokens(getHeader());
+        int viewTokens = (view != null && contextPosition == ContextPosition.PROMPT_AUGMENTATION) ? view.getTokenCount() : 0;
+        return headerTokens + viewTokens;
+    }
+
+    /**
+     * Resets the cached token counts on the active view, forcing a lazy recalculation.
+     */
+    public void resetTokenCount() {
+        if (view != null) {
+            view.resetTokenCount();
+        }
     }
 }

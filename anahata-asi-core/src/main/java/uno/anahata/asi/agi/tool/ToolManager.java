@@ -114,6 +114,13 @@ public class ToolManager extends BasicPropertyChangeSource implements ContextPro
     }
 
     /**
+     * Resets the cached token counts on all registered and enabled tools
+     * within this manager, forcing a lazy recalculation on the next query.
+     */
+    public void resetTokenCounts() {
+        getAllTools().forEach(AbstractTool::resetTokenCount);
+    }
+    /**
      * Scans the given classes for methods annotated with {@link AgiTool},
      * creates the corresponding toolkits, and applies any application-wide
      * preferences.

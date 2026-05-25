@@ -6,7 +6,6 @@ package uno.anahata.asi.swing.agi.context;
 import java.util.ArrayList;
 import java.util.List;
 import uno.anahata.asi.agi.context.ContextProvider;
-import uno.anahata.asi.agi.provider.TokenizerType;
 import uno.anahata.asi.agi.tool.spi.AbstractToolkit;
 import uno.anahata.asi.swing.agi.AgiPanel;
 import uno.anahata.asi.agi.tool.ToolManager;
@@ -14,8 +13,8 @@ import uno.anahata.asi.agi.tool.ToolManager;
 /**
  * A context tree node representing a {@link ContextProvider}.
  * <p>
- * This node handles the recursive structure of context providers. It has 
- * special logic for the {@link ToolManager}, which exposes its registered 
+ * This node handles the recursive structure of context providers. It has
+ * special logic for the {@link ToolManager}, which exposes its registered
  * toolkits as child nodes.
  * </p>
  *
@@ -25,6 +24,7 @@ public class ProviderNode extends AbstractContextNode<ContextProvider> {
 
     /**
      * Constructs a new ProviderNode.
+     *
      * @param agiPanel The parent agi panel.
      * @param userObject The context provider to wrap.
      */
@@ -32,7 +32,9 @@ public class ProviderNode extends AbstractContextNode<ContextProvider> {
         super(agiPanel, userObject);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getName() {
         String name = userObject.getName();
@@ -42,13 +44,17 @@ public class ProviderNode extends AbstractContextNode<ContextProvider> {
         return name;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getDescription() {
         return userObject.getDescription();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected List<?> fetchChildObjects() {
         List<Object> objects = new ArrayList<>();
@@ -64,7 +70,9 @@ public class ProviderNode extends AbstractContextNode<ContextProvider> {
         return objects;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected AbstractContextNode<?> createChildNode(Object obj) {
         if (obj instanceof AbstractToolkit<?> tk) {
@@ -75,20 +83,23 @@ public class ProviderNode extends AbstractContextNode<ContextProvider> {
         return null;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected void calculateLocalTokens() {
         if (userObject.isEffectivelyProviding()) {
-            TokenizerType type = getAgi().getSelectedModel() != null ? getAgi().getSelectedModel().getTokenizerType() : TokenizerType.CL100K_BASE;
-            this.instructionsTokens = userObject.getInstructionsTokenCount(type);
-            this.ragTokens = userObject.getRagTokenCount(type);
+            this.instructionsTokens = userObject.getInstructionsTokenCount();
+            this.ragTokens = userObject.getRagTokenCount();
         } else {
             this.instructionsTokens = 0;
             this.ragTokens = 0;
         }
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected void updateStatus() {
         if (!userObject.isProviding()) {

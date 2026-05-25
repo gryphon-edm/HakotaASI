@@ -9,8 +9,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -18,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.agi.message.AbstractMessage;
 import uno.anahata.asi.agi.message.AbstractModelMessage;
+import uno.anahata.asi.agi.message.BlobPart;
 import uno.anahata.asi.agi.provider.AbstractModel;
 import uno.anahata.asi.agi.provider.GenerationRequest;
 import uno.anahata.asi.agi.provider.RequestConfig;
@@ -27,9 +30,14 @@ import uno.anahata.asi.agi.provider.ServerTool;
 import uno.anahata.asi.agi.provider.StreamObserver;
 import uno.anahata.asi.agi.tool.schema.SchemaProvider;
 import uno.anahata.asi.agi.tool.spi.AbstractTool;
+import uno.anahata.asi.agi.tool.spi.AbstractToolCall;
 import uno.anahata.asi.agi.tool.spi.AbstractToolParameter;
+import uno.anahata.asi.agi.tool.spi.AbstractToolResponse;
 import uno.anahata.asi.anthropic.adapter.AnthropicContentAdapter;
+import uno.anahata.asi.internal.ImageMetadataUtils;
+import uno.anahata.asi.internal.ImageMetadataUtils.ImageMetadata;
 import uno.anahata.asi.internal.JacksonUtils;
+import uno.anahata.asi.internal.TokenizerUtils;
 
 /**
  * Model implementation for Anthropic's Claude.
@@ -86,6 +94,39 @@ public class AnthropicModel extends AbstractModel {
     @Override
     public AnthropicProvider getProvider() { return provider; }
 
+    /**
+     * {@inheritDoc}
+     * <p>Utilizes TokenizerUtils to perform offline, BPE token counting based on configured TokenizerType.</p>
+     * @param text The text to count tokens for.
+     * @return The token count, or 0 if the text is null or empty.
+     */
+    @Override public int countTokens(java.lang.String text) {
+        return TokenizerUtils.countTokens(text, getTokenizerType());
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Serializes the tool call into a standard Anthropic 'tool_use' block JSON object,
+     * containing 'id', 'name', and 'input' properties, and counts its tokens.
+     * </p>
+     * @param toolCall The tool call to count tokens for.
+     * @return The total token count.
+     */
+    @Override public int countTokens(AbstractToolCall<?, ?> toolCall) {
+        if (toolCall == null) {
+            return 0;
+        }
+        try {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", toolCall.getId());
+            map.put("name", toolCall.getToolName());
+            map.put("input", toolCall.getEffectiveArgs());
+            return countTokens(JacksonUtils.serialize(map));
+        } catch (Exception e) {
+            return countTokens(toolCall.asText());
+        }
+    }
     /**
      * {@inheritDoc}
      */
@@ -393,4 +434,53 @@ public class AnthropicModel extends AbstractModel {
     }
     
     
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Serializes the tool response into an OpenAI-compatible JSON structure and counts its tokens,
+     * ensuring strict exception logging and rethrowing for thread stability.
+     * </p>
+     * @param toolResponse The tool response instance to count.
+     * @return The precise token count.
+     */
+    @Override public int countTokens(uno.anahata.asi.agi.tool.spi.AbstractToolResponse<?> toolResponse) {
+        if (toolResponse == null) {
+            return 0;
+        }
+        try {
+            return countTokens(JacksonUtils.serialize(toolResponse));
+        } catch (Exception e) {
+            log.error("Failed to serialize Anthropic tool response for token counting", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Calculates the exact, model-specific multimodal token count for Anthropic image data.
+     * Delegates the header-only image dimension reading to the core {@link ImageMetadataUtils} utility,
+     * and performs the Anthropic-specific megapixel-based calculation locally to maintain strict,
+     * provider-decoupled modular boundaries.
+     * </p>
+     * @param data The raw binary data of the file or attachment.
+     * @param mimeType The detected MIME type of the binary data (e.g. "image/png").
+     * @return The precise, billing-identical multimodal token count.
+     */
+    @Override public int countTokens(byte[] data, String mimeType) {
+        if (data == null || data.length == 0) {
+                    return 0;
+                }
+                if (mimeType != null && mimeType.startsWith("image/")) {
+                    ImageMetadata metadata = ImageMetadataUtils.readMetadata(data);
+                    if (metadata != null) {
+                        // Anthropic Claude 3/3.5 Vision Token Pricing Formula:
+                        // tokens = (width * height) / 750
+                        return (int) Math.ceil((double) (metadata.getWidth() * metadata.getHeight()) / 750.0);
+                    }
+                    return 1600; // Flat-rate estimate for ~1.2MP fallback
+                }
+                return 258; // Fallback for other file blobs
+    }
 }

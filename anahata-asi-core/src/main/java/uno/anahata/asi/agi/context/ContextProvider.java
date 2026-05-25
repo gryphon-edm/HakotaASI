@@ -6,14 +6,14 @@ package uno.anahata.asi.agi.context;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import uno.anahata.asi.internal.TokenizerUtils;
+import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.agi.message.RagMessage;
-import uno.anahata.asi.agi.provider.TokenizerType;
+import uno.anahata.asi.agi.provider.AbstractModel;
 
 /**
- * Defines the contract for providers that inject just-in-time context into an AI request.
- * Context providers can contribute system instructions or augment the user's prompt
- * through a hierarchical tree structure.
+ * Defines the contract for providers that inject just-in-time context into an
+ * AI request. Context providers can contribute system instructions or augment
+ * the user's prompt through a hierarchical tree structure.
  *
  * @author anahata-ai
  */
@@ -21,32 +21,37 @@ public interface ContextProvider {
 
     /**
      * Gets the unique identifier for this context provider.
+     *
      * @return The provider's ID.
      */
     String getId();
 
     /**
      * Gets the human-readable name of this context provider.
+     *
      * @return The provider's name.
      */
     String getName();
 
     /**
      * Gets a detailed description of what this context provider does.
+     *
      * @return The provider's description.
      */
     String getDescription();
 
     /**
-     * Checks if this context provider is currently active and providing context.
+     * Checks if this context provider is currently active and providing
+     * context.
+     *
      * @return {@code true} if providing, {@code false} otherwise.
      */
     boolean isProviding();
 
     /**
-     * Checks if this provider is effectively providing context, meaning it is 
+     * Checks if this provider is effectively providing context, meaning it is
      * enabled AND all its ancestors in the hierarchy are also enabled.
-     * 
+     *
      * @return {@code true} if effectively providing, {@code false} otherwise.
      */
     default boolean isEffectivelyProviding() {
@@ -59,15 +64,16 @@ public interface ContextProvider {
 
     /**
      * Sets whether this context provider is enabled.
-     * 
+     *
      * @param enabled {@code true} to enable, {@code false} to disable.
      */
     default void setProviding(boolean enabled) {
-        
+
     }
 
     /**
      * Gets the parent context provider in the hierarchy, if any.
+     *
      * @return The parent provider, or null if this is a root provider.
      */
     default ContextProvider getParentProvider() {
@@ -76,6 +82,7 @@ public interface ContextProvider {
 
     /**
      * Sets the parent context provider for this instance.
+     *
      * @param parent The parent provider.
      */
     default void setParentProvider(ContextProvider parent) {
@@ -84,16 +91,17 @@ public interface ContextProvider {
 
     /**
      * Gets the list of immediate child context providers.
+     *
      * @return The list of children, or an empty list if none.
      */
     default List<ContextProvider> getChildrenProviders() {
         return Collections.emptyList();
     }
-    
+
     /**
-     * Gets the fully qualified ID of this provider, reflecting its position in the hierarchy.
-     * The format is typically 'parent.child.id'.
-     * 
+     * Gets the fully qualified ID of this provider, reflecting its position in
+     * the hierarchy. The format is typically 'parent.child.id'.
+     *
      * @return The dot-separated fully qualified ID.
      */
     public default String getFullyQualifiedId() {
@@ -101,23 +109,26 @@ public interface ContextProvider {
     }
 
     /**
-     * Gets a flattened list of this provider and all its descendants in the hierarchy.
+     * Gets a flattened list of this provider and all its descendants in the
+     * hierarchy.
      * <p>
-     * If {@code providingOnly} is true, the search stops at any provider that is 
-     * not providing, effectively excluding its entire subtree from the result.
+     * If {@code providingOnly} is true, the search stops at any provider that
+     * is not providing, effectively excluding its entire subtree from the
+     * result.
      * </p>
-     * 
-     * @param providingOnly if true, only providers where {@link #isProviding()} is true are included.
+     *
+     * @param providingOnly if true, only providers where {@link #isProviding()}
+     * is true are included.
      * @return A flat list of the provider hierarchy.
      */
     default List<ContextProvider> getFlattenedHierarchy(boolean providingOnly) {
         List<ContextProvider> list = new ArrayList<>();
         if (providingOnly && !isProviding()) {
-            return list; 
+            return list;
         }
-        
+
         list.add(this);
-        
+
         for (ContextProvider child : getChildrenProviders()) {
             list.addAll(child.getFlattenedHierarchy(providingOnly));
         }
@@ -126,17 +137,19 @@ public interface ContextProvider {
 
     /**
      * Gets the designated position of this provider's content in the AI prompt.
-     * 
-     * @return The context position. Defaults to {@link ContextPosition#PROMPT_AUGMENTATION}.
+     *
+     * @return The context position. Defaults to
+     * {@link ContextPosition#PROMPT_AUGMENTATION}.
      */
     default ContextPosition getContextPosition() {
         return ContextPosition.PROMPT_AUGMENTATION;
     }
 
     /**
-     * Gets a list of system instruction strings provided by this context provider.
-     * These are typically prepended to the conversation as high-level guidance.
-     * 
+     * Gets a list of system instruction strings provided by this context
+     * provider. These are typically prepended to the conversation as high-level
+     * guidance.
+     *
      * @return A list of system instruction strings.
      * @throws Exception if an error occurs during instruction generation.
      */
@@ -145,20 +158,20 @@ public interface ContextProvider {
     }
 
     /**
-     * Populates the given {@link RagMessage} with dynamic, just-in-time context parts.
-     * These parts are appended to the end of the user's prompt (RAG).
-     * 
+     * Populates the given {@link RagMessage} with dynamic, just-in-time context
+     * parts. These parts are appended to the end of the user's prompt (RAG).
+     *
      * @param ragMessage The message to be augmented with context.
      * @throws Exception if an error occurs during context generation.
      */
     default void populateMessage(RagMessage ragMessage) throws Exception {
-        
+
     }
-    
+
     /**
      * Generates a machine-readable header string for this context provider,
      * used to identify the source of injected context in the final prompt.
-     * 
+     *
      * @return A formatted header string.
      */
     public default String getHeader() {
@@ -172,11 +185,34 @@ public interface ContextProvider {
     }
 
     /**
-     * Calculates the token count for the system instructions provided by this instance using the specified tokenizer.
-     * @param type The tokenizer strategy to use.
+     * Gets an optional icon identifier for this provider. This ID can be used
+     * by the UI to look up a specialized icon.
+     *
+     * @return The provider's icon ID, or null if none.
+     */
+    default String getIconId() {
+        return null;
+    }
+
+    /**
+     * Gets the parent AGI session this context provider is registered under.
+     *
+     * @return The active parent AGI session, or null if it cannot be resolved.
+     */
+    Agi getAgi();
+
+    /**
+     * Calculates the token count for the system instructions provided by this
+     * instance using the active model.
+     *
      * @return The estimated token count.
      */
-    default int getInstructionsTokenCount(TokenizerType type) {
+    default int getInstructionsTokenCount() {
+        Agi agi = getAgi();
+        AbstractModel model = agi != null ? agi.getSelectedModel() : null;
+        if (model == null) {
+            return 0;
+        }
         try {
             List<String> instructions = getSystemInstructions();
             if (instructions.isEmpty()) {
@@ -184,7 +220,7 @@ public interface ContextProvider {
             }
             int count = 0;
             for (String s : instructions) {
-                count += TokenizerUtils.countTokens(s, type);
+                count += model.countTokens(s);
             }
             return count;
         } catch (Exception e) {
@@ -193,27 +229,23 @@ public interface ContextProvider {
     }
 
     /**
-     * Calculates the token count for the RAG content provided by this instance using the specified tokenizer.
-     * @param type The tokenizer strategy to use.
+     * Calculates the token count for the RAG content provided by this instance
+     * using the active model.
+     *
      * @return The estimated token count.
      */
-    default int getRagTokenCount(TokenizerType type) {
-        RagMessage rm = new RagMessage(null);
+    default int getRagTokenCount() {
+        Agi agi = getAgi();
+        AbstractModel model = agi != null ? agi.getSelectedModel() : null;
+        if (model == null) {
+            return 0;
+        }
+        RagMessage rm = new RagMessage(agi);
         try {
             populateMessage(rm);
             return rm.getTokenCount(true);
         } catch (Exception e) {
             return 0;
         }
-    }
-
-    /**
-     * Gets an optional icon identifier for this provider.
-     * This ID can be used by the UI to look up a specialized icon.
-     * 
-     * @return The provider's icon ID, or null if none.
-     */
-    default String getIconId() {
-        return null;
     }
 }

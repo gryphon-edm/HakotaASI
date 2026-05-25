@@ -1,6 +1,7 @@
 /* Licensed under the Anahata Software License (ASL) v 108. See the LICENSE file for details. Força Barça! */
 package uno.anahata.asi.swing.internal;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import uno.anahata.asi.agi.event.BasicPropertyChangeSource;
@@ -68,6 +69,6 @@ public class SwingTaskManager extends BasicPropertyChangeSource {
      * @return The list of active tasks.
      */
     public List<SwingTask<?>> getActiveTasks() {
-        return java.util.Collections.unmodifiableList(activeTasks);
+        return Collections.unmodifiableList(activeTasks);
     }
 }

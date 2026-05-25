@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.agi.message.RagMessage;
-import uno.anahata.asi.agi.provider.TokenizerType;
+import uno.anahata.asi.agi.provider.AbstractModel;
 
 /**
  * A resource view that interprets content as binary media (images, audio, etc.).
@@ -52,13 +52,20 @@ public class MediaView extends AbstractResourceView {
 
     /**
      * {@inheritDoc}
-     * @param type The tokenizer strategy to use.
-     * @return The estimated token count.
+     * <p>
+     * Performs a lazy, model-specific token calculation of the active media content,
+     * delegating to the selected model's generic raw bytes tokenizer.
+     * </p>
      */
-    @Override public int getTokenCount(TokenizerType type) {
-        if (cachedData == null) {
-            return 0;
-        }
-        return (int) (cachedData.length * 1.33 / 4);
+    @Override
+        public int getTokenCount() {
+        if (tokenCount == null) {
+                    AbstractModel model = getOwner() != null ? getOwner().getSelectedModel() : null;
+                    if (model == null) {
+                        return 0;
+                    }
+                    tokenCount = model.countTokens(cachedData, owner.getMimeType());
+                }
+                return tokenCount;
     }
 }

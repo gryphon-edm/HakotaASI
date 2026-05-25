@@ -3,8 +3,10 @@
  */
 package uno.anahata.asi.agi.message;
 
+import java.util.HashMap;
+import java.util.Map;
+import lombok.Builder;
 import lombok.Value;
-import lombok.experimental.SuperBuilder;
 
 /**
  * Metadata about the token usage for a single API response.
@@ -12,9 +14,8 @@ import lombok.experimental.SuperBuilder;
  * @author anahata
  */
 @Value
-@SuperBuilder
+@Builder
 public class ResponseUsageMetadata {
-
     /**
      * The number of tokens in the prompt.
      */
@@ -36,8 +37,8 @@ public class ResponseUsageMetadata {
     int thoughtsTokenCount;
 
     /**
-     * The number of tokens in the results from tool executions, which are provided back
-     * to the model as input, if applicable.
+     * The number of tokens in the results from tool executions, which are
+     * provided back to the model as input, if applicable.
      */
     int toolUsePromptTokenCount;
 
@@ -45,6 +46,14 @@ public class ResponseUsageMetadata {
      * The total number of tokens used for the entire interaction.
      */
     int totalTokenCount;
+
+    /**
+     * A map detailing the prompt token breakdown by modality (e.g. TEXT, IMAGE,
+     * AUDIO). Keys represent the modality name in uppercase, and values
+     * represent the counted tokens.
+     */
+    @Builder.Default
+    Map<String, Integer> promptTokensDetails = new HashMap<>();
 
     /**
      * The raw JSON representation of the native usage metadata object.

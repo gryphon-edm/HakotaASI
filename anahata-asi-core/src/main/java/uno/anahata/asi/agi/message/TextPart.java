@@ -3,8 +3,7 @@ package uno.anahata.asi.agi.message;
 
 import lombok.Getter;
 import lombok.Setter;
-import uno.anahata.asi.agi.provider.TokenizerType;
-import uno.anahata.asi.internal.TokenizerUtils;
+import uno.anahata.asi.agi.provider.AbstractModel;
 
 /**
  * An abstract base class for text-based message parts.
@@ -35,10 +34,10 @@ public abstract class TextPart extends AbstractPart {
      * Also updates the token count using the active session tokenizer.
      * @param text The new text content to apply.
      */
-    public void setText(String text) {
+    public void setText(java.lang.String text) {
         String oldText = this.text;
         this.text = text;
-        setTokenCount(TokenizerUtils.countTokens(text, getActiveTokenizer()));
+        resetTokenCount();
         propertyChangeSupport.firePropertyChange("text", oldText, text);
     }
 
@@ -47,16 +46,33 @@ public abstract class TextPart extends AbstractPart {
      * Also updates the token count using the active session tokenizer.
      * @param delta The text to append.
      */
-    public void appendText(String delta) {
+    public void appendText(java.lang.String delta) {
         if (delta == null || delta.isEmpty()) {
             return;
         }
         String oldText = this.text;
         this.text = (this.text == null ? "" : this.text) + delta;
-        setTokenCount(TokenizerUtils.countTokens(this.text, getActiveTokenizer()));
+        resetTokenCount();
         propertyChangeSupport.firePropertyChange("text", oldText, this.text);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Re-calculates the text token count using the currently selected model.
+     * </p>
+     */
+    @Override protected void calculateTokenCount() {
+        AbstractModel model = getAgi() != null ? getAgi().getSelectedModel() : null;
+        setTokenCount(model != null ? model.countTokens(text) : 0);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override public void resetTokenCount() {
+        super.resetTokenCount();
+    }
     /** {@inheritDoc} */
     @Override
     public String asText() {

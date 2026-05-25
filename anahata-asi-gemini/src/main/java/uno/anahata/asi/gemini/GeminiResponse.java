@@ -7,8 +7,11 @@ import com.google.genai.types.Candidate;
 import com.google.genai.types.GenerateContentResponse;
 import com.google.genai.types.GenerateContentResponsePromptFeedback;
 import com.google.genai.types.GenerateContentResponseUsageMetadata;
+import com.google.genai.types.ModalityTokenCount;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.Getter;
@@ -104,7 +107,17 @@ public class GeminiResponse extends Response<GeminiModelMessage> {
      * @param genaiUsage The native usage metadata.
      * @return The V2 {@code ResponseUsageMetadata}.
      */
-    private ResponseUsageMetadata convertUsageMetadata(GenerateContentResponseUsageMetadata genaiUsage) {
+        private ResponseUsageMetadata convertUsageMetadata(GenerateContentResponseUsageMetadata genaiUsage) {
+        Map<String, Integer> details = new HashMap<>();
+        if (genaiUsage.promptTokensDetails().isPresent()) {
+            for (ModalityTokenCount mtc : genaiUsage.promptTokensDetails().get()) {
+                String modality = mtc.modality().map(m -> m.knownEnum().name()).orElse("");
+                int count = mtc.tokenCount().orElse(0);
+                if (!modality.isEmpty() && count > 0) {
+                    details.put(modality, count);
+                }
+            }
+        }
         return ResponseUsageMetadata.builder()
             .promptTokenCount(genaiUsage.promptTokenCount().orElse(0))
             .candidatesTokenCount(genaiUsage.candidatesTokenCount().orElse(0))
@@ -112,6 +125,7 @@ public class GeminiResponse extends Response<GeminiModelMessage> {
             .thoughtsTokenCount(genaiUsage.thoughtsTokenCount().orElse(0))
             .toolUsePromptTokenCount(genaiUsage.toolUsePromptTokenCount().orElse(0))
             .totalTokenCount(genaiUsage.totalTokenCount().orElse(0))
+            .promptTokensDetails(details)
             .rawJson(genaiUsage.toJson())
             .build();
     }

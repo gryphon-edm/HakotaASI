@@ -69,31 +69,32 @@ public class ResourceManager extends BasicPropertyChangeSource implements Rebind
      */
     public void registerAll(@NonNull Collection<Resource> toRegister, String registeredBy) {
         if (toRegister.isEmpty()) {
-            return;
-        }
-
-        List<Resource> added = new ArrayList<>();
-        synchronized (resources) {
-            for (Resource res : toRegister) {
-                String uri = res.getHandle().getUri().toString();
-                if (findByUri(uri).isEmpty()) {
-                    
-                    // Authoritative Registration Metadata
-                    res.setRegistrationTime(System.currentTimeMillis());
-                    res.setDescription(registeredBy);
-
-                    resources.put(res.getId(), res);
-                    added.add(res);
-                    log.info("Registered V2 resource: {} ({}) [By: {}]", res.getName(), res.getId(), registeredBy);
-                } else {
-                    log.debug("Skipping duplicate resource registration for URI: {}", uri);
+                    return;
                 }
-            }
-        }
-        
-        if (!added.isEmpty()) {
-            propertyChangeSupport.firePropertyChange("resources", null, getResourcesList());
-        }
+
+                List<Resource> added = new ArrayList<>();
+                synchronized (resources) {
+                    for (Resource res : toRegister) {
+                        String uri = res.getHandle().getUri().toString();
+                        if (findByUri(uri).isEmpty()) {
+
+                            // Authoritative Registration Metadata
+                            res.setAgi(agi);
+                            res.setRegistrationTime(System.currentTimeMillis());
+                            res.setDescription(registeredBy);
+
+                            resources.put(res.getId(), res);
+                            added.add(res);
+                            log.info("Registered V2 resource: {} ({}) [By: {}]", res.getName(), res.getId(), registeredBy);
+                        } else {
+                            log.debug("Skipping duplicate resource registration for URI: {}", uri);
+                        }
+                    }
+                }
+
+                if (!added.isEmpty()) {
+                    propertyChangeSupport.firePropertyChange("resources", null, getResourcesList());
+                }
     }
 
     /**
@@ -308,5 +309,13 @@ public class ResourceManager extends BasicPropertyChangeSource implements Rebind
     @Override
     public ContextProvider getParentProvider() {
         return null; // Root level provider
+    }
+
+    /**
+     * Resets the cached token counts across all currently registered resources,
+     * forcing a lazy recalculation on the next query.
+     */
+    public void resetTokenCounts() {
+        getResourcesList().forEach(Resource::resetTokenCount);
     }
 }

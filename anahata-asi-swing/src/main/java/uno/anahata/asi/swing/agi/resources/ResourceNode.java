@@ -4,10 +4,7 @@ package uno.anahata.asi.swing.agi.resources;
 import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import uno.anahata.asi.agi.context.ContextPosition;
-import uno.anahata.asi.agi.provider.TokenizerType;
 import uno.anahata.asi.agi.resource.Resource;
-import uno.anahata.asi.internal.TokenizerUtils;
 import uno.anahata.asi.swing.agi.AgiPanel;
 import uno.anahata.asi.swing.agi.context.AbstractContextNode;
 
@@ -19,6 +16,7 @@ public class ResourceNode extends AbstractContextNode<Resource> {
 
     /**
      * Constructs a new ResourceNode.
+     *
      * @param agiPanel The parent AgiPanel.
      * @param userObject The Resource domain object.
      */
@@ -26,10 +24,11 @@ public class ResourceNode extends AbstractContextNode<Resource> {
         super(agiPanel, userObject);
     }
 
-    /** 
-     * {@inheritDoc} 
-     * <p>Implementation details: Prioritizes the model-provided HTML display 
-     * name for rich rendering in the context tree.</p>
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation details: Prioritizes the model-provided HTML display name
+     * for rich rendering in the context tree.</p>
      */
     @Override
     public String getName() {
@@ -37,9 +36,10 @@ public class ResourceNode extends AbstractContextNode<Resource> {
         return html != null ? html : userObject.getName();
     }
 
-    /** 
-     * {@inheritDoc} 
-     * <p>Implementation details: Provides the underlying resource URI as the 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation details: Provides the underlying resource URI as the
      * primary descriptive identifier.</p>
      */
     @Override
@@ -47,46 +47,30 @@ public class ResourceNode extends AbstractContextNode<Resource> {
         return "URI: " + userObject.getHandle().getUri();
     }
 
-    /** 
-     * {@inheritDoc} 
-     * <p>Implementation details: Resources are leaf nodes in the context tree 
-     * and do not have children.</p>
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation details: Resources are leaf nodes in the context tree and
+     * do not have children.</p>
      */
     @Override
     protected List<?> fetchChildObjects() {
         return Collections.emptyList();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected AbstractContextNode<?> createChildNode(Object obj) {
         return null;
     }
 
-    /** 
-     * {@inheritDoc} 
-     * <p>Implementation details: Calculates token usage based on the 
-     * associated view and assigns it to either SYSTEM or RAG buckets.</p>
-     */
-    @Override
-    protected void calculateLocalTokens() {
-        TokenizerType type = getAgi().getSelectedModel() != null ? getAgi().getSelectedModel().getTokenizerType() : TokenizerType.CL100K_BASE;
-        int viewTokens = (userObject.getView() != null) ? userObject.getView().getTokenCount(type) : 0;
-        int headerTokens = TokenizerUtils.countTokens(userObject.getHeader(), type);
-        int totalTokens = viewTokens + headerTokens;
-        if (userObject.getContextPosition() == ContextPosition.SYSTEM_INSTRUCTIONS) {
-            this.instructionsTokens = totalTokens;
-            this.ragTokens = 0;
-        } else {
-            this.ragTokens = totalTokens;
-            this.instructionsTokens = 0;
-        }
-    }
-
-    /** 
-     * {@inheritDoc} 
-     * <p>Implementation details: Reflects the real-time availability and 
-     * refresh policy of the resource.</p>
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation details: Reflects the real-time availability and refresh
+     * policy of the resource.</p>
      */
     @Override
     protected void updateStatus() {
@@ -99,5 +83,19 @@ public class ResourceNode extends AbstractContextNode<Resource> {
         } else {
             this.status = userObject.getRefreshPolicy().name().toLowerCase();
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Calculates and caches the local token counts for both the system
+     * instructions and the RAG context buckets directly from the parent
+     * resource.
+     * </p>
+     */
+    @Override
+    protected void calculateLocalTokens() {
+        this.instructionsTokens = userObject.getInstructionsTokenCount();
+        this.ragTokens = userObject.getRagTokenCount();
     }
 }

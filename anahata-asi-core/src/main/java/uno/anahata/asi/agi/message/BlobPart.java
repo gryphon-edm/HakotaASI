@@ -4,6 +4,7 @@ package uno.anahata.asi.agi.message;
 import java.nio.file.Path;
 import lombok.Getter;
 import lombok.NonNull;
+import uno.anahata.asi.agi.provider.AbstractModel;
 
 /**
  * An abstract base class for binary data parts, such as an image or a document.
@@ -69,6 +70,17 @@ public abstract class BlobPart extends AbstractPart {
 
     /**
      * {@inheritDoc}
+     * <p>
+     * Calculates the multimodal token count for this binary part using the active model.
+     * </p>
+     */
+    @Override protected void calculateTokenCount() {
+        AbstractModel model = getAgi() != null ? getAgi().getSelectedModel() : null;
+        setTokenCount(model != null ? model.countTokens(getData(), getMimeType()) : 258);
+    }
+
+    /**
+     * {@inheritDoc}
      * Always includes the source path in the metadata header if available,
      * ensuring semantic continuity even when pruned.
      */
@@ -79,19 +91,6 @@ public abstract class BlobPart extends AbstractPart {
         }
     }
 
-    /** 
-     * Returns the token count for this binary part.
-     * <p>Provides multimodal token accounting with a fixed cost of 258 to prevent binary inflation.</p> 
-     *
-     * @return The token count (always 258).
-     */
-    @Override
-    public int getTokenCount() {
-        // MULTIMODAL ACCOUNTING: Binary parts have a fixed cost in most models 
-        // (Gemini is ~258). This override prevents 'Binary Inflation' where 
-        // base64 strings are treated as thousands of text tokens.
-        return 258;
-    }
 
     @Override
     protected int getDefaultMaxDepth() {
