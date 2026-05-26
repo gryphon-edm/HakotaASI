@@ -36,7 +36,7 @@ public final class ShowAsiClasspathAction implements ActionListener {
         InputOutput io = IOProvider.getDefault().getIO("Default Anahata ASI Classpath", true);
         io.select();
         try (OutputWriter out = io.getOut()) {
-            String cp = NetBeansModuleUtils.getNetBeansClasspath();
+            String cp = NetBeansModuleUtils.getFullModuleClasspath();
             String[] entries = cp.split(File.pathSeparator);
             
             out.println("-----------------------------------------------------------------------");
