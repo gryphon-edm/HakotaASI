@@ -98,4 +98,12 @@ public class ResourceNode extends AbstractContextNode<Resource> {
         this.instructionsTokens = userObject.getInstructionsTokenCount();
         this.ragTokens = userObject.getRagTokenCount();
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isActive() {
+        return userObject.isEffectivelyProviding() && userObject.getHandle().exists();
+    }
 }
