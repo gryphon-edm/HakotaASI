@@ -4,21 +4,23 @@
 package uno.anahata.asi.swing.agi.context;
 
 import java.util.List;
+import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.agi.tool.spi.AbstractTool;
 import uno.anahata.asi.agi.tool.spi.AbstractToolkit;
 import uno.anahata.asi.swing.agi.AgiPanel;
 
 /**
  * A context tree node that acts as a container for all tools within a toolkit.
- * It uses the DoubleToolIconRefined to represent the modular capabilities of the ASI.
- * 
+ * It uses the DoubleToolIconRefined to represent the modular capabilities of
+ * the ASI.
+ *
  * @author anahata
  */
 public class ToolsNode extends AbstractContextNode<AbstractToolkit<?>> {
 
-
     /**
      * Constructs a new ToolsNode.
+     *
      * @param agiPanel The parent agi panel.
      * @param userObject The parent toolkit.
      */
@@ -26,26 +28,33 @@ public class ToolsNode extends AbstractContextNode<AbstractToolkit<?>> {
         super(agiPanel, userObject);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getName() {
         return "Tools";
     }
 
-
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getDescription() {
         return "Available tools provided by the " + userObject.getName() + " toolkit.";
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected List<?> fetchChildObjects() {
         return userObject.getAllTools();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected AbstractContextNode<?> createChildNode(Object obj) {
         if (obj instanceof AbstractTool<?, ?> tool) {
@@ -54,13 +63,29 @@ public class ToolsNode extends AbstractContextNode<AbstractToolkit<?>> {
         return null;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected void calculateLocalTokens() {
         // Tools tokens are aggregated from ToolNodes
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isActive() {
+        Agi agi = getAgi();
+        return agi != null
+                && agi.getConfig().isLocalToolsEnabled()
+                && userObject.isEnabled()
+                && userObject.getToolManager().isEffectivelyProviding();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected void updateStatus() {
         if (!userObject.isEnabled()) {
