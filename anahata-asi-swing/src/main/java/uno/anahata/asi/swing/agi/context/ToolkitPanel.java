@@ -19,7 +19,8 @@ import uno.anahata.asi.swing.components.ScrollablePanel;
 import uno.anahata.asi.swing.toolkit.render.ToolkitUiRegistry;
 
 /**
- * A panel that displays the details and management controls for an {@link AbstractToolkit}.
+ * A panel that displays the details and management controls for an
+ * {@link AbstractToolkit}.
  * <p>
  * It supports extensible UI components via the {@link ToolkitUiRegistry}.
  * </p>
@@ -32,7 +33,7 @@ public class ToolkitPanel extends ScrollablePanel {
      * The parent container panel.
      */
     private final ContextPanel parentPanel;
-    
+
     /**
      * Label showing the toolkit's name.
      */
@@ -49,23 +50,26 @@ public class ToolkitPanel extends ScrollablePanel {
      * Spinner defining maximum context pruning depth.
      */
     private final JSpinner maxDepthSpinner;
-    /** Wrapper container for specialized toolkit UI components. */
+    /**
+     * Wrapper container for specialized toolkit UI components.
+     */
     private final JPanel rendererContainer;
 
     /**
      * Constructs a new ToolkitPanel.
+     *
      * @param parentPanel The parent context panel.
      */
     public ToolkitPanel(ContextPanel parentPanel) {
         this.parentPanel = parentPanel;
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
-        
+
         setMinimumSize(new Dimension(0, 0));
 
         JPanel detailsPanel = new JPanel(new GridBagLayout());
         detailsPanel.setBorder(BorderFactory.createTitledBorder("Toolkit Model Details"));
-        
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -96,10 +100,10 @@ public class ToolkitPanel extends ScrollablePanel {
 
         rendererContainer = new JPanel(new BorderLayout());
         rendererContainer.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createTitledBorder("Toolkit Specialized UI"),
-            BorderFactory.createEmptyBorder(8, 8, 8, 8)
+                BorderFactory.createTitledBorder("Toolkit Specialized UI"),
+                BorderFactory.createEmptyBorder(8, 8, 8, 8)
         ));
-        
+
         // CUSTOM RENDERER POSITION: Below details as requested
         add(detailsPanel, BorderLayout.NORTH);
         add(rendererContainer, BorderLayout.CENTER);
@@ -107,12 +111,13 @@ public class ToolkitPanel extends ScrollablePanel {
 
     /**
      * Updates the panel with the given toolkit's information.
+     *
      * @param tk The toolkit to display.
      */
     public void setToolkit(AbstractToolkit<?> tk) {
         nameLabel.setText("Toolkit: " + tk.getName());
         descLabel.setText("<html>" + tk.getDescription().replace("\n", "<br>") + "</html>");
-        
+
         for (java.awt.event.ActionListener al : enabledCheckbox.getActionListeners()) {
             enabledCheckbox.removeActionListener(al);
         }
