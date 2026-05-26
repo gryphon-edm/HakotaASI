@@ -12,6 +12,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import uno.anahata.asi.agi.context.ContextProvider;
 import uno.anahata.asi.agi.event.PropertyChangeSource;
+import uno.anahata.asi.agi.tool.spi.java.JavaObjectToolkit;
 import uno.anahata.asi.persistence.Rebindable;
 
 /**
@@ -35,6 +36,17 @@ public abstract class AnahataToolkit extends ToolContext implements ContextProvi
     @Setter
     @Getter
     private boolean providing = true;
+
+    /**
+     * Override to also take into consideration the
+     * {@link JavaObjectToolkit#enabled}
+     *
+     * @return true if the providing flag is true and the toolkit is enabled
+     */
+    @Override
+    public boolean isEffectivelyProviding() {
+        return ContextProvider.super.isEffectivelyProviding() && toolkit.isEnabled();
+    }
 
     /**
      * Support for firing property change events. Marked transient to avoid
