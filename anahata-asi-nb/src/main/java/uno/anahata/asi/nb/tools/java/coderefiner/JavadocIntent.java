@@ -39,7 +39,7 @@ public class JavadocIntent implements Serializable {
      * A map of parameter names to their descriptions for the @param tag.
      */
     @Schema(description = "Map of parameter names to their descriptions. "
-        + "The JSON keys must be the raw parameter names, and the values are their descriptions. ")
+        + "The keys must be the raw parameter names, and the values are their descriptions. ")
     private Map<String, String> params;
     /**
      * The description of the return value for the @return tag.
@@ -50,7 +50,7 @@ public class JavadocIntent implements Serializable {
      * A map of exception FQNs to their descriptions for the @throws tag.
      */
     @Schema(description = "Map of exception class FQNs to their descriptions for the @throws tag. "
-        + "The JSON keys must be the fully qualified exception class names (e.g. 'java.io.IOException'), "
+        + "The keys must be the fully qualified exception class names (e.g. 'java.io.IOException'), "
         + "and the values are the descriptions of when they are thrown. ")
     private Map<String, String> thrownExceptions;
     /**
