@@ -58,11 +58,11 @@ public class ContextTreeCellRenderer extends DefaultTreeCellRenderer {
      */
     @Override
     public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
-        super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
+        Component c = super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
 
         if (value instanceof AbstractContextNode<?> node) {
             setText(node.getName());
-            
+
             Icon icon = node.getIcon();
             if (icon == null) {
                 // Fallback to type-specific icons
@@ -70,7 +70,7 @@ public class ContextTreeCellRenderer extends DefaultTreeCellRenderer {
                     icon = toolkitIcon;
                 } else if (node instanceof ToolsNode) {
                     icon = toolsIcon;
-                } else if (node instanceof ProviderNode pn && pn.getUserObject() instanceof ToolManager) {
+                } else if (node instanceof ToolManagerNode) {
                     icon = toolManagerIcon;
                 } else if (node instanceof ToolNode) {
                     icon = toolIcon;
@@ -80,7 +80,7 @@ public class ContextTreeCellRenderer extends DefaultTreeCellRenderer {
                     icon = partIcon;
                 }
             }
-            
+
             // If we found a specialized icon, apply it (potentially with fading)
             if (icon != null) {
                 if (!node.isActive()) {
@@ -94,7 +94,7 @@ public class ContextTreeCellRenderer extends DefaultTreeCellRenderer {
                     setIcon(IconUtils.getDisabledIcon(defaultIcon));
                 }
             }
-            
+
             // Gray out text for inactive nodes
             if (!node.isActive()) {
                 setForeground(Color.GRAY);
