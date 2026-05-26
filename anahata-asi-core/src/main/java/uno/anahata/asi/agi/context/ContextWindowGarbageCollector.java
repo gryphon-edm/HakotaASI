@@ -14,6 +14,7 @@ import uno.anahata.asi.agi.message.AbstractMessage;
 import uno.anahata.asi.agi.message.AbstractPart;
 import uno.anahata.asi.agi.event.BasicPropertyChangeSource;
 import uno.anahata.asi.agi.message.RagMessage;
+import uno.anahata.asi.agi.provider.AbstractModel;
 import uno.anahata.asi.agi.provider.TokenizerType;
 import uno.anahata.asi.agi.tool.spi.AbstractTool;
 import uno.anahata.asi.toolkit.History;
@@ -50,18 +51,23 @@ public class ContextWindowGarbageCollector extends BasicPropertyChangeSource {
      * current context. This categorizes tokens into system instructions, tools, 
      * metadata, and various history states using the active session tokenizer.
      */
-    public void calculate() {
+        public void calculate() {
         long startTime = System.currentTimeMillis();
-        log.info("Calculating high-fidelity token metabolism for session {}", contextManager.getAgi().getShortId());
+        log.debug("Calculating high-fidelity token metabolism for session {}", contextManager.getAgi().getShortId());
         Stats.StatsBuilder sb = Stats.builder();
 
-        TokenizerType activeTokenizer = contextManager.getAgi().getSelectedModel() != null
-                ? contextManager.getAgi().getSelectedModel().getTokenizerType()
-                : TokenizerType.CL100K_BASE;
+        AbstractModel model = contextManager.getAgi().getSelectedModel();
+        if (model == null) {
+            log.info("No model selected for session {}. Setting token metabolism to 0.", contextManager.getAgi().getShortId());
+            Stats oldStats = this.stats;
+            this.stats = sb.build();
+            propertyChangeSupport.firePropertyChange("stats", oldStats, this.stats);
+            return;
+        }
 
         // 1. System Instructions
         List<String> instructions = contextManager.getSystemInstructions();
-        sb.systemInstructionsTokens(TokenizerUtils.countTokens(String.join("\n", instructions), activeTokenizer));
+        sb.systemInstructionsTokens(model.countTokens(String.join("\n", instructions)));
 
         // 2. Tool Declarations
         if (contextManager.getAgi().getConfig().isLocalToolsEnabled()) {
@@ -80,7 +86,7 @@ public class ContextWindowGarbageCollector extends BasicPropertyChangeSource {
 
         for (AbstractMessage msg : contextManager.getHistory()) {
             if (injectInband && msg.shouldCreateMetadata()) {
-                metadata += TokenizerUtils.countTokens(msg.createMetadataHeader(), activeTokenizer);
+                metadata += model.countTokens(msg.createMetadataHeader());
             }
             for (AbstractPart part : msg.getParts()) {
                 if (injectInband) {
@@ -103,7 +109,7 @@ public class ContextWindowGarbageCollector extends BasicPropertyChangeSource {
             // In consolidated mode, calculate the History Metadata block tokens specifically
             History historyToolkit = contextManager.getAgi().getToolkit(History.class).orElse(null);
             if (historyToolkit != null) {
-                metadata = TokenizerUtils.countTokens(historyToolkit.createConsolidatedIndex(), activeTokenizer);
+                metadata = model.countTokens(historyToolkit.createConsolidatedIndex());
             }
             sb.ragTokens(totalRagTokens - metadata);
         } else {
@@ -118,7 +124,7 @@ public class ContextWindowGarbageCollector extends BasicPropertyChangeSource {
         int totalGarbageCollected = logRecords.stream()
                 .mapToInt(GarbageCollectorRecord::getTokenCount)
                 .sum();
-            sb.garbageCollectedTokens(totalGarbageCollected);
+        sb.garbageCollectedTokens(totalGarbageCollected);
 
         Stats oldStats = this.stats;
         this.stats = sb.build();
