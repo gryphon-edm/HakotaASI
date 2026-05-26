@@ -14,12 +14,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import uno.anahata.asi.agi.Agi;
 import uno.anahata.asi.agi.context.ContextProvider;
-import uno.anahata.asi.agi.message.AbstractMessage;
-import uno.anahata.asi.agi.message.AbstractPart;
 import uno.anahata.asi.agi.tool.spi.AbstractTool;
 import uno.anahata.asi.agi.tool.spi.AbstractToolkit;
-import uno.anahata.asi.agi.tool.ToolPermission;
-import uno.anahata.asi.agi.resource.Resource;
 import uno.anahata.asi.swing.agi.AgiPanel;
 import uno.anahata.asi.swing.agi.SwingAgiConfig;
 import uno.anahata.asi.swing.icons.IconProvider;
@@ -27,13 +23,14 @@ import uno.anahata.asi.swing.icons.IconProvider;
 /**
  * The base class for all nodes in the hierarchical context tree.
  * <p>
- * This class provides a unified interface for the {@link ContextTreeTableModel} 
- * to interact with different types of domain objects (Providers, Toolkits, Tools) 
- * while maintaining a consistent JNDI-style view.
+ * This class provides a unified interface for the {@link ContextTreeTableModel}
+ * to interact with different types of domain objects (Providers, Toolkits,
+ * Tools) while maintaining a consistent JNDI-style view.
  * </p>
  * <p>
- * It implements a hierarchical token aggregation system and an identity-preserving 
- * child synchronization mechanism to ensure UI stability during refreshes.
+ * It implements a hierarchical token aggregation system and an
+ * identity-preserving child synchronization mechanism to ensure UI stability
+ * during refreshes.
  * </p>
  *
  * @author anahata
@@ -43,30 +40,45 @@ import uno.anahata.asi.swing.icons.IconProvider;
 @RequiredArgsConstructor
 public abstract class AbstractContextNode<T> {
 
-    /** The parent agi panel. */
+    /**
+     * The parent agi panel.
+     */
     protected final AgiPanel agiPanel;
 
-    /** 
-     * The underlying domain object. 
+    /**
+     * The underlying domain object.
      */
     protected final T userObject;
 
-    /** The cached list of child nodes. */
+    /**
+     * The cached list of child nodes.
+     */
     protected List<AbstractContextNode<?>> children;
 
-    /** Cached instruction token count (including children). */
+    /**
+     * Cached instruction token count (including children).
+     */
     protected int instructionsTokens;
-    /** Cached declaration token count (including children). */
+    /**
+     * Cached declaration token count (including children).
+     */
     protected int declarationsTokens;
-    /** Cached history token count (including children). */
+    /**
+     * Cached history token count (including children).
+     */
     protected int historyTokens;
-    /** Cached RAG token count (including children). */
+    /**
+     * Cached RAG token count (including children).
+     */
     protected int ragTokens;
-    /** Cached status string. */
+    /**
+     * Cached status string.
+     */
     protected String status;
 
     /**
      * Gets the parent agi session.
+     *
      * @return The agi session.
      */
     public Agi getAgi() {
@@ -75,21 +87,23 @@ public abstract class AbstractContextNode<T> {
 
     /**
      * Gets the human-readable display name for this node.
+     *
      * @return The name to be displayed in the tree.
      */
     public abstract String getName();
 
     /**
      * Gets a detailed description of the node's purpose or content.
+     *
      * @return The description string.
      */
     public abstract String getDescription();
 
     /**
-     * Gets the list of child nodes for this node.
-     * Implementation details: Returns the cached child list, initializing it 
-     * via {@link #refresh()} if necessary.
-     * 
+     * Gets the list of child nodes for this node. Implementation details:
+     * Returns the cached child list, initializing it via {@link #refresh()} if
+     * necessary.
+     *
      * @return A list of child AbstractContextNodes.
      */
     public final List<AbstractContextNode<?>> getChildren() {
@@ -102,9 +116,9 @@ public abstract class AbstractContextNode<T> {
     /**
      * Refreshes the node's state, including its child list and token counts.
      * <p>
-     * This method implements an identity-preserving synchronization logic: 
-     * it updates the child list by reusing existing node instances for 
-     * domain objects that are still present.
+     * This method implements an identity-preserving synchronization logic: it
+     * updates the child list by reusing existing node instances for domain
+     * objects that are still present.
      * </p>
      */
     public final void refresh() {
@@ -113,8 +127,8 @@ public abstract class AbstractContextNode<T> {
         if (newChildObjects == null || newChildObjects.isEmpty()) {
             this.children = Collections.emptyList();
         } else {
-            Map<Object, AbstractContextNode<?>> currentNodes = (children == null) ? Collections.emptyMap() :
-                    children.stream().collect(Collectors.toMap(AbstractContextNode::getUserObject, Function.identity(), (a, b) -> a));
+            Map<Object, AbstractContextNode<?>> currentNodes = (children == null) ? Collections.emptyMap()
+                    : children.stream().collect(Collectors.toMap(AbstractContextNode::getUserObject, Function.identity(), (a, b) -> a));
 
             List<AbstractContextNode<?>> syncedChildren = new ArrayList<>();
             for (Object obj : newChildObjects) {
@@ -134,8 +148,9 @@ public abstract class AbstractContextNode<T> {
     }
 
     /**
-     * Recursively recalculates token counts and status for this node and its descendants.
-     * This method is designed to be called from a background thread via SwingTask.
+     * Recursively recalculates token counts and status for this node and its
+     * descendants. This method is designed to be called from a background
+     * thread via SwingTask.
      */
     public final void refreshData() {
         // 1. Refresh children first (Post-order traversal for correct aggregation)
@@ -163,45 +178,48 @@ public abstract class AbstractContextNode<T> {
     }
 
     /**
-     * Fetches the current list of domain objects that should be represented 
-     * as children of this node.
-     * 
+     * Fetches the current list of domain objects that should be represented as
+     * children of this node.
+     *
      * @return A list of domain objects.
      */
     protected abstract List<?> fetchChildObjects();
 
     /**
      * Creates a new child node for the given domain object.
-     * 
+     *
      * @param userObject The domain object to wrap.
-     * @return A new AbstractContextNode, or null if the object type is not supported.
+     * @return A new AbstractContextNode, or null if the object type is not
+     * supported.
      */
     protected abstract AbstractContextNode<?> createChildNode(Object userObject);
 
     /**
-     * Recalculates and caches the token counts and status for this node 
-     * and all its descendants.
+     * Recalculates and caches the token counts and status for this node and all
+     * its descendants.
+     *
      * @deprecated Use {@link #refresh()} instead for a unified update.
      */
     @Deprecated
     public final void refreshTokens() {
         refresh();
     }
-    
+
     /**
-     * Calculates the token counts for this node's own content (excluding children).
+     * Calculates the token counts for this node's own content (excluding
+     * children).
      */
     protected abstract void calculateLocalTokens();
-    
+
     /**
      * Updates the status string for this node.
      */
     protected abstract void updateStatus();
-    
+
     /**
-     * Gets an optional icon for this node by delegating to the 
+     * Gets an optional icon for this node by delegating to the
      * {@link IconProvider} configured in the agi session.
-     * 
+     *
      * @return The icon, or null if no specialized icon is available.
      */
     public Icon getIcon() {
@@ -222,43 +240,30 @@ public abstract class AbstractContextNode<T> {
     }
 
     /**
-     * Checks if the underlying domain object is currently "active" in the context.
+     * Checks if the underlying domain object is currently active in the
+     * context.
      * <p>
-     * An object is inactive if it is a disabled toolkit, a provider not effectively 
-     * providing (including parent state), a deleted resource, or a pruned message/part.
+     * Subclasses override this method to define their specific active-state
+     * policy, allowing for clean, polymorphic evaluation without dirty
+     * instanceof chains.
      * </p>
-     * 
+     *
      * @return {@code true} if active, {@code false} otherwise.
      */
-    public boolean isActive() {
-        if (userObject instanceof ContextProvider cp) {
-            boolean active = cp.isEffectivelyProviding();
-            if (cp instanceof Resource res) {
-                active = active && res.getHandle().exists();
-            }
-            return active;
-        } else if (userObject instanceof AbstractToolkit<?> tk) {
-            return tk.isEnabled() && tk.getToolManager().isEffectivelyProviding();
-        } else if (userObject instanceof AbstractTool<?, ?> tool) {
-            AbstractToolkit<?> tk = tool.getToolkit();
-            return tool.getPermission() != ToolPermission.DENY 
-                && (tk == null || (tk.isEnabled() && tk.getToolManager().isEffectivelyProviding()));
-        } else if (userObject instanceof AbstractMessage msg) {
-            return !msg.isEffectivelyPruned();
-        } else if (userObject instanceof AbstractPart part) {
-            return !part.isEffectivelyPruned();
-        }
-        return true;
-    }
+    public abstract boolean isActive();
 
     /**
-     * {@inheritDoc}
-     * Equality is based on the underlying userObject and the node class.
+     * {@inheritDoc} Equality is based on the underlying userObject and the node
+     * class.
      */
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         AbstractContextNode<?> that = (AbstractContextNode<?>) o;
         return userObject.equals(that.userObject);
     }
@@ -272,8 +277,7 @@ public abstract class AbstractContextNode<T> {
     }
 
     /**
-     * {@inheritDoc}
-     * Returns the display name of the node.
+     * {@inheritDoc} Returns the display name of the node.
      */
     @Override
     public String toString() {
