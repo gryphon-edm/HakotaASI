@@ -395,7 +395,7 @@ public class ToolManager extends BasicPropertyChangeSource implements ContextPro
     /** {@inheritDoc} */
     @Override
     public String getId() {
-        return "tool";
+        return "ToolManager";
     }
 
     /** {@inheritDoc} */
