@@ -2,7 +2,6 @@
 package uno.anahata.asi.gemini;
 
 import com.google.genai.Client;
-import com.google.genai.LocalTokenizer;
 import com.google.genai.ResponseStream;
 import com.google.genai.types.Candidate;
 import com.google.genai.types.Citation;
@@ -47,6 +46,7 @@ import uno.anahata.asi.agi.provider.RetryableApiException;
 import uno.anahata.asi.agi.tool.ToolResponseAttachment;
 import uno.anahata.asi.agi.tool.spi.AbstractToolCall;
 import uno.anahata.asi.gemini.adapter.GeminiPartAdapter;
+import uno.anahata.asi.gemini.tokenizer.LocalTokenizer;
 import uno.anahata.asi.internal.ImageMetadataUtils;
 import uno.anahata.asi.internal.ImageMetadataUtils.ImageMetadata;
 import uno.anahata.asi.internal.JacksonUtils;
@@ -75,7 +75,7 @@ public class GeminiModel extends AbstractModel {
      */
     private transient Model genaiModel;
 
-    private transient com.google.genai.LocalTokenizer localTokenizer;
+    private transient LocalTokenizer localTokenizer;
 
     /**
      * Constructs a new GeminiModel adapter.
