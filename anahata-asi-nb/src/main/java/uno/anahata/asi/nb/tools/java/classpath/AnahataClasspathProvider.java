@@ -17,9 +17,9 @@ import org.openide.util.lookup.ServiceProvider;
 import uno.anahata.asi.nb.module.NetBeansModuleUtils;
 
 /**
- * A global ClassPathProvider that intercepts queries for in-memory files
- * and provides the appropriate classpath based on the file's context.
- * Enables semantic highlighting and code completion for virtual snippets.
+ * A global ClassPathProvider that intercepts queries for in-memory files and
+ * provides the appropriate classpath based on the file's context. Enables
+ * semantic highlighting and code completion for virtual snippets.
  */
 @ServiceProvider(service = ClassPathProvider.class, position = 10000)
 @Slf4j
@@ -31,16 +31,19 @@ public class AnahataClasspathProvider implements ClassPathProvider {
     private ClassPath anahataPluginCp;
 
     /**
-     * Lazily initializes and returns the ClassPath representing the Anahata plugin's environment.
+     * Lazily initializes and returns the ClassPath representing the Anahata
+     * plugin's environment.
      * <p>
-     * Implementation details: Extracts the NetBeans runtime classpath from {@link NetBeansModuleUtils} 
-     * and converts physical files to archive-aware URLs via {@link FileUtil#urlForArchiveOrDir}.
+     * Implementation details: Extracts the NetBeans runtime classpath from
+     * {@link NetBeansModuleUtils} and converts physical files to archive-aware
+     * URLs via {@link FileUtil#urlForArchiveOrDir}.
      * </p>
+     *
      * @return the anahata plugin classpath.
      */
     private synchronized ClassPath getPluginClassPath() {
         if (anahataPluginCp == null) {
-            String rawCp = NetBeansModuleUtils.getNetBeansClasspath();
+            String rawCp = NetBeansModuleUtils.getFullModuleClasspath();
             List<URL> cpUrls = new ArrayList<>();
             for (String path : rawCp.split(File.pathSeparator)) {
                 File f = new File(path);
@@ -58,17 +61,18 @@ public class AnahataClasspathProvider implements ClassPathProvider {
 
     /**
      * {@inheritDoc}
-     * <p>Detects memory-based FileObjects and attempts to resolve their classpath 
-     * by checking for custom attributes (<code>anahata.customClasspath</code> 
-     * or <code>anahata.contextPath</code>). If no specific context is found, 
-     * it falls back to the global plugin classpath.</p>
+     * <p>
+     * Detects memory-based FileObjects and attempts to resolve their classpath
+     * by checking for custom attributes (<code>anahata.customClasspath</code>
+     * or <code>anahata.contextPath</code>). If no specific context is found, it
+     * falls back to the global plugin classpath.</p>
      */
     @Override
     public ClassPath findClassPath(FileObject file, String type) {
         try {
             // MemoryFileSystem classes are package-private, so we match the simple name.
             if (file.getFileSystem().getClass().getSimpleName().equals("MemoryFileSystem")) {
-                
+
                 // 1. Check for explicitly injected custom classpath (e.g., from JavaCodeParameterRenderer)
                 Object customCp = file.getAttribute("anahata.customClasspath");
                 if (customCp instanceof String cpStr && (ClassPath.COMPILE.equals(type) || ClassPath.EXECUTE.equals(type))) {
@@ -109,15 +113,10 @@ public class AnahataClasspathProvider implements ClassPathProvider {
                     }
                 }
 
-                // Fallback to global plugin classpath if no context hint is found
-                if (ClassPath.COMPILE.equals(type) || ClassPath.EXECUTE.equals(type)) {
-                    return getPluginClassPath();
-                } else if (ClassPath.SOURCE.equals(type)) {
-                    return ClassPathSupport.createClassPath(new URL[0]);
-                } else if (ClassPath.BOOT.equals(type)) {
-                    // Returning null tells JavaSource to fall back to the default platform's bootstrap libraries
-                    return null;
-                }
+                
+                // Fallback to null classpath for plain, non-interactive chat code blocks to completely prevent background parsing, red compiler highlights, and CPU-intensive indexing
+                return null;
+                
             }
         } catch (Exception ex) {
             // Silently ignore exceptions (like FileStateInvalidException) to prevent parser disruption

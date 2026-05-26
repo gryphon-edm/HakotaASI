@@ -21,6 +21,7 @@ import org.openide.filesystems.FileUtil;
 import org.openide.filesystems.FileSystem;
 import org.openide.loaders.DataObject;
 import uno.anahata.asi.agi.resource.Resource;
+import uno.anahata.asi.agi.resource.handle.PathHandle;
 import uno.anahata.asi.agi.resource.handle.StringHandle;
 import uno.anahata.asi.nb.resources.handle.NbHandle;
 import uno.anahata.asi.swing.agi.AgiPanel;
@@ -59,12 +60,19 @@ public class NetBeansTextResourceViewer extends AbstractTextResourceViewer {
     private JPanel wrapper = null;
 
     /**
+     * The resolved FileObject for this resource view.
+     */
+    private FileObject fileObject;
+
+    /**
      * Shared MemoryFileSystem for all virtual snippets to prevent GC leaks and
      * AST Indexer fragmentation.
      */
     private static FileSystem sharedMemFS;
 
-    /** Cleaner instance for resource garbage collection sweeps. */
+    /**
+     * Cleaner instance for resource garbage collection sweeps.
+     */
     private static final Cleaner CLEANER = Cleaner.create();
 
     /**
@@ -189,12 +197,20 @@ public class NetBeansTextResourceViewer extends AbstractTextResourceViewer {
                 }
             }
 
+            this.fileObject = finalFo;
+
             // 2. High-Fidelity Pane Setup
             this.editor = new JEditorPane();
             editor.setContentType(mime);
             editor.setEditorKit(org.openide.text.CloneableEditorSupport.getEditorKit(mime));
 
+            boolean disableCookie = false;
             if (finalFo != null) {
+                Object attr = finalFo.getAttribute("anahata.disableEditorCookie");
+                disableCookie = attr != null && ("true".equals(attr.toString()) || Boolean.TRUE.equals(attr));
+            }
+
+            if (finalFo != null && !disableCookie) {
                 try {
                     DataObject dobj = DataObject.find(finalFo);
                     org.openide.cookies.EditorCookie ec = dobj.getLookup().lookup(org.openide.cookies.EditorCookie.class);
@@ -252,6 +268,15 @@ public class NetBeansTextResourceViewer extends AbstractTextResourceViewer {
                 final FileObject fileToDelete = finalFo;
                 CLEANER.register(this, () -> {
                     try {
+                        try {
+                            DataObject dobj = DataObject.find(fileToDelete);
+                            if (dobj.isModified()) {
+                                dobj.setModified(false);
+                            }
+                        } catch (Throwable t) {
+                            // ignore
+                        }
+
                         if (fileToDelete.isValid()) {
                             log.info("Deleting in memory file object {}", fileToDelete);
                             fileToDelete.delete();
@@ -312,8 +337,18 @@ public class NetBeansTextResourceViewer extends AbstractTextResourceViewer {
                 @Override
                 public void focusGained(java.awt.event.FocusEvent e) {
                     if (!"text/plain".equals(editor.getContentType())) {
-                        log.debug("Focus gained calling ensureRegistered() for editor: {}", editor);
-                        ensureRegistered();
+                        boolean disableRegistry = false;
+                        if (fileObject != null) {
+                            Object attr = fileObject.getAttribute("anahata.disableEditorCookie");
+                            disableRegistry = attr != null && ("true".equals(attr.toString()) || Boolean.TRUE.equals(attr));
+                        }
+
+                        if (!disableRegistry) {
+                            log.debug("Focus gained calling ensureRegistered() for active editor: {}", editor);
+                            ensureRegistered();
+                        } else {
+                            log.debug("Skipping EditorRegistry registration for static chat snippet: {}", resource.getName());
+                        }
                     } else {
                         log.debug("Skipping EditorRegistry registration for plain text snippet: {}", resource.getName());
                     }
@@ -332,7 +367,26 @@ public class NetBeansTextResourceViewer extends AbstractTextResourceViewer {
     }
 
     /**
-     * Registers the active JEditorPane instance with the NetBeans EditorRegistry.
+     * Resets the modified status of the underlying DataObject. This removes any
+     * active SaveCookie and prevents NetBeans from showing a "Save Changes"
+     * prompt when closing the IDE or unloading the session.
+     */
+    private void discardUnsavedChanges() {
+        if (fileObject != null) {
+            try {
+                DataObject dobj = DataObject.find(fileObject);
+                if (dobj.isModified()) {
+                    dobj.setModified(false);
+                }
+            } catch (Throwable t) {
+                // silently ignore
+            }
+        }
+    }
+
+    /**
+     * Registers the active JEditorPane instance with the NetBeans
+     * EditorRegistry.
      */
     private void ensureRegistered() {
         log.info("ensureRegistered() editor.getHeight() " + editor.getHeight());
@@ -353,7 +407,9 @@ public class NetBeansTextResourceViewer extends AbstractTextResourceViewer {
         return mainScroller;
     }
 
-    /** The last logged height dimension value to prevent logging floods. */
+    /**
+     * The last logged height dimension value to prevent logging floods.
+     */
     private transient int lastLoggedH = -1;
 
     /**
@@ -432,6 +488,7 @@ public class NetBeansTextResourceViewer extends AbstractTextResourceViewer {
             editor.setEditable(false);
         }
         syncWithResource();
+        discardUnsavedChanges();
     }
 
     /**
@@ -468,6 +525,8 @@ public class NetBeansTextResourceViewer extends AbstractTextResourceViewer {
                 } catch (Exception ex) {
                     editor.setCaretPosition(0);
                 }
+
+                discardUnsavedChanges();
 
                 // Breathing re-layout for snippets
                 if (!verticalScrollEnabled) {

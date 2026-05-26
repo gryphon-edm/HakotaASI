@@ -200,6 +200,7 @@ public class CodeBlockSegmentRenderer extends AbstractTextSegmentRenderer {
         // THE UNIVERSAL WAY: Wrap in virtual resource and ask Registry.
         // CERO HARDCODING: Mimes are resolved by the viewer based on name.
         StringHandle handle = new StringHandle("snippet." + language, currentContent);
+        handle.setAttribute("anahata.disableEditorCookie", true);
         Resource ephemeral = new Resource(handle);
         
         try {
