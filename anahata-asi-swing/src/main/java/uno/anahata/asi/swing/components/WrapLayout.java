@@ -95,6 +95,18 @@ public class WrapLayout extends FlowLayout {
             // Each row must fit with the width of the parent container.
             // The height of the layout will be calculated dynamically.
             int targetWidth = target.getSize().width;
+            
+            // Break circular layout dependency inside JScrollPanes/Viewports by resolving 
+            // the true available viewport constraint instead of target's stale width.
+            Container parent = target.getParent();
+            while (parent != null) {
+                if (parent instanceof JViewport) {
+                    targetWidth = parent.getWidth();
+                    break;
+                }
+                parent = parent.getParent();
+            }
+
             if (targetWidth == 0) {
                 targetWidth = Integer.MAX_VALUE;
             }
