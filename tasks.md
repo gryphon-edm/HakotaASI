@@ -4,29 +4,29 @@ This file tracks the actionable tasks and tactical goals for the Anahata ASI (V2
 
 ## 0. Zero Day Go Live: 
 
-- [ ] Remove syntax highligthing from java code blocks in text parts.
+- [x] Remove syntax highligthing from java code blocks in text parts.
 
-- [ ] Integrate CodeRefiner.optimizeImports in BCR
+- [X] WrapLayout in unloadResources plays games with horizotnal widths some times
 
-- [ ] ToolCallPanel sometimes shows white sspace between the adjustingtabbedpane and the response titled panel
+- [X] Integrate CodeRefiner.optimizeImports in BCR
+    
+## 2. Post Go Live (v1.1)
+- [ ] "add / remove to AGI Context for "files in a jar"  
+
+- [ ] check playback lines on linux work correctly
+
+- [ ] ToolCallPanel sometimes shows white sspace between the adjustingtabbedpane and the response titled panel in maven tool calls 
 
 - [ ] make "cached data" in MediaView transient? possibly in text resources too?
 
 - [ ] change all log.info to log.debug
 
-- [ ] WrapLayout in unloadResources plays games with horizotnal widths some times
-
-- [ ] recording audio on the microphon button default recording device leaves a dangling swing task and doesn't record
-
-- [ ] test playback lines work correctly
-
-- [ ] "add / remove to AGI Context for "files in a jar" causes double context menu item 
-
-## 1. Have to do before Go Live: 
 - [ ] merge helders database branch
+
 - [ ] test one hf model with the chat completions api and put (Beta) 
-    
-## 2. Post Go Live (v1.1)
+
+
+
 - [ ] **Preferences Panel**: 
     [ ] Enabled / Disabled toolkits
 
