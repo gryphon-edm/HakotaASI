@@ -118,6 +118,18 @@ jobs:
           pattern: bin-*
           merge-multiple: true
 
+      - name: Purge old snapshot assets
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # Fetch and delete all existing assets for the latest-snapshot release
+          assets=$(gh release view latest-snapshot --json assets -q '.assets[].name' || true)
+          for asset in $assets; do
+            echo "Deleting stale snapshot asset: $asset"
+            gh release delete-asset latest-snapshot "$asset" -y || true
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
