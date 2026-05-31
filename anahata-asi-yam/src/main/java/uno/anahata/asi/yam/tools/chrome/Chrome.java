@@ -2,6 +2,7 @@
 package uno.anahata.asi.yam.tools.chrome;
 
 import java.io.File;
+import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -69,13 +70,15 @@ public class Chrome extends AbstractBrowser {
     @Override
     public List<String> getSystemInstructions() {
         return Collections.singletonList(
-                "**Chrome Toolkit Instructions**:\n"
-                + "- **Connection Protocol**: Use the `connect()` tool as your primary entry point. It automatically detects running browsers and handles the restart protocol if necessary.\n"
-                + "- **Scraping Tips (Headless vs Visual)**: Use the visual `Chrome` toolkit to bypass strong bot protections (DataDome, Cloudflare) by hijacking the user's authenticated fingerprint.\n"
-                + "- **Multi-Drone Routing**: All methods require a `droneId` to target the specific browser session.\n"
-                + "- **Missing Binaries**: If Selenium cannot find the browser binary, use the `Shell` toolkit to locate it (e.g., `which google-chrome`) and pass the absolute path to the `binaryPath` parameter.\n"
-                + "- **Extensibility**: The `Java` toolkit has `Selenium` and `Jsoup` on its classpath. Use it to cover any advanced gaps."
-        );
+                        "**Chrome Toolkit Instructions**:\n"
+                        + "- **Connection Protocol**: Use the `connect()` tool as your primary entry point. It automatically detects running browsers and handles the restart protocol if necessary.\n"
+                        + "- **Scraping Tips (Headless vs Visual)**: Use the visual `Chrome` toolkit to bypass strong bot protections (DataDome, Cloudflare) by hijacking the user's authenticated fingerprint.\n"
+                        + "- **Multi-Drone Routing**: All methods require a `droneId` to target the specific browser session.\n"
+                        + "- **Missing Binaries**: If Selenium cannot find the browser binary, use the `Shell` toolkit to locate it (e.g., `which google-chrome`) and pass the absolute path to the `binaryPath` parameter.\n"
+                        + "- **Extensibility**: The `Java` toolkit has `Selenium` and `Jsoup` on its classpath. Use it to cover any advanced gaps.\n"
+                        + "- **Direct WebDriver Access (Superpower)**: To bypass toolkit limits and control the browser natively from a dynamic `NbJava` JIT script, retrieve the live Selenium driver using:\n"
+                        + "  `WebDriver driver = getToolkit(Chrome.class).getDriver(droneId);`"
+                );
     }
 
     /**
@@ -315,8 +318,7 @@ public class Chrome extends AbstractBrowser {
     /**
      * {@inheritDoc}
      */
-    @Override
-    protected synchronized WebDriver getDriver(String droneId) {
+    @Override public synchronized WebDriver getDriver(String droneId) {
         BrowserDrone d = drones.get(droneId);
         if (d == null) {
             return null;
@@ -707,7 +709,7 @@ public class Chrome extends AbstractBrowser {
         }
         
         int remotePort;
-        try (java.net.ServerSocket socket = new java.net.ServerSocket(0)) {
+        try (ServerSocket socket = new ServerSocket(0)) {
             remotePort = socket.getLocalPort();
         } catch (Exception e) {
             log.warn("Failed to find a free port, falling back to 9222", e);

@@ -3,7 +3,9 @@ package uno.anahata.asi.yam.tools.browser;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -56,7 +58,7 @@ public abstract class AbstractBrowser extends AnahataToolkit implements Rebindab
      * @param droneId The unique ID of the drone.
      * @return The active WebDriver, or {@code null} if it cannot be resolved.
      */
-    protected abstract WebDriver getDriver(String droneId);
+    public abstract WebDriver getDriver(String droneId) ;
 
     /**
      * Gets the current status of the browser driver for a specific drone.
@@ -149,7 +151,7 @@ public abstract class AbstractBrowser extends AnahataToolkit implements Rebindab
         File screenshotDir = AbstractAsiContainer.getWorkDirSubDir("screenshots").toFile();
         File destFile = new File(screenshotDir, name + ".png");
 
-        Files.copy(srcFile.toPath(), destFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(srcFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         addAttachment(destFile);
 
         return "Screenshot '" + name + "' attached to session for drone: " + droneId;
@@ -172,7 +174,7 @@ public abstract class AbstractBrowser extends AnahataToolkit implements Rebindab
             return "No active session for drone: " + droneId;
         }
 
-        List<String> handles = new java.util.ArrayList<>(driver.getWindowHandles());
+        List<String> handles = new ArrayList<>(driver.getWindowHandles());
         if (index < 0 || index >= handles.size()) {
             return "Invalid tab index: " + index + ". Total tabs: " + handles.size();
         }

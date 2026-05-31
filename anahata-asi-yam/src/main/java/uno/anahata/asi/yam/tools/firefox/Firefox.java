@@ -75,11 +75,13 @@ public class Firefox extends AbstractBrowser {
     @Override
     public List<String> getSystemInstructions() {
         return Collections.singletonList(
-                "**Firefox Toolkit Instructions**:\n"
-                + "- **Connection Protocol**: Use the `connect()` tool to launch a Firefox browser instance.\n"
-                + "- **Multi-Drone Routing**: All methods require a `droneId` to target the specific browser session.\n"
-                + "- **Missing Binaries**: If Selenium cannot find the browser binary, use the `Shell` toolkit to locate it (e.g., `find /snap -name firefox`) and pass the absolute path to the `binaryPath` parameter."
-        );
+                        "**Firefox Toolkit Instructions**:\n"
+                        + "- **Connection Protocol**: Use the `connect()` tool to launch a Firefox browser instance.\n"
+                        + "- **Multi-Drone Routing**: All methods require a `droneId` to target the specific browser session.\n"
+                        + "- **Missing Binaries**: If Selenium cannot find the browser binary, use the `Shell` toolkit to locate it (e.g., `find /snap -name firefox`) and pass the absolute path to the `binaryPath` parameter.\n"
+                        + "- **Direct WebDriver Access (Superpower)**: To bypass toolkit limits and control the browser natively from a dynamic `NbJava` JIT script, retrieve the live Selenium driver using:\n"
+                        + "  `WebDriver driver = getToolkit(Firefox.class).getDriver(droneId);`"
+                );
     }
 
     /**
@@ -227,8 +229,7 @@ public class Firefox extends AbstractBrowser {
     /**
      * {@inheritDoc}
      */
-    @Override
-    protected synchronized WebDriver getDriver(String droneId) {
+    @Override public synchronized WebDriver getDriver(String droneId) {
         BrowserDrone d = drones.get(droneId);
         if (d == null) {
             return null;
