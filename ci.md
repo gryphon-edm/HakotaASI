@@ -1,11 +1,15 @@
 # Continuous Integration & Deployment (CI/CD)
 
 ## Artifact Publishing
-All project artifacts (JARs, POMs) are published to **Maven Central** via a GitHub Action (`deploy-artifacts.yml`), triggered on push to master or release tags.
+All project artifacts (NBMs, native Desktop installers, JARs, POMs) are compiled, validated, and published via a unified, multi-job GitHub Action (`deploy-artifacts.yml`), triggered on pushes to the `main` branch or release tags.
 
-### Deployment Paths
--   **Releases & Snapshots**: Published to the **Sonatype Central Portal** ecosystem.
--   **Credentials**: Both paths use the `sonatype-central` server ID for credential management in GitHub Actions.
+### Publishing Pipelines
+1.  **Platform NBMs & Maven JARs**: Compiled on JDK 25 and published natively to **Sonatype Central Portal** (using GPG signing and automated verification).
+2.  **Native Desktop Installers**: Compiled on a cross-platform matrix (Linux, Windows, macOS) and packaged into portable native standalone app-bundles (`.zip` and `.tar.gz`) using `jpackage`.
+3.  **Atomic GitHub Releases**: Once both build stages successfully complete, a synchronized release job purges old snapshots and uploads all 4 binaries (the NBM and the 3 native desktop installers) together in a single, atomic, collision-free transaction to the `latest-snapshot` release.
+
+### Credentials
+-   Both paths use the `sonatype-central` server ID for credential management in GitHub Actions.
 -   **Verification**: The build uses the `central-publishing-maven-plugin` to handle the deferred deployment and portal integration.
 
 ## Website & Javadoc Deployment
