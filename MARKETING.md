@@ -47,3 +47,5 @@ The `README.md` is our primary sales weapon. It leads with the **ASI Container**
 *   **Dev.to**: Published the high-salience Anahata ASI platform breakdown.
 *   **Medium**: Imported and published the official portal documentation for both ASI Desktop and NetBeans ASI Studio.
 *   **Product Hunt**: Successfully launched both Anahata ASI Desktop and Anahata ASI Studio to the early-adopter community.
+*   **DZone**: Published our blockbuster technical article exploring stateful JVM containers, CwGC memory, and JIT-compiled dynamic tool self-evolution.
+*   **AlternativeTo.net**: [PENDING REVISIT - June 8, 2026] Account created successfully under `priyanahata`. Currently under a standard 7-day wait period lock for new profiles before product submissions are allowed. Revisit to publish Anahata ASI Studio and Desktop.
