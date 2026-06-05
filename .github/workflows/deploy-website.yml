@@ -33,9 +33,15 @@ jobs:
           java-version: '25'
           distribution: 'temurin'
           cache: 'maven'
+          server-id: sonatype-central
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
 
       - name: Build and Generate Javadoc
-        run: mvn clean install javadoc:aggregate -DskipTests -o -ntp
+        env:
+          MAVEN_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+        run: mvn clean install javadoc:aggregate -DskipTests -ntp
 
       - name: Checkout gh-pages Branch (Persistence Database)
         uses: actions/checkout@v4
