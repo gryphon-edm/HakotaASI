@@ -46,8 +46,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
 
-                    <a href="quickstart.html" class="${isActive('quickstart.html') ? 'active-link' : ''}">Quick Start</a>
-                    <a href="apidocs/index.html">Javadocs</a>
+                    <a href="enterprise.html" class="${isActive('enterprise.html') ? 'active-link' : ''}">Enterprise</a>
+
+                    <div class="dropdown">
+                        <a href="#" class="dropdown-toggle ${(isActive('quickstart.html') || currentPath.includes('apidocs')) ? 'active-link' : ''}">
+                            Developer docs <i class="fas fa-chevron-down"></i>
+                        </a>
+                        <div class="dropdown-menu">
+                            <a href="quickstart.html" class="${isActive('quickstart.html') ? 'active-item' : ''}"><i class="fas fa-bolt"></i> Quick Start</a>
+                            <a href="apidocs/index.html"><i class="fas fa-book"></i> Javadocs</a>
+                        </div>
+                    </div>
                     
                     <div class="social-links">
                         <a href="https://www.youtube.com/@anahata108" target="_blank" title="Anahata TV"><i class="fab fa-youtube"></i></a>
@@ -55,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <a href="https://x.com/AnahataASI" target="_blank" title="Twitter / X"><i class="fa-brands fa-x-twitter"></i></a>
                         <a href="https://github.com/anahata-os/anahata-asi" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
                     </div>
-                    <a href="https://github.com/sponsors/anahata-os" class="btn-sponsor">Sponsor</a>
+                    <a href="https://www.paypal.com/donate/?hosted_button_id=SS8B8R7S68R7G" target="_blank" class="btn-sponsor" style="background: var(--barca-red); color: white; border: none;">Donate</a>
                 </div>
             </div>
         </nav>

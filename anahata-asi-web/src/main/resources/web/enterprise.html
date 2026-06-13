@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WMGS1YH2WD"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-WMGS1YH2WD');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="description" content="Anahata ASI Enterprise. Air-gapped, zero-telemetry ASI orchestration for defense, finance, and highly regulated environments.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Security | Anahata ASI Platform</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet" />
+    <style>
+        .docs-wrapper { display: flex; max-width: 1400px; margin: 0 auto; padding: 160px 2rem 100px; gap: 4rem; }
+        .sidebar { width: 300px; flex-shrink: 0; position: sticky; top: 130px; height: calc(100vh - 160px); overflow-y: auto; padding-right: 1.5rem; }
+        .sidebar-nav h4 { color: var(--barca-gold); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 2px; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(237, 187, 0, 0.2); padding-bottom: 8px; }
+        .sidebar-nav ul { list-style: none; padding: 0; margin: 0; width: 100%; }
+        .sidebar-nav li { margin-bottom: 0.5rem; }
+        .sidebar-nav a { color: var(--text-muted); text-decoration: none; display: block; padding: 10px 15px; transition: var(--transition); border-left: 3px solid transparent; font-size: 0.95rem; }
+        .sidebar-nav a:hover, .sidebar-nav a.active { color: var(--primary-light); border-left-color: var(--primary-light); background: linear-gradient(to right, rgba(44, 122, 123, 0.12), transparent); border-radius: 0 6px 6px 0; }
+        
+        .main-content { flex-grow: 1; max-width: 900px; min-width: 0; }
+        section { padding-top: 20px; margin-bottom: 80px; scroll-margin-top: 140px; }
+        
+        .main-content h1 { font-size: 3.5rem; margin-bottom: 0.5rem; color: var(--white); }
+        .main-content h2 { font-size: 2.2rem; margin-top: 3rem; margin-bottom: 1.5rem; color: var(--white); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem; }
+        .toolkit-header { display: flex; align-items: center; gap: 1rem; margin-top: 3rem; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem; }
+        .toolkit-header i { font-size: 1.8rem; color: var(--barca-gold); }
+        .toolkit-header h2 { margin: 0 !important; border-bottom: none !important; padding-bottom: 0 !important; }
+
+        .tagline { font-size: 1.4rem; color: var(--text-muted); margin-top: 0; line-height: 1.5; }
+        .tag-row { display: flex; gap: 0.8rem; margin-bottom: 2rem; flex-wrap: wrap; }
+        .tag { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-muted); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .tag-gold { border-color: var(--barca-gold); color: var(--barca-gold); background: rgba(237, 187, 0, 0.05); }
+
+        .info-box { background: rgba(44, 122, 123, 0.1); border-left: 4px solid var(--barca-gold); padding: 1.5rem; border-radius: 8px; margin: 2rem 0; }
+        
+        .integration-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin: 2rem 0; background: rgba(255, 255, 255, 0.02); padding: 2rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
+        .integration-item { display: flex; align-items: flex-start; gap: 1rem; color: var(--text-main); font-size: 1rem; line-height: 1.5; }
+        .integration-item i { color: var(--primary-light); margin-top: 5px; font-size: 1.2rem; flex-shrink: 0; width: 24px; text-align: center; }
+
+        .comparison-table th, .comparison-table td { border: 1px solid rgba(255,255,255,0.05); padding: 1.2rem; }
+        
+        .nb-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 2rem; margin: 2rem 0; position: relative; }
+        .usp-list { list-style: none; padding: 0; margin-bottom: 2rem; }
+        .usp-item { display: flex; align-items: flex-start; gap: 0.8rem; color: var(--white); font-size: 1rem; line-height: 1.6; margin-bottom: 1.2rem; }
+        .usp-item i { margin-top: 5px; font-size: 1.1rem; flex-shrink: 0; }
+    </style>
+</head>
+<body>
+    <div id="main-nav"></div>
+
+    <div class="docs-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-nav">
+                <h4>Enterprise</h4>
+                <ul>
+                    <li><a href="#overview" class="active">Security Overview</a></li>
+                    <li><a href="#architecture">Air-Gapped Architecture</a></li>
+                    <li><a href="#comparison">The Risk Matrix</a></li>
+                    <li><a href="#forge">The Anahata Forge</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <section id="overview">
+                <h1>Enterprise <span style="color: var(--barca-gold)">Security</span></h1>
+                <p class="tagline">Absolute Data Sovereignty for Defense, Finance, and highly regulated engineering environments.</p>
+                
+                <div class="tag-row">
+                    <span class="tag tag-gold"><i class="fas fa-shield-alt"></i> Zero Telemetry</span>
+                    <span class="tag"><i class="fas fa-server"></i> Local Inference</span>
+                    <span class="tag"><i class="fas fa-lock"></i> Air-Gapped</span>
+                </div>
+                
+                <div class="info-box">
+                    <h4 style="margin-top: 0; margin-bottom: 0.5rem; color: var(--white);"><i class="fas fa-user-shield"></i> The Enterprise Reality</h4>
+                    <p style="margin-bottom: 0;">Proprietary AI assistants (like Copilot and Cursor) fundamentally rely on exfiltrating your intellectual property to external cloud servers for "processing". The Anahata ASI Platform is a <b>100% native Java Runtime</b> that operates entirely within your corporate DMZ. Your code never leaves your workstation.</p>
+                </div>
+            </section>
+
+            <section id="architecture">
+                <div class="toolkit-header"><i class="fas fa-network-wired"></i><h2>Air-Gapped Architecture</h2></div>
+                <p>Anahata ASI is designed to be the ultimate offline intelligence orchestrator. It seamlessly integrates with your internal, firewall-protected infrastructure.</p>
+                
+                <div class="integration-grid" style="border-left: 4px solid var(--primary-light);">
+                    <div class="integration-item">
+                        <i class="fas fa-server"></i> 
+                        <div><b>Local Inference Connectors:</b> Connect the Universal Alliance endpoints directly to your internal Ollama, vLLM, or Hugging Face TGI servers. Keep all inference strictly within your corporate DMZ.</div>
+                    </div>
+                    <div class="integration-item">
+                        <i class="fas fa-database"></i> 
+                        <div><b>Stateful Passivation:</b> All conversation state, context window memory, and tool execution logs are serialized locally via Kryo. Data rests safely on your encrypted corporate drives, not on an external cloud database.</div>
+                    </div>
+                    <div class="integration-item">
+                        <i class="fas fa-folder-open"></i> 
+                        <div><b>Intranet RAG & Tools:</b> Leverage the Resources Toolkit to index internal Confluence pages, local PDF architectures, and proprietary Git repositories without exposing a single byte to the public web.</div>
+                    </div>
+                    <div class="integration-item">
+                        <i class="fas fa-hand-paper"></i> 
+                        <div><b>Deterministic HITL:</b> Human-In-The-Loop by design. Every structural refactoring or shell execution proposed by the model is blocked in a PENDING state for security review before execution.</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="comparison">
+                <div class="toolkit-header"><i class="fas fa-crosshairs"></i><h2>The Corporate Risk Matrix</h2></div>
+                <div style="overflow-x: auto; margin-top: 2rem;">
+                    <table class="comparison-table" style="width: 100%; border-collapse: collapse; text-align: left; background: rgba(255,255,255,0.01); border-radius: 12px; font-size: 0.95rem;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
+                                <th style="color: var(--barca-gold);">Security Dimension</th>
+                                <th style="color: var(--primary-light);">Anahata ASI</th>
+                                <th style="color: var(--white); opacity: 0.8;">GitHub Copilot Enterprise</th>
+                                <th style="color: var(--white); opacity: 0.8;">Cursor Pro</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="font-weight: 700;">Code Exfiltration</td>
+                                <td style="background: rgba(44, 122, 123, 0.05); border-left: 3px solid var(--primary-light);"><b>None.</b> Works with offline open-weight models.</td>
+                                <td style="opacity: 0.8;">Sent to Microsoft/OpenAI Azure servers.</td>
+                                <td style="opacity: 0.8;">Sent to Cursor cloud/OpenAI servers.</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="font-weight: 700;">Telemetry & Tracking</td>
+                                <td style="background: rgba(44, 122, 123, 0.05); border-left: 3px solid var(--primary-light);"><b>Zero.</b> Open Source codebase guarantee.</td>
+                                <td style="opacity: 0.8;">Extensive IDE telemetry and usage tracking.</td>
+                                <td style="opacity: 0.8;">"Privacy mode" available, but closed-source client.</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="font-weight: 700;">Host Environment</td>
+                                <td style="background: rgba(44, 122, 123, 0.05); border-left: 3px solid var(--primary-light);"><b>JVM Runtime.</b> Highly secure, sandboxed execution.</td>
+                                <td style="opacity: 0.8;">Electron / Node.js (High CVE attack surface).</td>
+                                <td style="opacity: 0.8;">Electron / Node.js.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="forge">
+                <div class="toolkit-header"><i class="fas fa-hammer"></i><h2>The Anahata Forge</h2></div>
+                <p>We offer a premier, hands-on consulting package for enterprise Java teams. We will directly help your organization deploy, configure, and train your developers on the Anahata ASI ecosystem entirely behind your corporate firewall.</p>
+                
+                <div class="nb-card" style="border-top-color: var(--barca-gold); background: linear-gradient(145deg, rgba(26, 32, 44, 0.9), #000); padding: 3rem; text-align: center; margin-top: 3rem;">
+                    <h3 style="color: var(--barca-gold); text-transform: uppercase; letter-spacing: 2px; font-size: 1.2rem; margin: 0;">Corporate Air-Gapped Package</h3>
+                    <div style="font-size: 4rem; color: var(--white); font-weight: 800; margin: 1.5rem 0; letter-spacing: -2px;">$5,000 <span style="font-size: 1.2rem; color: var(--text-muted); font-weight: 400; letter-spacing: normal;">/ setup</span></div>
+                    <p style="color: var(--text-muted); margin-bottom: 2.5rem; font-size: 1.1rem;">Full architectural integration and team onboarding.</p>
+                    
+                    <div class="usp-list" style="text-align: left; max-width: 600px; margin: 0 auto 3rem;">
+                        <div class="usp-item"><i class="fas fa-check-circle" style="color: var(--verified-green);"></i> <div>Deployment architecture for local vLLM/Ollama servers behind your firewall.</div></div>
+                        <div class="usp-item"><i class="fas fa-check-circle" style="color: var(--verified-green);"></i> <div>Anahata ASI Desktop configuration tailored for your internal network constraints.</div></div>
+                        <div class="usp-item"><i class="fas fa-check-circle" style="color: var(--verified-green);"></i> <div>Custom proprietary toolkit design session (e.g., internal Jira, GitLab, DBs).</div></div>
+                        <div class="usp-item"><i class="fas fa-check-circle" style="color: var(--verified-green);"></i> <div>Hands-on developer training for AST-guided Java refactoring via ASI.</div></div>
+                        <div class="usp-item"><i class="fas fa-check-circle" style="color: var(--verified-green);"></i> <div>Priority 48-hour issue resolution direct from core maintainers for 6 months.</div></div>
+                    </div>
+                    
+                    <a href="https://www.paypal.com/donate/?hosted_button_id=SS8B8R7S68R7G" target="_blank" class="btn-primary" style="display: inline-block; padding: 18px 40px; font-size: 1.1rem; background: var(--barca-red); border: none; border-radius: 8px; color: white; text-decoration: none; font-weight: bold; box-shadow: 0 10px 20px rgba(165, 0, 68, 0.4); transition: transform 0.2s;"><i class="fas fa-rocket"></i> Secure Your Onboarding Slot</a>
+                    <p style="margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-muted);">or email <a href="mailto:support@anahata.uno" style="color: var(--barca-gold);">support@anahata.uno</a> for custom enterprise invoicing.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding-top: 2rem;">
+                &copy; 2026 Anahata Uno. All rights reserved. <br>
+                Messi was, is, and will always be the greatest player of all timelines.
+            </div>
+        </div>
+    </footer>
+    
+    <script src="nav.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=f19c44f5-8b2e-458f-beab-96e4f9f8e603" />
+</body>
+</html>
