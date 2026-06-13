@@ -65,6 +65,7 @@
                 <ul>
                     <li><a href="#overview" class="active">Security Overview</a></li>
                     <li><a href="#architecture">Air-Gapped Architecture</a></li>
+                    <li><a href="#guardrails">Active Guardrails</a></li>
                     <li><a href="#verticals">Industry Verticals</a></li>
                     <li><a href="#comparison">The Risk Matrix</a></li>
                     <li><a href="#forge">The Anahata Forge & SLAs</a></li>
@@ -117,6 +118,53 @@
                     <div class="integration-item">
                         <i class="fas fa-puzzle-piece"></i> 
                         <div><b>Seamless Java Application Integration:</b> Integrate Anahata ASI directly into your existing corporate Java applications (e.g., legacy IDEs, business analytics, financial ledgers, health monitoring, and defense systems).</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="guardrails">
+                <div class="toolkit-header"><i class="fas fa-microchip"></i><h2>Active Container Guardrails</h2></div>
+                <p>Anahata's architectural power lies in our active, JVM-native guardrails. We move beyond stateless autocomplete boxes to deliver a secure, stateful runtime environment that guarantees absolute compliance and data sovereignty.</p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 2rem; margin-top: 2rem;">
+                    <!-- Use Case 1: Metaspace & Classloading -->
+                    <div class="nb-card" style="margin: 0; border-top-color: var(--barca-gold); padding: 1.5rem; display: flex; flex-direction: column;">
+                        <h4 style="color: var(--white); margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem;"><i class="fab fa-java" style="color: var(--barca-gold);"></i> Metaspace Memory Protection</h4>
+                        <p style="font-size: 0.85rem; line-height: 1.6; color: var(--text-muted); margin: 0; flex-grow: 1;">
+                            To prevent <strong>LinkageErrors</strong> or <strong>ClassCastExceptions</strong> from corrupting the host application during JIT code execution, Anahata isolates dynamic classloads inside a transient, child-first classloader. 
+                            The parent classloader retains exclusive authority over critical infrastructure singletons (like <code>Agi</code>, <code>ToolContext</code>, and <code>ResourceManager</code>) to preserve ThreadLocal context. 
+                            Upon turn completion, the child classloader is completely discarded and garbage-collected, preventing <strong>Metaspace memory leaks</strong> under continuous, long-running agentic runs.
+                        </p>
+                    </div>
+
+                    <!-- Use Case 2: CwGC Token Reduction -->
+                    <div class="nb-card" style="margin: 0; border-top-color: var(--barca-red); padding: 1.5rem; display: flex; flex-direction: column;">
+                        <h4 style="color: var(--white); margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem;"><i class="fas fa-ghost" style="color: var(--barca-red);"></i> CwGC & Semantic Ghosts</h4>
+                        <p style="font-size: 0.85rem; line-height: 1.6; color: var(--text-muted); margin: 0; flex-grow: 1;">
+                            Unlike naive sliding windows that abruptly truncate history—causing the AI to lose cognitive coherence—our <strong>Context Window Garbage Collector (CwGC)</strong> soft-recycles expired, low-priority message parts once their designated "turns-to-keep" counter reaches zero. 
+                            These heavy payloads are replaced by a highly compressed <strong>Semantic Ghost</strong> metadata header. 
+                            This lets the model retain full chronological awareness of historical decisions while reducing active token consumption by up to <strong>60% to 80%</strong>, saving enterprises thousands of dollars in input token fees.
+                        </p>
+                    </div>
+
+                    <!-- Use Case 3: Zero-Trust Federated Toolkits -->
+                    <div class="nb-card" style="margin: 0; border-top-color: var(--barca-blue); padding: 1.5rem; display: flex; flex-direction: column;">
+                        <h4 style="color: var(--white); margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem;"><i class="fas fa-network-wired" style="color: #4faaff;"></i> Federated Zero-Trust Toolkits</h4>
+                        <p style="font-size: 0.85rem; line-height: 1.6; color: var(--text-muted); margin: 0; flex-grow: 1;">
+                            Centralized corporate AI servers represent a massive compliance bottleneck, risking data cross-contamination and prompt-memory leaks between departments. 
+                            Anahata ASI operates as a fully federated, local-first container. 
+                            Each instance runs privately on the operator's machine or secure local subnet, with active toolkits and RAG resources bound <strong>strictly to that specific user's operating system credentials and local network scopes</strong>, aligning perfectly with standard Zero-Trust Access Control (ZTAC).
+                        </p>
+                    </div>
+
+                    <!-- Use Case 4: AST-Guided Structural Refactoring -->
+                    <div class="nb-card" style="margin: 0; border-top-color: var(--verified-green); padding: 1.5rem; display: flex; flex-direction: column;">
+                        <h4 style="color: var(--white); margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem;"><i class="fas fa-atom" style="color: var(--verified-green);"></i> AST-Guided Structural Refactoring</h4>
+                        <p style="font-size: 0.85rem; line-height: 1.6; color: var(--text-muted); margin: 0; flex-grow: 1;">
+                            Traditional AI coding assistants rely on fragile regex find-and-replace text blocks, which frequently introduce syntax errors and break compilation across large codebases. 
+                            Anahata's <code>BatchCodeRefiner</code> leverages native Javac compiler trees to parse and mutate code structurally. 
+                            By targeting exact coordinates on compile-time abstract syntax trees, we surgically inject or modify class members while leaving surrounding comments, formatting, and custom indentations <strong>100% untouched</strong>.
+                        </p>
                     </div>
                 </div>
             </section>
