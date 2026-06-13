@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
 
                     <div class="dropdown">
-                        <a href="#" class="dropdown-toggle ${(isActive('enterprise.html') || isActive('defense.html') || isActive('finance.html') || isActive('healthcare.html') || isActive('public-sector.html')) ? 'active-link' : ''}">
+                        <a href="#" class="dropdown-toggle ${(isActive('enterprise.html') || isActive('defense.html') || isActive('finance.html') || isActive('healthcare.html') || isActive('public-sector.html') || isActive('legal.html') || isActive('logistics.html') || isActive('telecom.html')) ? 'active-link' : ''}">
                             Enterprise <i class="fas fa-chevron-down"></i>
                         </a>
                         <div class="dropdown-menu">
@@ -60,6 +60,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             <a href="${prefix}enterprise/finance.html" class="${isActive('finance.html') ? 'active-item' : ''}"><i class="fas fa-landmark"></i> Finance & Banking</a>
                             <a href="${prefix}enterprise/healthcare.html" class="${isActive('healthcare.html') ? 'active-item' : ''}"><i class="fas fa-dna"></i> Healthcare & Pharma</a>
                             <a href="${prefix}enterprise/public-sector.html" class="${isActive('public-sector.html') ? 'active-item' : ''}"><i class="fas fa-gavel"></i> Public Sector</a>
+                            <a href="${prefix}enterprise/legal.html" class="${isActive('legal.html') ? 'active-item' : ''}"><i class="fas fa-scale-balanced"></i> Legal & Ethics</a>
+                            <a href="${prefix}enterprise/logistics.html" class="${isActive('logistics.html') ? 'active-item' : ''}"><i class="fas fa-truck-ramp-box"></i> Logistics & Supply</a>
+                            <a href="${prefix}enterprise/telecom.html" class="${isActive('telecom.html') ? 'active-item' : ''}"><i class="fas fa-wifi"></i> Telecom & 6G</a>
                         </div>
                     </div>
 
