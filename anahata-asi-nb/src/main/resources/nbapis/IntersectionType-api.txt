@@ -1,6 +1,0 @@
-========================================
- API Bible: javax.lang.model.type.IntersectionType
-========================================
-
-METHODS:
-public abstract List getBounds()

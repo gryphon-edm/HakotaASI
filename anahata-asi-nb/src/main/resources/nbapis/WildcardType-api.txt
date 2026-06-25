@@ -1,7 +1,0 @@
-========================================
- API Bible: javax.lang.model.type.WildcardType
-========================================
-
-METHODS:
-public abstract TypeMirror getExtendsBound()
-public abstract TypeMirror getSuperBound()

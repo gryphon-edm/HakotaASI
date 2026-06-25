@@ -1,8 +1,0 @@
-========================================
- API Bible: javax.lang.model.type.TypeVariable
-========================================
-
-METHODS:
-public abstract Element asElement()
-public abstract TypeMirror getUpperBound()
-public abstract TypeMirror getLowerBound()

@@ -1,6 +1,0 @@
-========================================
- API Bible: javax.lang.model.type.UnionType
-========================================
-
-METHODS:
-public abstract List getAlternatives()
