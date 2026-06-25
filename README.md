@@ -8,7 +8,7 @@
   <a href="https://github.com/gryphon-edm/HakotaASI">
     <img src="https://img.shields.io/badge/REPOSITORY-HAKOTA%20ASI-0B1020?style=for-the-badge&labelColor=7C3AED&color=111827" alt="Hakota ASI Repository">
   </a>
-  <a href="https://github.com/gryphon-edm">
+  <a href="https://github.com/gryphon-edm/HakotaASI">
     <img src="https://img.shields.io/badge/DEVELOPER-GRYPHON--EDM-0B1020?style=for-the-badge&labelColor=EC4899&color=111827" alt="gryphon-edm">
   </a>
 </p>
