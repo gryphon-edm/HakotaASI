@@ -1,10 +1,10 @@
-/* Licensed under the Anahata Software License (ASL) v 108. See the LICENSE file for details. Força Barça! */
-# Anahata ASI NetBeans (`anahata-asi-nb`)
+/* Licensed under the Hakota Software License (ASL) v 108. See the LICENSE file for details. Força Barça! */
+# Hakota ASI NetBeans (`Hakota-asi-nb`)
 
 > [!IMPORTANT]
-> This file is an extension of the `anahata.md` in the parent project. Always keep the root `anahata.md` in context as it contains the master Coding Principles and Javadoc Standards.
+> This file is an extension of the `Hakota.md` in the parent project. Always keep the root `Hakota.md` in context as it contains the master Coding Principles and Javadoc Standards.
 
-This is the V2 NetBeans integration module for the Anahata ASI framework.
+This is the V2 NetBeans integration module for the Hakota ASI framework.
 
 ## 1. Core Principles
 
@@ -16,8 +16,8 @@ This is the V2 NetBeans integration module for the Anahata ASI framework.
 ## 2. Annotator Strategy
 
 We use a non-intrusive annotation system to provide visual feedback and context within the NetBeans code editors and project views. This includes:
-- **Project Icons & Names**: Real-time badges and session counters for Anahata-enabled projects.
-- **Dynamic Context Menus**: Unified "AI Context" submenus across all file types via the `AnahataAnnotationProvider`.
+- **Project Icons & Names**: Real-time badges and session counters for Hakota-enabled projects.
+- **Dynamic Context Menus**: Unified "AI Context" submenus across all file types via the `HakotaAnnotationProvider`.
 - **Editor Annotations**: Real-time feedback from the ASI directly on the source code lines.
 
 ## 3. Dependency Management
@@ -32,7 +32,7 @@ We use a non-intrusive annotation system to provide visual feedback and context 
 
 ## 5. Reloading and Lifecycle
 The NetBeans plugin runtime is static and **always** loads classes from the installed JAR:
-`/anahata-asi-nb/target/nbm/clusters/extra/modules/uno-anahata-asi-nb.jar`.
+`/Hakota-asi-nb/target/nbm/clusters/extra/modules/uno-Hakota-asi-nb.jar`.
 Standard tool calls (the ones that show run buttons in the ui) will not reflect changes until an `nbmreload` is performed.
 
 
@@ -41,7 +41,7 @@ Standard tool calls (the ones that show run buttons in the ui) will not reflect 
 > You can test toolkit modifications immediately without triggering an `nbmreload` by using `NbJava.compileAndExecuteInProject`.
 > 
 > - **Dependencies:** Set `includeDependencies` and `includeTestDependencies` to `false` (unless you specifically need to test cross-module changes with `swing`, `core`, etc.).
-> - **Instantiation & Context:** Simply instantiate the toolkit (e.g., `Refactor r = new Refactor();`) and invoke its methods. **Do not call `setAgi()`, `setToolkit()`, or attempt manual onboarding.** The Anahata framework automatically handles context propagation (like `log()`, `error()`, or `getAgi()`) via `ThreadLocal` bindings during the `NbJava` execution.
+> - **Instantiation & Context:** Simply instantiate the toolkit (e.g., `Refactor r = new Refactor();`) and invoke its methods. **Do not call `setAgi()`, `setToolkit()`, or attempt manual onboarding.** The Hakota framework automatically handles context propagation (like `log()`, `error()`, or `getAgi()`) via `ThreadLocal` bindings during the `NbJava` execution.
 
 
 - **Hot Reload Workflow (NbJava.compileAndExecuteInProject)**: 
