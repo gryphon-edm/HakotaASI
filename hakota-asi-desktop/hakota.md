@@ -1,5 +1,5 @@
 /* Licensed under the Hakota Software License (ASL) v 108. See the LICENSE file for details. Força Barça! */
-# Hakota ASI Standalone (`Hakota-asi-standalone`)
+# Hakota ASI Standalone (`Hakota-asi-standalone`) 
 
 > [!IMPORTANT]
 > This file is an extension of the `Hakota.md` in the parent project. Always keep the root `Hakota.md` in context as it contains the master Coding Principles and Javadoc Standards.
