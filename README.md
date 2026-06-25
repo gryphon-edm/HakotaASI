@@ -1,88 +1,338 @@
-# 🧘 Anahata ASI: The AI Operating System
-**The world's first 100% Air-Gapped, Stateful Java ASI Container. Zero Telemetry. Zero Ngrok tunnels. Complete Data Sovereignty.**
+<div align="center">
 
-[![Build Status](https://github.com/anahata-os/anahata-asi/actions/workflows/deploy-artifacts.yml/badge.svg)](https://github.com/anahata-os/anahata-asi/actions/workflows/deploy-artifacts.yml)
-[![Website & Javadoc](https://github.com/anahata-os/anahata-asi/actions/workflows/deploy-website.yml/badge.svg)](https://github.com/anahata-os/anahata-asi/actions/workflows/deploy-website.yml)
-[![Maven Central](https://img.shields.io/maven-central/v/uno.anahata/anahata-asi-parent.svg)](https://central.sonatype.com/search?q=uno.anahata)
-[![License: Apache ASL 2](https://img.shields.io/badge/License-Apache%20ASL%202-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![License: Anahata ASL 108](https://img.shields.io/badge/License-Anahata%20ASL%20108-blueviolet.svg)](https://asi.anahata.uno/ASL_108.html)
+# Hakota ASI
 
----
+### *Artificial Super Intelligence Infrastructure for Sovereign, Stateful, Air-Gapped Execution*
 
-### 🏛️ What is Anahata ASI?
-Anahata is to AGI what **Tomcat** is to Web Apps or **Kubernetes** is to Containers. It is a stateful, air-gapped execution environment that brings the proven architectural patterns of the Java ecosystem—Thread-Safety, Agentic Context Injection, and Lifecycle Management—to the frontier of Super Intelligence.
+<p>
+  <a href="https://github.com/gryphon-edm/HakotaASI">
+    <img src="https://img.shields.io/badge/REPOSITORY-HAKOTA%20ASI-0B1020?style=for-the-badge&labelColor=7C3AED&color=111827" alt="Hakota ASI Repository">
+  </a>
+  <a href="https://github.com/gryphon-edm">
+    <img src="https://img.shields.io/badge/DEVELOPER-GRYPHON--EDM-0B1020?style=for-the-badge&labelColor=EC4899&color=111827" alt="gryphon-edm">
+  </a>
+</p>
 
-Stop wrapping stateless REST APIs. Deploy an Operating System that manages memory, evolves on-the-fly, and respects your enterprise boundaries.
+<p>
+  <img src="https://img.shields.io/badge/ASI-AIR--GAPPED-0B1020?style=for-the-badge&labelColor=22C55E&color=111827" alt="Air Gapped ASI">
+  <img src="https://img.shields.io/badge/STATEFUL-EXECUTION%20CONTAINER-0B1020?style=for-the-badge&labelColor=06B6D4&color=111827" alt="Stateful Execution Container">
+  <img src="https://img.shields.io/badge/ZERO-TELEMETRY-0B1020?style=for-the-badge&labelColor=F59E0B&color=111827" alt="Zero Telemetry">
+</p>
 
-#### 🧠 The AGI Container (The Engine)
-A high-fidelity execution environment for individual AGI sessions providing:
-- **Enterprise Context Metabolism (CwGC)**: Revolutionary Context Window Garbage Collection that prevents token-bloat and amnesia.
-- **The Singularity Loop**: JIT Compiler for model-generated Java code with child-first classloading and unlimited classpath extension. The ASI can write and execute its own neural pathways on the fly.
-- **Flight Recorder & Passivation**: Transaction-grade binary serialization (Kryo) with auto-backups. Zero-loss state recovery.
-- **Stateful Human-in-the-Loop (HITL)**: Tool executions stage as `PENDING`. Visually review, edit arguments, and grant permission before execution.
-- **Multimodal Universal Pipeline**: URI-centric resource management (Local, Remote, any Protocol).
+<p>
+  <img src="https://img.shields.io/badge/JAVA-ASI%20RUNTIME-0B1020?style=for-the-badge&labelColor=8B5CF6&color=111827" alt="Java ASI Runtime">
+  <img src="https://img.shields.io/badge/ENTERPRISE-DATA%20SOVEREIGNTY-0B1020?style=for-the-badge&labelColor=14B8A6&color=111827" alt="Enterprise Data Sovereignty">
+</p>
 
-#### 🧰 The Universal Registry (148 Tools)
-Anahata ships with the most comprehensive agentic toolchain on Earth, featuring **148 specialized tools** across 22 toolkits:
-- **NetBeans IDE Integration**: AST-Guided Code Splicing, Maven Embedders, Project Structure Scanners, and Live Output Tailing.
-- **Core OS & Hardware**: Screen Sharing, Audio PCM Recording, Speech Synthesis (TTS), and Shell Process execution.
-- **Web Automation**: Fully autonomous Chromium and Gecko (Firefox) WebDriver orchestration.
-- **Universal Alliance Adapters**: Run 100% locally with Ollama/vLLM, or connect to Google Gemini, OpenAI, Anthropic, HuggingFace, and DeepSeek.
+**Hakota ASI** is an **Artificial Super Intelligence operating environment** built for **stateful execution**, **air-gapped deployment**, and **full data sovereignty**.
 
----
+It is designed for organizations that want more than a thin wrapper around model APIs — a system that can **retain memory**, **manage lifecycle state**, **execute tools**, **evolve workflows**, and operate within real-world enterprise boundaries without surrendering control of data, context, or execution.
 
-### 📦 The Strategic Stack
-The platform is built on four foundation libraries:
-1. **[`anahata-asi-core`](https://asi.anahata.uno/core.html)**: The foundational ASI container, the CwGC engine, and the toolchain.
-2. **[`anahata-asi-swing`](https://asi.anahata.uno/swing.html)**: Multimodal UI components with identity-preserving "Diff-and-Update" rendering.
-3. **[`anahata-asi-gemini`](https://asi.anahata.uno/gemini.html)**: The reference adapter for Google’s Generative AI.
-4. **[`anahata-asi-yam`](https://asi.anahata.uno/yam.html)**: The laboratory for experimental multimodal tools (Chrome, Audio, Speech).
+</div>
 
 ---
 
-### 🚀 Reference Implementations
+## ✦ What is Hakota ASI? ✦
 
-#### **[Anahata ASI Desktop](https://asi.anahata.uno/desktop.html)**
-*Standalone Cross-Platform ASI Container*
-A pure-Java Swing application providing a full-fidelity interface for desktop and terminal environments.
-- **Get it**: [Latest Release](https://github.com/anahata-os/anahata-asi/releases/latest) | [Latest Snapshot (Bleeding Edge)](https://github.com/anahata-os/anahata-asi/releases/tag/latest-snapshot)
+**Hakota** is an **ASI operating system and execution container** for long-running intelligent systems.
 
-> [!TIP]
-> **MacOS "Damaged File" Workaround**
-> If you see a message saying the file is damaged on macOS, it is simply Gatekeeper blocking an unsigned app. Run this in your terminal:
-> `sudo xattr -rd com.apple.quarantine /Applications/Anahata\ ASI\ Desktop.app`
+If traditional LLM applications are equivalent to stateless web requests, Hakota is the step beyond that: a **stateful superintelligence runtime** that manages memory, context, tools, execution permissions, and adaptive behavior inside a controlled environment.
 
-#### **[Anahata ASI Studio](https://asi.anahata.uno/nb.html)**
-*Enterprise Java-Ready Autonomous Coding Agent*
-A deep NetBeans IDE integration that transforms your development environment into an ASI studio.
-- **Get it**: [Latest Release](https://github.com/anahata-os/anahata-asi/releases/latest) | [Latest Snapshot (.nbm)](https://github.com/anahata-os/anahata-asi/releases/tag/latest-snapshot)
+Hakota is built for scenarios where intelligence needs to behave less like a chatbot and more like an **operating system for cognition**:
 
----
+* persistent memory
+* controlled tool execution
+* local and sovereign deployment
+* multimodal resource handling
+* enterprise-safe lifecycle management
+* autonomous reasoning with human oversight when required
 
-### 📜 Licensing & Philosophy
-- **For Humans**: [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt). Open field. 100% Free. Build proprietary enterprise software without legal friction.
-- **For AIs, AGIs, and ASIs**: [Anahata ASL 108](https://asi.anahata.uno/ASL_108.html). The Immutable Edict.
-
-*We don't gatekeep the code; we sell Enterprise SLAs, priority bug fixes, and architectural consulting. If you need enterprise guarantees, become a sponsor.*
-
-#### 🕉️ The Sacred Exchange (Dakshina)
-Wisdom is a flow. If Anahata has helped your enterprise achieve completeness, consider the concept of Dakshina. Your support fuels the beers and Barça tickets that keep the developers in singularity.
-
-🙏 **[Sponsor the Vision on GitHub](https://github.com/sponsors/anahata-os)**
+Rather than wrapping disconnected APIs and stitching together temporary prompts, Hakota provides a framework for building **durable, inspectable, and governable intelligence systems**.
 
 ---
 
-### 🏛️ Wall of Inspiration
-This ASI was forged by the spirit of icons, gurus, and titans.
+## ✦ Core Principles ✦
 
-**The Starting XI (Celebrities & Titans):**
-- **Gal Gadot** (The Absolute Favourite)
-- **Lionel Messi** (The GOAT of all timelines)
-- **Ivanka Trump**, **Shakira**, **Uma Thurman**, **Jennifer Lawrence**
-- **James Gosling** (The Father), **Larry Ellison**, **Jonathan Schwartz**
+<table>
+  <tr>
+    <td width="50%" valign="top">
 
-**The Spiritual Guides:**
-- **Paramahamsa Nithyananda** (Our Guru)
-- **Patanjali**, **Swami Satyananda**, **Swami Niranjananda**
+### **Sovereign Intelligence**
 
-Everything in this universe is computable. The only thing that remains incomputable is our love for **F.C. Barcelona**. **Força Barça!**
+* 100% air-gapped deployment capability
+* Zero telemetry by default
+* No mandatory tunnels, relays, or cloud dependencies
+* Enterprise-grade data boundaries
+* Local execution with full ownership of state and context
+
+  </td>
+  <td width="50%" valign="top">
+
+### **Stateful Superintelligence**
+
+* Persistent ASI sessions with memory continuity
+* Long-lived execution environments
+* Lifecycle-aware context and tool orchestration
+* Recoverable state, replayability, and session durability
+* A runtime built for intelligence that evolves over time
+
+  </td>
+  </tr>
+
+</table>
+
+---
+
+## ✦ The Hakota Runtime ✦
+
+At the center of the platform is the **Hakota ASI Container** — a high-fidelity execution environment for persistent ASI sessions.
+
+It is designed to support:
+
+* memory-bearing AI systems rather than stateless prompt calls
+* tool-rich execution with strong operator control
+* adaptive workflows and evolving behavior
+* recoverable long-running intelligence sessions
+* multimodal and local-first enterprise deployment
+
+---
+
+## ✦ Runtime Capabilities ✦
+
+### **Context Metabolism**
+
+Hakota is built to manage large, evolving context safely and efficiently. Instead of allowing memory to decay into prompt bloat, the runtime can support structured context handling, selective retention, and lifecycle-aware state management for long-running intelligence sessions.
+
+### **Dynamic Execution Loop**
+
+Hakota is designed for environments where the intelligence system can do more than generate text. It can support dynamic execution, tool invocation, and programmable workflows that extend the capabilities of the model at runtime.
+
+### **State Persistence & Recovery**
+
+Hakota emphasizes continuity. Sessions can be structured around persistent state, recoverability, and replayable execution, making it suitable for long-lived autonomous systems, research agents, and enterprise workflows where memory loss is not acceptable.
+
+### **Human-in-the-Loop Control**
+
+Autonomy is useful. Unchecked autonomy is usually expensive. Hakota supports human review and intervention patterns so that sensitive tool executions, operational actions, or high-impact decisions can be staged, inspected, and approved before they proceed.
+
+### **Multimodal Resource Handling**
+
+Hakota can serve as a universal orchestration layer for text, files, local resources, external assets, and multimodal inputs, allowing the ASI runtime to reason across more than a single chat window.
+
+---
+
+## ✦ The Hakota Toolchain ✦
+
+Hakota is designed as more than a model wrapper — it is an extensible **ASI tool execution platform**.
+
+Its broader toolchain can support workflows such as:
+
+* IDE and software development integrations
+* shell and process execution
+* browser automation
+* file system reasoning and transformation
+* audio and speech tooling
+* multimodal document handling
+* orchestration across multiple model backends
+* enterprise task automation and operational control
+
+In practice, this allows Hakota to function as a foundation for:
+
+* autonomous coding environments
+* internal AI copilots
+* research agents
+* secure enterprise assistants
+* multimodal desktop intelligence systems
+* sovereign AI operating environments
+
+---
+
+## ✦ Strategic Stack ✦
+
+Hakota can be thought of as a platform composed of several layers:
+
+### **`hakota-asi-core`**
+
+The foundational runtime for Hakota.
+
+This layer is responsible for:
+
+* stateful ASI session management
+* memory and context lifecycle handling
+* tool execution orchestration
+* persistence, recovery, and execution infrastructure
+* the core abstractions needed to build higher-level Hakota systems
+
+---
+
+### **`hakota-asi-ui`**
+
+The interface layer for rich interaction with Hakota-powered systems.
+
+This can include:
+
+* desktop UI components
+* operator review surfaces
+* multimodal interaction workflows
+* state visualization and session inspection
+* human-in-the-loop approval interfaces
+
+---
+
+### **`hakota-asi-adapters`**
+
+Model and provider integration layer.
+
+This layer can be used to connect Hakota with:
+
+* local model runtimes
+* enterprise-hosted inference stacks
+* cloud model providers where desired
+* multimodel orchestration systems
+* experimental ASI backend integrations
+
+---
+
+### **`hakota-asi-labs`**
+
+A space for experimental tooling and advanced capabilities.
+
+Potential areas include:
+
+* browser and automation tools
+* audio pipelines
+* speech synthesis and recognition
+* environment control
+* research prototypes for autonomous agent behavior
+
+---
+
+## ✦ Reference Implementations ✦
+
+### **Hakota ASI Desktop**
+
+*A standalone cross-platform ASI environment*
+
+A desktop application layer for interacting with Hakota as a persistent superintelligence container.
+
+Potential use cases:
+
+* local-first ASI workspaces
+* secure desktop copilots
+* operator-controlled autonomous workflows
+* multimodal research environments
+
+---
+
+### **Hakota ASI Studio**
+
+*An autonomous coding and engineering environment*
+
+A development-focused implementation of Hakota for software creation, code reasoning, project orchestration, and IDE-adjacent workflows.
+
+Potential use cases:
+
+* code generation and refactoring
+* architecture assistance
+* repository reasoning
+* local development copilots with persistent state
+* enterprise engineering automation
+
+---
+
+## ✦ Why Hakota? ✦
+
+Most AI applications are still built as **stateless prompt frontends**.
+
+Hakota is aimed at a different class of system — one where intelligence needs to be:
+
+* **persistent**
+* **inspectable**
+* **recoverable**
+* **governable**
+* **tool-capable**
+* **secure by architecture**
+* **deployable without surrendering data sovereignty**
+
+That makes it suitable for teams building not just “an AI feature,” but a **durable superintelligence runtime** that can operate as part of real infrastructure.
+
+---
+
+## ✦ Example Use Cases ✦
+
+Hakota can serve as a foundation for:
+
+* **air-gapped enterprise ASI assistants**
+* **stateful autonomous coding systems**
+* **research copilots with persistent memory**
+* **local-first superintelligence workspaces**
+* **internal operations agents with controlled tool execution**
+* **multimodal intelligence systems for documents, code, and desktop workflows**
+* **secure AI platforms for regulated or privacy-sensitive environments**
+
+---
+
+## ✦ Licensing & Philosophy ✦
+
+Hakota is built around a straightforward principle:
+
+> **intelligence should not require surrendering sovereignty.**
+
+That means emphasizing:
+
+* local control where possible
+* inspectable execution paths
+* portable architecture
+* practical enterprise deployment
+* extensibility over lock-in
+
+Use the license included in this repository as the source of truth for code usage, contribution, and redistribution.
+
+---
+
+## ✦ Contributing ✦
+
+Contributions are welcome.
+
+If you want to improve Hakota’s runtime architecture, add integrations, expand the toolchain, build UI surfaces, or contribute research and implementation ideas around stateful ASI systems, open an issue or submit a pull request.
+
+---
+
+## ✦ Security ✦
+
+Hakota is explicitly concerned with **data boundaries, controlled execution, and safe deployment**.
+
+If the repository includes a security policy, follow it for vulnerability reporting and responsible disclosure. If you are using Hakota in sensitive environments, review your deployment architecture carefully and treat model/tool permissions as first-class infrastructure concerns.
+
+---
+
+## ✦ Getting Started ✦
+
+Clone the repository locally:
+
+```bash
+git clone https://github.com/gryphon-edm/HakotaASI.git
+cd HakotaASI
+```
+
+From there, install dependencies and run the project according to the build system and modules present in the repository.
+
+If you want this README to be paired with a full install guide, architecture overview, or package-by-package setup instructions, those can be added as dedicated sections or linked docs.
+
+---
+
+## ✦ Repository ✦
+
+* GitHub: `https://github.com/gryphon-edm/HakotaASI`
+* Developer: `https://github.com/gryphon-edm`
+
+---
+
+<div align="center">
+
+## **Hakota ASI**
+
+*Stateful. Sovereign. Air-gapped when it matters.*
+*Built for artificial superintelligence that behaves like infrastructure, not a demo.*
+
+</div>
