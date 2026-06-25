@@ -1,0 +1,14 @@
+/* Licensed under the Hakota Software License (ASL) v 108. See the LICENSE file for details. Força Barça! */
+# Hakota ASI Standalone (`Hakota-asi-standalone`)
+
+> [!IMPORTANT]
+> This file is an extension of the `Hakota.md` in the parent project. Always keep the root `Hakota.md` in context as it contains the master Coding Principles and Javadoc Standards.
+
+## 1. Purpose
+Provides standalone Java launchers for both CLI and Swing interfaces outside of an IDE.
+
+## 2. Execution
+Invoke the NetBeans project action "run" or use the Maven Shade generated JAR.
+
+## 3. Session Persistence
+Sessions are stored in: `~/.Hakota/asi/standalone/sessions`
